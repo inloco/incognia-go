@@ -6,28 +6,18 @@ const (
 	transactionsEndpoint = "/v2/authentication/transactions"
 )
 
-type Region int64
-
-const (
-	US Region = iota
-	BR
-)
-
 type endpoints struct {
 	Token        string
 	Signups      string
 	Transactions string
 }
 
-var baseEndpoint map[Region]string = map[Region]string{
-	US: "https://api.us.incognia.com/api",
-	BR: "https://incognia.inloco.com.br/api",
-}
+var baseEndpoint string = "https://api.us.incognia.com/api"
 
-func buildEndpoints(region Region) endpoints {
+func buildEndpoints() endpoints {
 	return endpoints{
-		Token:        baseEndpoint[region] + tokenEndpoint,
-		Signups:      baseEndpoint[region] + signupsEndpoint,
-		Transactions: baseEndpoint[region] + transactionsEndpoint,
+		Token:        baseEndpoint + tokenEndpoint,
+		Signups:      baseEndpoint + signupsEndpoint,
+		Transactions: baseEndpoint + transactionsEndpoint,
 	}
 }

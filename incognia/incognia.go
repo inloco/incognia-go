@@ -18,7 +18,6 @@ type Client struct {
 type IncogniaClientConfig struct {
 	ClientId     string
 	ClientSecret string
-	Region       Region
 }
 
 func New(config *IncogniaClientConfig) (*Client, error) {
@@ -30,7 +29,7 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		Timeout: time.Second * 10,
 	}
 
-	endpoints := buildEndpoints(config.Region)
+	endpoints := buildEndpoints()
 
 	client := &Client{config.ClientId, config.ClientSecret, endpoints, nil, netClient}
 
