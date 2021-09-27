@@ -2,14 +2,14 @@ package incognia
 
 import "time"
 
-type incogniaToken struct {
+type accessToken struct {
 	CreatedAt   int64
 	ExpiresIn   int64  `json:"expires_in,string"`
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
 }
 
-func (token *incogniaToken) isValid() bool {
+func (token *accessToken) isValid() bool {
 	createdAt := token.CreatedAt
 	expiresIn := token.ExpiresIn
 
