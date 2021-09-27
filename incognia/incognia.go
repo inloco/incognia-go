@@ -29,7 +29,7 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		Timeout: time.Second * 10,
 	}
 
-	endpoints := buildEndpoints()
+	endpoints := newEndpoints()
 
 	client := &Client{config.ClientId, config.ClientSecret, endpoints, nil, netClient}
 

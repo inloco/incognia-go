@@ -14,7 +14,7 @@ type endpoints struct {
 
 var baseEndpoint string = "https://api.us.incognia.com/api"
 
-func buildEndpoints() endpoints {
+func newEndpoints() endpoints {
 	return endpoints{
 		Token:        baseEndpoint + tokenEndpoint,
 		Signups:      baseEndpoint + signupsEndpoint,
