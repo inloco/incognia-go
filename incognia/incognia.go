@@ -9,7 +9,6 @@ import (
 type Client struct {
 	clientId     string
 	clientSecret string
-	endpoints    endpoints
 	tokenManager *clientCredentialsTokenManager
 	netClient    *http.Client
 }
@@ -28,10 +27,9 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		Timeout: time.Second * 10,
 	}
 
-	endpoints := newEndpoints()
-	tokenManager := newClientCredentialsTokenManager(config.ClientId, config.ClientSecret, endpoints.Token)
+	tokenManager := newClientCredentialsTokenManager(config.ClientId, config.ClientSecret)
 
-	client := &Client{config.ClientId, config.ClientSecret, endpoints, tokenManager, netClient}
+	client := &Client{config.ClientId, config.ClientSecret, tokenManager, netClient}
 
 	return client, nil
 }

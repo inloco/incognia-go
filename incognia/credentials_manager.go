@@ -7,14 +7,13 @@ import (
 )
 
 type clientCredentialsTokenManager struct {
-	clientId      string
-	clientSecret  string
-	tokenEndpoint string
-	netClient     *http.Client
-	token         *accessToken
+	clientId     string
+	clientSecret string
+	netClient    *http.Client
+	token        *accessToken
 }
 
-func newClientCredentialsTokenManager(clientId, clientSecret, tokenEndpoint string) *clientCredentialsTokenManager {
+func newClientCredentialsTokenManager(clientId, clientSecret string) *clientCredentialsTokenManager {
 	netClient := &http.Client{
 		Timeout: time.Second * 10,
 	}
@@ -22,7 +21,6 @@ func newClientCredentialsTokenManager(clientId, clientSecret, tokenEndpoint stri
 	return &clientCredentialsTokenManager{
 		clientId,
 		clientSecret,
-		tokenEndpoint,
 		netClient,
 		nil,
 	}
@@ -37,7 +35,7 @@ func (tokenManager *clientCredentialsTokenManager) getToken() *accessToken {
 }
 
 func (tokenManager *clientCredentialsTokenManager) refreshToken() error {
-	req, _ := http.NewRequest("POST", tokenManager.tokenEndpoint, nil)
+	req, _ := http.NewRequest("POST", tokenEndpoint, nil)
 
 	req.SetBasicAuth(tokenManager.clientId, tokenManager.clientSecret)
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
