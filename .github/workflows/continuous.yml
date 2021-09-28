@@ -1,0 +1,40 @@
+name: Continuous
+on: push
+jobs:
+  test-and-build:
+    name: Test
+    runs-on:
+      - self-hosted
+      - ci
+      - linux
+      - amd64
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Cache go dependencies
+        uses: inloco/actions-cache@HEAD
+        id: cache-dependencies
+        with:
+          path: |
+            /go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.17'
+      - name: Install gcc
+        run: sudo apt update && sudo apt install -y gcc
+      - name: Check code format
+        run: |
+          UNFORMATED=$(gofmt -l ./incognia/)
+          COUNT=$(echo $UNFORMATED | wc -w)
+          if [ $COUNT -eq 0 ]; then
+              echo "Files formatted properly!"
+              exit 0
+          fi
+          echo "The following files are not properly formatted:"
+          echo >&2 $UNFORMATED
+          exit 1
+      - name: Run tests
+        run: make test
