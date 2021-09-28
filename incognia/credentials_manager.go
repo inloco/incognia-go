@@ -27,7 +27,7 @@ func newClientCredentialsTokenManager(clientId, clientSecret string) *clientCred
 }
 
 func (tokenManager *clientCredentialsTokenManager) getToken() *accessToken {
-	if !tokenManager.token.isValid() {
+	if tokenManager.token == nil || !tokenManager.token.isValid() {
 		tokenManager.refreshToken()
 	}
 

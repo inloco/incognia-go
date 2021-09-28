@@ -22,3 +22,19 @@ func (token *accessToken) isValid() bool {
 
 	return true
 }
+
+type Assessment string
+
+const (
+	LowRisk     Assessment = "low_risk"
+	HighRisk    Assessment = "high_risk"
+	UnknownRisk Assessment = "unknown_risk"
+)
+
+type SignupAssessment struct {
+	Id             string                 `json:"id"`
+	DeviceId       string                 `json:"device_id"`
+	RequestId      string                 `json:"request_id"`
+	RiskAssessment Assessment             `json:"risk_assessment"`
+	Evidence       map[string]interface{} `json:"evidence"`
+}
