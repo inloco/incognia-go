@@ -6,4 +6,5 @@ var (
 	tokenEndpoint        = baseEndpoint + "/v1/token"
 	signupsEndpoint      = baseEndpoint + "/v2/onboarding/signups"
 	transactionsEndpoint = baseEndpoint + "/v2/authentication/transactions"
+	feedbackEndpoint     = baseEndpoint + "/v2/feedbacks"
 )
