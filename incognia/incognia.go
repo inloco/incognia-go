@@ -22,6 +22,28 @@ type IncogniaClientConfig struct {
 	ClientSecret string
 }
 
+type Payment struct {
+	InstallationId string
+	AccountId      string
+	ExternalId     string
+	Addresses      []*TransactionAddress
+}
+
+type FeedbackIdentifiers struct {
+	InstallationID string
+	LoginID        string
+	PaymentID      string
+	SignupID       string
+	AccountID      string
+	ExternalID     string
+}
+
+type Address struct {
+	Coordinates       *Coordinates
+	StructuredAddress *StructuredAddress
+	AddressLine       string
+}
+
 func New(config *IncogniaClientConfig) (*Client, error) {
 	if config.ClientID == "" || config.ClientSecret == "" {
 		return nil, errors.New("client id and client secret are required")
@@ -114,6 +136,41 @@ func (client *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *ti
 	}
 
 	return nil
+}
+
+func (c *Client) RegisterPayment(payment *Payment) (*TransactionAssessment, error) {
+	if payment.InstallationId == "" {
+		return nil, errors.New("missing installation id")
+	}
+
+	if payment.AccountId == "" {
+		return nil, errors.New("missing account id")
+	}
+
+	requestBody, err := json.Marshal(postTransactionRequestBody{
+		InstallationId: payment.InstallationId,
+		Type:           paymentType,
+		AccountId:      payment.AccountId,
+		ExternalId:     payment.ExternalId,
+		Addresses:      payment.Addresses,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", transactionsEndpoint, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, err
+	}
+
+	var paymentAssesment TransactionAssessment
+
+	err = c.doRequest(req, &paymentAssesment)
+	if err != nil {
+		return nil, err
+	}
+
+	return &paymentAssesment, nil
 }
 
 func (c *Client) doRequest(request *http.Request, response interface{}) error {

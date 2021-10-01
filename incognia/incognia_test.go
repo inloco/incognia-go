@@ -89,6 +89,86 @@ var (
 		AccountID:      "some-account-id",
 		ExternalID:     "some-external-id",
 	}
+	transactionAssessmentFixture = &TransactionAssessment{
+		Id:             "some-id",
+		DeviceId:       "some-device-id",
+		RiskAssessment: LowRisk,
+		Evidence: map[string]interface{}{
+			"device_model":                 "Moto Z2 Play",
+			"geocode_quality":              "good",
+			"address_quality":              "good",
+			"address_match":                "street",
+			"location_events_near_address": 38.0,
+			"location_events_quantity":     288.0,
+			"location_services": map[string]interface{}{
+				"location_permission_enabled": true,
+				"location_sensors_enabled":    true,
+			},
+			"device_integrity": map[string]interface{}{
+				"probable_root":       false,
+				"emulator":            false,
+				"gps_spoofing":        false,
+				"from_official_store": true,
+			},
+		},
+	}
+	postPaymentRequestBodyFixture = &postTransactionRequestBody{
+		InstallationId: "installation-id",
+		AccountId:      "account-id",
+		ExternalId:     "external-id",
+		Type:           paymentType,
+		Addresses: []*TransactionAddress{
+			{
+				Type: Billing,
+				StructuredAddress: &StructuredAddress{
+					Locale:       "locale",
+					CountryName:  "country-name",
+					CountryCode:  "country-code",
+					State:        "state",
+					City:         "city",
+					Borough:      "borough",
+					Neighborhood: "neighborhood",
+					Street:       "street",
+					Number:       "number",
+					Complements:  "complements",
+					PostalCode:   "postalcode",
+				},
+				AddressLine: "address line",
+				Coordinates: &Coordinates{
+					Lat: -23.561414,
+					Lng: -46.6558819,
+				},
+			},
+		},
+	}
+	paymentFixture = &Payment{
+		InstallationId: "installation-id",
+		AccountId:      "account-id",
+		ExternalId:     "external-id",
+		Addresses: []*TransactionAddress{
+			{
+				Type: Billing,
+				StructuredAddress: &StructuredAddress{
+					Locale:       "locale",
+					CountryName:  "country-name",
+					CountryCode:  "country-code",
+					State:        "state",
+					City:         "city",
+					Borough:      "borough",
+					Neighborhood: "neighborhood",
+					Street:       "street",
+					Number:       "number",
+					Complements:  "complements",
+					PostalCode:   "postalcode",
+				},
+				AddressLine: "address line",
+				Coordinates: &Coordinates{
+					Lat: -23.561414,
+					Lng: -46.6558819,
+				},
+			},
+		},
+	}
 )
 
 type IncogniaTestSuite struct {
@@ -288,6 +368,71 @@ func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
 	}
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
+	defer suite.tokenServer.Close()
+
+	transactionServer := mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(paymentFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentAfterTokenExpiration() {
+	defer suite.tokenServer.Close()
+
+	transactionServer := mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(paymentFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+
+	token, _ := suite.client.tokenManager.getToken()
+	token.ExpiresIn = 0
+
+	response, err = suite.client.RegisterPayment(paymentFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyInstallationId() {
+	response, err := suite.client.RegisterPayment(&Payment{AccountId: "some-account-id"})
+	suite.EqualError(err, "missing installation id")
+	suite.Nil(response)
+}
+
+func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyAccountId() {
+	response, err := suite.client.RegisterPayment(&Payment{InstallationId: "some-installation-id"})
+	suite.EqualError(err, "missing account id")
+	suite.Nil(response)
+}
+
+func (suite *IncogniaTestSuite) TestForbiddenRegisterPayment() {
+	defer suite.tokenServer.Close()
+
+	transactionServer := mockPostTransactionsEndpoint("some-other-token", postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(paymentFixture)
+	suite.Nil(response)
+	suite.EqualError(err, "403 Forbidden")
+}
+
+func (suite *IncogniaTestSuite) TestRegisterPaymentErrors() {
+	defer suite.tokenServer.Close()
+
+	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
+	for _, status := range errors {
+		statusServer := mockStatusServer(status)
+		transactionsEndpoint = statusServer.URL
+
+		response, err := suite.client.RegisterPayment(paymentFixture)
+		suite.Nil(response)
+		suite.Contains(err.Error(), strconv.Itoa(status))
+	}
+}
+
 func TestIncogniaTestSuite(t *testing.T) {
 	suite.Run(t, new(IncogniaTestSuite))
 }
@@ -326,6 +471,32 @@ func mockStatusServer(statusCode int) *httptest.Server {
 	return statusServer
 }
 
+func mockPostTransactionsEndpoint(expectedToken string, expectedBody *postTransactionRequestBody, expectedResponse *TransactionAssessment) *httptest.Server {
+	transactionsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+
+		if !isRequestAuthorized(r, expectedToken) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		var requestBody postTransactionRequestBody
+		json.NewDecoder(r.Body).Decode(&requestBody)
+
+		if reflect.DeepEqual(&requestBody, expectedBody) {
+			res, _ := json.Marshal(expectedResponse)
+			w.Write(res)
+			return
+		}
+
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+
+	transactionsEndpoint = transactionsServer.URL
+
+	return transactionsServer
+}
+
 func mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentRequestBody, expectedResponse *SignupAssessment) *httptest.Server {
 	signupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
@@ -344,7 +515,7 @@ func mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentR
 			return
 		}
 
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
 	}))
 
 	signupsEndpoint = signupsServer.URL

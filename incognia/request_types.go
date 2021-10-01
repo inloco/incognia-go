@@ -19,12 +19,6 @@ type StructuredAddress struct {
 	PostalCode   string `json:"postal_code"`
 }
 
-type Address struct {
-	Coordinates       *Coordinates
-	StructuredAddress *StructuredAddress
-	AddressLine       string
-}
-
 type postAssessmentRequestBody struct {
 	InstallationID    string             `json:"installation_id"`
 	AddressLine       string             `json:"address_line,omitempty"`
@@ -58,15 +52,6 @@ const (
 	MposFraud                     FeedbackType = "mpos_fraud"
 )
 
-type FeedbackIdentifiers struct {
-	InstallationID string
-	LoginID        string
-	PaymentID      string
-	SignupID       string
-	AccountID      string
-	ExternalID     string
-}
-
 type postFeedbackRequestBody struct {
 	Event          FeedbackType `json:"event"`
 	Timestamp      int64        `json:"timestamp"`
@@ -76,4 +61,34 @@ type postFeedbackRequestBody struct {
 	SignupID       string       `json:"signup_id,omitempty"`
 	AccountID      string       `json:"account_id,omitempty"`
 	ExternalID     string       `json:"external_id,omitempty"`
+}
+
+type AddressType string
+
+const (
+	Shipping AddressType = "shipping"
+	Billing  AddressType = "billing"
+	Home     AddressType = "home"
+)
+
+type transactionType string
+
+const (
+	loginType   transactionType = "login"
+	paymentType transactionType = "payment"
+)
+
+type TransactionAddress struct {
+	Type              AddressType        `json:"type"`
+	Coordinates       *Coordinates       `json:"address_coordinates"`
+	StructuredAddress *StructuredAddress `json:"structured_address"`
+	AddressLine       string             `json:"address_line"`
+}
+
+type postTransactionRequestBody struct {
+	ExternalId     string                `json:"external_id,omitempty"`
+	InstallationId string                `json:"installation_id"`
+	Type           transactionType       `json:"type"`
+	AccountId      string                `json:"account_id"`
+	Addresses      []*TransactionAddress `json:"addresses,omitempty"`
 }
