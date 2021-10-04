@@ -37,7 +37,7 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 	return client, nil
 }
 
-func (client *Client) GetOnboardingAssessment(signupId string) (*SignupAssessment, error) {
+func (client *Client) GetSignupAssessment(signupId string) (*SignupAssessment, error) {
 	if signupId == "" {
 		return nil, errors.New("no signupId provided")
 	}
@@ -57,7 +57,7 @@ func (client *Client) GetOnboardingAssessment(signupId string) (*SignupAssessmen
 	return &signupAssessment, nil
 }
 
-func (client *Client) RegisterOnboardingAssessment(installationId string, address *Address) (*SignupAssessment, error) {
+func (client *Client) RegisterSignup(installationId string, address *Address) (*SignupAssessment, error) {
 	if installationId == "" {
 		return nil, errors.New("no installationId provided")
 	}

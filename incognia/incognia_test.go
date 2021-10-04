@@ -70,7 +70,7 @@ var (
 	}
 )
 
-func TestSuccessGetOnboardingAssessment(t *testing.T) {
+func TestSuccessGetSignupAssessment(t *testing.T) {
 	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
 
 	token := "some-token"
@@ -82,12 +82,12 @@ func TestSuccessGetOnboardingAssessment(t *testing.T) {
 	signupServer := mockGetSignupsEndpoint(token, signupId, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.GetOnboardingAssessment(signupId)
+	response, err := client.GetSignupAssessment(signupId)
 	assert.NoError(t, err)
 	assert.Equal(t, signupAssessmentFixture, response)
 }
 
-func TestSuccessGetOnboardingAssessmentAfterTokenExpiration(t *testing.T) {
+func TestSuccessGetSignupAssessmentAfterTokenExpiration(t *testing.T) {
 	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
 
 	token := "some-token"
@@ -99,26 +99,25 @@ func TestSuccessGetOnboardingAssessmentAfterTokenExpiration(t *testing.T) {
 	signupServer := mockGetSignupsEndpoint(token, signupId, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.GetOnboardingAssessment(signupId)
+	response, err := client.GetSignupAssessment(signupId)
 	assert.NoError(t, err)
 	assert.Equal(t, signupAssessmentFixture, response)
 
 	client.tokenManager.getToken().ExpiresIn = 0
 
-	response, err = client.GetOnboardingAssessment(signupId)
+	response, err = client.GetSignupAssessment(signupId)
 	assert.NoError(t, err)
 	assert.Equal(t, signupAssessmentFixture, response)
 }
-func TestGetOnboardingAssessmentEmptySignupId(t *testing.T) {
+func TestGetSignupAssessmentEmptySignupId(t *testing.T) {
 	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
 
-	response, err := client.GetOnboardingAssessment("")
-	assert.Error(t, err)
+	response, err := client.GetSignupAssessment("")
 	assert.EqualError(t, err, "no signupId provided")
 	assert.Nil(t, response)
 }
 
-func TestForbiddenGetOnboardingAssessment(t *testing.T) {
+func TestForbiddenGetSignupAssessment(t *testing.T) {
 	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
 
 	token := "some-token"
@@ -130,12 +129,12 @@ func TestForbiddenGetOnboardingAssessment(t *testing.T) {
 	signupServer := mockGetSignupsEndpoint("some-other-token", signupId, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.GetOnboardingAssessment(signupId)
+	response, err := client.GetSignupAssessment(signupId)
 	assert.Nil(t, response)
 	assert.EqualError(t, err, "403 Forbidden")
 }
 
-func TestGetOnboardingAssessmentErrors(t *testing.T) {
+func TestGetSignupAssessmentErrors(t *testing.T) {
 	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
 
 	token := "some-token"
@@ -148,13 +147,13 @@ func TestGetOnboardingAssessmentErrors(t *testing.T) {
 		statusServer := mockStatusServer(status)
 		signupsEndpoint = statusServer.URL
 
-		response, err := client.GetOnboardingAssessment("any-signup-id")
+		response, err := client.GetSignupAssessment("any-signup-id")
 		assert.Nil(t, response)
 		assert.Contains(t, err.Error(), strconv.Itoa(status))
 	}
 }
 
-func TestSuccessRegisterOnboardingAssessment(t *testing.T) {
+func TestSuccessRegisterSignup(t *testing.T) {
 	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
 
 	token := "some-token"
@@ -165,12 +164,12 @@ func TestSuccessRegisterOnboardingAssessment(t *testing.T) {
 	signupServer := mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.RegisterOnboardingAssessment(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	response, err := client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
 	assert.NoError(t, err)
 	assert.Equal(t, signupAssessmentFixture, response)
 }
 
-func TestSuccessRegisterOnboardingAssessmentAfterTokenExpiration(t *testing.T) {
+func TestSuccessRegisterSignupAfterTokenExpiration(t *testing.T) {
 	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
 
 	token := "some-token"
@@ -181,26 +180,25 @@ func TestSuccessRegisterOnboardingAssessmentAfterTokenExpiration(t *testing.T) {
 	signupServer := mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.RegisterOnboardingAssessment(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	response, err := client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
 	assert.NoError(t, err)
 	assert.Equal(t, signupAssessmentFixture, response)
 
 	client.tokenManager.getToken().ExpiresIn = 0
 
-	response, err = client.RegisterOnboardingAssessment(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	response, err = client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
 	assert.NoError(t, err)
 	assert.Equal(t, signupAssessmentFixture, response)
 }
-func TestRegisterOnboardingAssessmentEmptyInstallationId(t *testing.T) {
+func TestRegisterSignupEmptyInstallationId(t *testing.T) {
 	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
 
-	response, err := client.RegisterOnboardingAssessment("", &Address{})
-	assert.Error(t, err)
+	response, err := client.RegisterSignup("", &Address{})
 	assert.EqualError(t, err, "no installationId provided")
 	assert.Nil(t, response)
 }
 
-func TestForbiddenRegisterOnboardingAssessment(t *testing.T) {
+func TestForbiddenRegisterSignup(t *testing.T) {
 	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
 
 	token := "some-token"
@@ -211,12 +209,12 @@ func TestForbiddenRegisterOnboardingAssessment(t *testing.T) {
 	signupServer := mockPostSignupsEndpoint("some-other-token", postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.RegisterOnboardingAssessment(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	response, err := client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
 	assert.Nil(t, response)
 	assert.EqualError(t, err, "403 Forbidden")
 }
 
-func TestRegisterOnboardingAssessmentErrors(t *testing.T) {
+func TestRegisterSignupErrors(t *testing.T) {
 	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
 
 	token := "some-token"
@@ -229,7 +227,7 @@ func TestRegisterOnboardingAssessmentErrors(t *testing.T) {
 		statusServer := mockStatusServer(status)
 		signupsEndpoint = statusServer.URL
 
-		response, err := client.RegisterOnboardingAssessment("any-signup-id", &Address{})
+		response, err := client.RegisterSignup("any-signup-id", &Address{})
 		assert.Nil(t, response)
 		assert.Contains(t, err.Error(), strconv.Itoa(status))
 	}
