@@ -7,37 +7,41 @@ import (
 )
 
 type clientCredentialsTokenManager struct {
-	clientId     string
+	clientID     string
 	clientSecret string
 	netClient    *http.Client
 	token        *accessToken
 }
 
-func newClientCredentialsTokenManager(clientId, clientSecret string) *clientCredentialsTokenManager {
+func newClientCredentialsTokenManager(clientID, clientSecret string) *clientCredentialsTokenManager {
 	netClient := &http.Client{
 		Timeout: time.Second * 10,
 	}
 
 	return &clientCredentialsTokenManager{
-		clientId,
+		clientID,
 		clientSecret,
 		netClient,
 		nil,
 	}
 }
 
-func (tokenManager *clientCredentialsTokenManager) getToken() *accessToken {
-	if !tokenManager.token.isValid() {
-		tokenManager.refreshToken()
+func (tokenManager *clientCredentialsTokenManager) getToken() (*accessToken, error) {
+	if tokenManager.token == nil || !tokenManager.token.isValid() {
+		err := tokenManager.refreshToken()
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return tokenManager.token
+	return tokenManager.token, nil
 }
 
 func (tokenManager *clientCredentialsTokenManager) refreshToken() error {
 	req, _ := http.NewRequest("POST", tokenEndpoint, nil)
 
-	req.SetBasicAuth(tokenManager.clientId, tokenManager.clientSecret)
+	req.SetBasicAuth(tokenManager.clientID, tokenManager.clientSecret)
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
 
 	res, err := tokenManager.netClient.Do(req)
