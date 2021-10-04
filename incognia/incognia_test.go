@@ -296,8 +296,7 @@ func mockFeedbackEndpoint(expectedToken string, expectedBody *postFeedbackReques
 	feedbackServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
-		tokenType, token := readAuthorizationHeader(r)
-		if token != expectedToken || tokenType != "Bearer" {
+		if !isRequestAuthorized(r, expectedToken) {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
@@ -331,9 +330,8 @@ func mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentR
 	signupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
-		tokenType, token := readAuthorizationHeader(r)
-		if token != expectedToken || tokenType != "Bearer" {
-			w.WriteHeader(403)
+		if !isRequestAuthorized(r, expectedToken) {
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 
@@ -358,10 +356,8 @@ func mockGetSignupsEndpoint(expectedToken, expectedSignupID string, expectedResp
 	getSignupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
-		tokenType, token := readAuthorizationHeader(r)
-
-		if token != expectedToken || tokenType != "Bearer" {
-			w.WriteHeader(403)
+		if !isRequestAuthorized(r, expectedToken) {
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 
@@ -382,6 +378,16 @@ func mockGetSignupsEndpoint(expectedToken, expectedSignupID string, expectedResp
 	signupsEndpoint = getSignupsServer.URL
 
 	return getSignupsServer
+}
+
+func isRequestAuthorized(request *http.Request, expectedToken string) bool {
+	tokenType, token := readAuthorizationHeader(request)
+
+	if token != expectedToken || tokenType != "Bearer" {
+		return false
+	}
+
+	return true
 }
 
 func readAuthorizationHeader(request *http.Request) (string, string) {
