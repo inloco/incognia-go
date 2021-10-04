@@ -91,7 +91,10 @@ func (c *Client) RegisterSignup(installationId string, address *Address) (*Signu
 }
 
 func (c *Client) doRequest(request *http.Request, response interface{}) error {
-	c.authorizeRequest(request)
+	err := c.authorizeRequest(request)
+	if err != nil {
+		return err
+	}
 
 	res, err := c.netClient.Do(request)
 	if err != nil {
@@ -121,7 +124,13 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 	return nil
 }
 
-func (c *Client) authorizeRequest(request *http.Request) {
-	token := c.tokenManager.getToken()
+func (c *Client) authorizeRequest(request *http.Request) error {
+	token, err := c.tokenManager.getToken()
+	if err != nil {
+		return err
+	}
+
 	request.Header.Add("Authorization", token.TokenType+" "+token.AccessToken)
+
+	return nil
 }

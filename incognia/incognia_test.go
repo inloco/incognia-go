@@ -9,12 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
 const (
-	ClientID     string = "client-id"
-	clientSecret string = "client-secret"
+	clientID       string = "client-id"
+	clientSecret   string = "client-secret"
+	token          string = "some-token"
+	tokenExpiresIn string = "500"
 )
 
 var (
@@ -70,167 +72,150 @@ var (
 	}
 )
 
-func TestSuccessGetSignupAssessment(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
+type IncogniaTestSuite struct {
+	suite.Suite
 
-	token := "some-token"
-	tokenExpiresIn := "500"
+	client      *Client
+	token       string
+	tokenServer *httptest.Server
+}
+
+func (suite *IncogniaTestSuite) SetupTest() {
+	client, _ := New(&IncogniaClientConfig{clientID, clientSecret})
+	suite.client = client
+
 	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
-	defer tokenServer.Close()
+	suite.token = token
+	suite.tokenServer = tokenServer
+}
+
+func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
+	defer suite.tokenServer.Close()
 
 	signupId := "signup-id"
 	signupServer := mockGetSignupsEndpoint(token, signupId, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.GetSignupAssessment(signupId)
-	assert.NoError(t, err)
-	assert.Equal(t, signupAssessmentFixture, response)
+	response, err := suite.client.GetSignupAssessment(signupId)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
 }
 
-func TestSuccessGetSignupAssessmentAfterTokenExpiration(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
-
-	token := "some-token"
-	tokenExpiresIn := "500"
-	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
-	defer tokenServer.Close()
+func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessmentAfterTokenExpiration() {
+	defer suite.tokenServer.Close()
 
 	signupId := "signup-id"
 	signupServer := mockGetSignupsEndpoint(token, signupId, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.GetSignupAssessment(signupId)
-	assert.NoError(t, err)
-	assert.Equal(t, signupAssessmentFixture, response)
+	response, err := suite.client.GetSignupAssessment(signupId)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
 
-	client.tokenManager.getToken().ExpiresIn = 0
+	token, _ := suite.client.tokenManager.getToken()
+	token.ExpiresIn = 0
 
-	response, err = client.GetSignupAssessment(signupId)
-	assert.NoError(t, err)
-	assert.Equal(t, signupAssessmentFixture, response)
+	response, err = suite.client.GetSignupAssessment(signupId)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
 }
-func TestGetSignupAssessmentEmptySignupId(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
+func (suite *IncogniaTestSuite) TestGetSignupAssessmentEmptySignupId() {
+	defer suite.tokenServer.Close()
 
-	response, err := client.GetSignupAssessment("")
-	assert.EqualError(t, err, "no signupID provided")
-	assert.Nil(t, response)
+	response, err := suite.client.GetSignupAssessment("")
+	suite.EqualError(err, "no signupID provided")
+	suite.Nil(response)
 }
 
-func TestForbiddenGetSignupAssessment(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
-
-	token := "some-token"
-	tokenExpiresIn := "500"
-	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
-	defer tokenServer.Close()
+func (suite *IncogniaTestSuite) TestForbiddenGetSignupAssessment() {
+	defer suite.tokenServer.Close()
 
 	signupId := "signup-id"
 	signupServer := mockGetSignupsEndpoint("some-other-token", signupId, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.GetSignupAssessment(signupId)
-	assert.Nil(t, response)
-	assert.EqualError(t, err, "403 Forbidden")
+	response, err := suite.client.GetSignupAssessment(signupId)
+	suite.Nil(response)
+	suite.EqualError(err, "403 Forbidden")
 }
 
-func TestGetSignupAssessmentErrors(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
-
-	token := "some-token"
-	tokenExpiresIn := "500"
-	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
-	defer tokenServer.Close()
+func (suite *IncogniaTestSuite) TestGetSignupAssessmentErrors() {
+	defer suite.tokenServer.Close()
 
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
 		statusServer := mockStatusServer(status)
 		signupsEndpoint = statusServer.URL
 
-		response, err := client.GetSignupAssessment("any-signup-id")
-		assert.Nil(t, response)
-		assert.Contains(t, err.Error(), strconv.Itoa(status))
+		response, err := suite.client.GetSignupAssessment("any-signup-id")
+		suite.Nil(response)
+		suite.Contains(err.Error(), strconv.Itoa(status))
 	}
 }
 
-func TestSuccessRegisterSignup(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
-
-	token := "some-token"
-	tokenExpiresIn := "500"
-	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
-	defer tokenServer.Close()
+func (suite *IncogniaTestSuite) TestSuccessRegisterSignup() {
+	defer suite.tokenServer.Close()
 
 	signupServer := mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
-	assert.NoError(t, err)
-	assert.Equal(t, signupAssessmentFixture, response)
+	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
 }
 
-func TestSuccessRegisterSignupAfterTokenExpiration(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
-
-	token := "some-token"
-	tokenExpiresIn := "500"
-	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
-	defer tokenServer.Close()
+func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() {
+	defer suite.tokenServer.Close()
 
 	signupServer := mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
-	assert.NoError(t, err)
-	assert.Equal(t, signupAssessmentFixture, response)
+	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
 
-	client.tokenManager.getToken().ExpiresIn = 0
+	token, _ := suite.client.tokenManager.getToken()
+	token.ExpiresIn = 0
 
-	response, err = client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
-	assert.NoError(t, err)
-	assert.Equal(t, signupAssessmentFixture, response)
+	response, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
 }
-func TestRegisterSignupEmptyInstallationId(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
+func (suite *IncogniaTestSuite) TestRegisterSignupEmptyInstallationId() {
+	defer suite.tokenServer.Close()
 
-	response, err := client.RegisterSignup("", &Address{})
-	assert.EqualError(t, err, "no installationId provided")
-	assert.Nil(t, response)
+	response, err := suite.client.RegisterSignup("", &Address{})
+	suite.EqualError(err, "no installationId provided")
+	suite.Nil(response)
 }
 
-func TestForbiddenRegisterSignup(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
-
-	token := "some-token"
-	tokenExpiresIn := "500"
-	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
-	defer tokenServer.Close()
+func (suite *IncogniaTestSuite) TestForbiddenRegisterSignup() {
+	defer suite.tokenServer.Close()
 
 	signupServer := mockPostSignupsEndpoint("some-other-token", postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
-	assert.Nil(t, response)
-	assert.EqualError(t, err, "403 Forbidden")
+	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	suite.Nil(response)
+	suite.EqualError(err, "403 Forbidden")
 }
 
-func TestRegisterSignupErrors(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
-
-	token := "some-token"
-	tokenExpiresIn := "500"
-	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
-	defer tokenServer.Close()
+func (suite *IncogniaTestSuite) TestRegisterSignupErrors() {
+	defer suite.tokenServer.Close()
 
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
 		statusServer := mockStatusServer(status)
 		signupsEndpoint = statusServer.URL
 
-		response, err := client.RegisterSignup("any-signup-id", &Address{})
-		assert.Nil(t, response)
-		assert.Contains(t, err.Error(), strconv.Itoa(status))
+		response, err := suite.client.RegisterSignup("any-signup-id", &Address{})
+		suite.Nil(response)
+		suite.Contains(err.Error(), strconv.Itoa(status))
 	}
+}
+
+func TestIncogniaTestSuite(t *testing.T) {
+	suite.Run(t, new(IncogniaTestSuite))
 }
 
 func mockStatusServer(statusCode int) *httptest.Server {
@@ -319,7 +304,7 @@ func mockTokenEndpoint(expectedToken string, expiresIn string) *httptest.Server 
 
 		username, password, ok := r.BasicAuth()
 
-		if !ok || username != ClientID || password != clientSecret {
+		if !ok || username != clientID || password != clientSecret {
 			w.WriteHeader(401)
 			return
 		}
