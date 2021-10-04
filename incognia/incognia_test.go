@@ -111,11 +111,11 @@ func (suite *IncogniaTestSuite) SetupTest() {
 func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
 	defer suite.tokenServer.Close()
 
-	signupId := "signup-id"
-	signupServer := mockGetSignupsEndpoint(token, signupId, signupAssessmentFixture)
+	signupID := "signup-id"
+	signupServer := mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := suite.client.GetSignupAssessment(signupId)
+	response, err := suite.client.GetSignupAssessment(signupID)
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 }
@@ -123,18 +123,18 @@ func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
 func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessmentAfterTokenExpiration() {
 	defer suite.tokenServer.Close()
 
-	signupId := "signup-id"
-	signupServer := mockGetSignupsEndpoint(token, signupId, signupAssessmentFixture)
+	signupID := "signup-id"
+	signupServer := mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := suite.client.GetSignupAssessment(signupId)
+	response, err := suite.client.GetSignupAssessment(signupID)
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 
 	token, _ := suite.client.tokenManager.getToken()
 	token.ExpiresIn = 0
 
-	response, err = suite.client.GetSignupAssessment(signupId)
+	response, err = suite.client.GetSignupAssessment(signupID)
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 }
@@ -149,11 +149,11 @@ func (suite *IncogniaTestSuite) TestGetSignupAssessmentEmptySignupId() {
 func (suite *IncogniaTestSuite) TestForbiddenGetSignupAssessment() {
 	defer suite.tokenServer.Close()
 
-	signupId := "signup-id"
-	signupServer := mockGetSignupsEndpoint("some-other-token", signupId, signupAssessmentFixture)
+	signupID := "signup-id"
+	signupServer := mockGetSignupsEndpoint("some-other-token", signupID, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := suite.client.GetSignupAssessment(signupId)
+	response, err := suite.client.GetSignupAssessment(signupID)
 	suite.Nil(response)
 	suite.EqualError(err, "403 Forbidden")
 }
