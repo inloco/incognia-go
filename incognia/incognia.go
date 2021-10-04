@@ -37,12 +37,12 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 	return client, nil
 }
 
-func (client *Client) GetSignupAssessment(signupId string) (*SignupAssessment, error) {
-	if signupId == "" {
-		return nil, errors.New("no signupId provided")
+func (client *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error) {
+	if signupID == "" {
+		return nil, errors.New("no signupID provided")
 	}
 
-	req, err := http.NewRequest("GET", signupsEndpoint+"/"+signupId, nil)
+	req, err := http.NewRequest("GET", signupsEndpoint+"/"+signupID, nil)
 	if err != nil {
 		return nil, err
 	}
