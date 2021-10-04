@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -42,7 +43,7 @@ func (c *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error)
 		return nil, errors.New("no signupID provided")
 	}
 
-	req, err := http.NewRequest("GET", signupsEndpoint+"/"+signupID, nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", signupsEndpoint, signupID), nil)
 	if err != nil {
 		return nil, err
 	}
