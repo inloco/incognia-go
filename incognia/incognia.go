@@ -37,7 +37,7 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 	return client, nil
 }
 
-func (client *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error) {
+func (c *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error) {
 	if signupID == "" {
 		return nil, errors.New("no signupID provided")
 	}
@@ -49,7 +49,7 @@ func (client *Client) GetSignupAssessment(signupID string) (*SignupAssessment, e
 
 	var signupAssessment SignupAssessment
 
-	err = client.doRequest(req, &signupAssessment)
+	err = c.doRequest(req, &signupAssessment)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (client *Client) GetSignupAssessment(signupID string) (*SignupAssessment, e
 	return &signupAssessment, nil
 }
 
-func (client *Client) RegisterSignup(installationId string, address *Address) (*SignupAssessment, error) {
+func (c *Client) RegisterSignup(installationId string, address *Address) (*SignupAssessment, error) {
 	if installationId == "" {
 		return nil, errors.New("no installationId provided")
 	}
@@ -81,7 +81,7 @@ func (client *Client) RegisterSignup(installationId string, address *Address) (*
 
 	req.Header.Add("Content-Type", "application/json")
 
-	err = client.doRequest(req, &signupAssessment)
+	err = c.doRequest(req, &signupAssessment)
 	if err != nil {
 		return nil, err
 	}
@@ -89,10 +89,10 @@ func (client *Client) RegisterSignup(installationId string, address *Address) (*
 	return &signupAssessment, nil
 }
 
-func (client *Client) doRequest(request *http.Request, response interface{}) error {
-	client.authorizeRequest(request)
+func (c *Client) doRequest(request *http.Request, response interface{}) error {
+	c.authorizeRequest(request)
 
-	res, err := client.netClient.Do(request)
+	res, err := c.netClient.Do(request)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (client *Client) doRequest(request *http.Request, response interface{}) err
 	return nil
 }
 
-func (client *Client) authorizeRequest(request *http.Request) {
-	token := client.tokenManager.getToken()
+func (c *Client) authorizeRequest(request *http.Request) {
+	token := c.tokenManager.getToken()
 	request.Header.Add("Authorization", token.TokenType+" "+token.AccessToken)
 }
