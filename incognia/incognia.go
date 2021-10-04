@@ -58,13 +58,13 @@ func (c *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error)
 	return &signupAssessment, nil
 }
 
-func (c *Client) RegisterSignup(installationId string, address *Address) (*SignupAssessment, error) {
-	if installationId == "" {
+func (c *Client) RegisterSignup(installationID string, address *Address) (*SignupAssessment, error) {
+	if installationID == "" {
 		return nil, errors.New("no installationId provided")
 	}
 
 	requestBody, err := json.Marshal(postAssessmentRequestBody{
-		InstallationId:    installationId,
+		InstallationID:    installationID,
 		AddressLine:       address.AddressLine,
 		StructuredAddress: address.StructuredAddress,
 		Coordinates:       address.Coordinates,

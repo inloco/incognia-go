@@ -21,9 +21,9 @@ const (
 
 var (
 	signupAssessmentFixture = &SignupAssessment{
-		Id:             "some-id",
-		DeviceId:       "some-device-id",
-		RequestId:      "some-request-id",
+		ID:             "some-id",
+		DeviceID:       "some-device-id",
+		RequestID:      "some-request-id",
 		RiskAssessment: LowRisk,
 		Evidence: map[string]interface{}{
 			"device_model":                 "Moto Z2 Play",
@@ -45,7 +45,7 @@ var (
 		},
 	}
 	postSignupRequestBodyFixture = &postAssessmentRequestBody{
-		InstallationId: "installation-id",
+		InstallationID: "installation-id",
 		AddressLine:    "address line",
 		StructuredAddress: &StructuredAddress{
 			Locale:       "locale",
@@ -159,7 +159,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignup() {
 	signupServer := mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 }
@@ -170,14 +170,14 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() 
 	signupServer := mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 
 	token, _ := suite.client.tokenManager.getToken()
 	token.ExpiresIn = 0
 
-	response, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	response, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 }
@@ -195,7 +195,7 @@ func (suite *IncogniaTestSuite) TestForbiddenRegisterSignup() {
 	signupServer := mockPostSignupsEndpoint("some-other-token", postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationId, addressFixture)
+	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
 	suite.Nil(response)
 	suite.EqualError(err, "403 Forbidden")
 }
@@ -254,7 +254,7 @@ func mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentR
 	return signupsServer
 }
 
-func mockGetSignupsEndpoint(expectedToken, expectedSignupId string, expectedResponse *SignupAssessment) *httptest.Server {
+func mockGetSignupsEndpoint(expectedToken, expectedSignupID string, expectedResponse *SignupAssessment) *httptest.Server {
 	getSignupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
@@ -268,9 +268,9 @@ func mockGetSignupsEndpoint(expectedToken, expectedSignupId string, expectedResp
 		defer r.Body.Close()
 
 		splitUrl := strings.Split(r.URL.RequestURI(), "/")
-		requestSignupId := splitUrl[len(splitUrl)-1]
+		requestSignupID := splitUrl[len(splitUrl)-1]
 
-		if requestSignupId == expectedSignupId {
+		if requestSignupID == expectedSignupID {
 			res, _ := json.Marshal(expectedResponse)
 			w.Write(res)
 			return

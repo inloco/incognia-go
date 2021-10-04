@@ -32,9 +32,9 @@ const (
 )
 
 type SignupAssessment struct {
-	Id             string                 `json:"id"`
-	DeviceId       string                 `json:"device_id"`
-	RequestId      string                 `json:"request_id"`
+	ID             string                 `json:"id"`
+	DeviceID       string                 `json:"device_id"`
+	RequestID      string                 `json:"request_id"`
 	RiskAssessment Assessment             `json:"risk_assessment"`
 	Evidence       map[string]interface{} `json:"evidence"`
 }

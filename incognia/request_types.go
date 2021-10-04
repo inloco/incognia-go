@@ -26,7 +26,7 @@ type Address struct {
 }
 
 type postAssessmentRequestBody struct {
-	InstallationId    string             `json:"installation_id"`
+	InstallationID    string             `json:"installation_id"`
 	AddressLine       string             `json:"address_line,omitempty"`
 	StructuredAddress *StructuredAddress `json:"structured_address,omitempty"`
 	Coordinates       *Coordinates       `json:"address_coordinates,omitempty"`
