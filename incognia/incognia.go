@@ -92,12 +92,12 @@ func (client *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *ti
 	requestBody, err := json.Marshal(postFeedbackRequestBody{
 		Event:          feedbackEvent,
 		Timestamp:      timestamp.UnixMilli(),
-		InstallationId: feedbackIdentifiers.InstallationId,
-		LoginId:        feedbackIdentifiers.LoginId,
-		PaymentId:      feedbackIdentifiers.PaymentId,
-		SignupId:       feedbackIdentifiers.SignupId,
-		AccountId:      feedbackIdentifiers.AccountId,
-		ExternalId:     feedbackIdentifiers.ExternalId,
+		InstallationID: feedbackIdentifiers.InstallationID,
+		LoginID:        feedbackIdentifiers.LoginID,
+		PaymentID:      feedbackIdentifiers.PaymentID,
+		SignupID:       feedbackIdentifiers.SignupID,
+		AccountID:      feedbackIdentifiers.AccountID,
+		ExternalID:     feedbackIdentifiers.ExternalID,
 	})
 	if err != nil {
 		return err

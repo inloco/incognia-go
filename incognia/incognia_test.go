@@ -74,20 +74,20 @@ var (
 	postFeedbackRequestBodyFixture = &postFeedbackRequestBody{
 		Event:          SignupAccepted,
 		Timestamp:      time.Now().UnixMilli(),
-		InstallationId: "some-installation-id",
-		LoginId:        "some-login-id",
-		PaymentId:      "some-payment-id",
-		SignupId:       "some-signup-id",
-		AccountId:      "some-account-id",
-		ExternalId:     "some-external-id",
+		InstallationID: "some-installation-id",
+		LoginID:        "some-login-id",
+		PaymentID:      "some-payment-id",
+		SignupID:       "some-signup-id",
+		AccountID:      "some-account-id",
+		ExternalID:     "some-external-id",
 	}
 	feedbackIdentifiersFixture = &FeedbackIdentifiers{
-		InstallationId: "some-installation-id",
-		LoginId:        "some-login-id",
-		PaymentId:      "some-payment-id",
-		SignupId:       "some-signup-id",
-		AccountId:      "some-account-id",
-		ExternalId:     "some-external-id",
+		InstallationID: "some-installation-id",
+		LoginID:        "some-login-id",
+		PaymentID:      "some-payment-id",
+		SignupID:       "some-signup-id",
+		AccountID:      "some-account-id",
+		ExternalID:     "some-external-id",
 	}
 )
 

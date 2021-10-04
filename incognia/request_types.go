@@ -58,21 +58,21 @@ const (
 )
 
 type FeedbackIdentifiers struct {
-	InstallationId string
-	LoginId        string
-	PaymentId      string
-	SignupId       string
-	AccountId      string
-	ExternalId     string
+	InstallationID string
+	LoginID        string
+	PaymentID      string
+	SignupID       string
+	AccountID      string
+	ExternalID     string
 }
 
 type postFeedbackRequestBody struct {
 	Event          FeedbackType `json:"event"`
 	Timestamp      int64        `json:"timestamp"`
-	InstallationId string       `json:"installation_id,omitempty"`
-	LoginId        string       `json:"login_id,omitempty"`
-	PaymentId      string       `json:"payment_id,omitempty"`
-	SignupId       string       `json:"signup_id,omitempty"`
-	AccountId      string       `json:"account_id,omitempty"`
-	ExternalId     string       `json:"external_id,omitempty"`
+	InstallationID string       `json:"installation_id,omitempty"`
+	LoginID        string       `json:"login_id,omitempty"`
+	PaymentID      string       `json:"payment_id,omitempty"`
+	SignupID       string       `json:"signup_id,omitempty"`
+	AccountID      string       `json:"account_id,omitempty"`
+	ExternalID     string       `json:"external_id,omitempty"`
 }
