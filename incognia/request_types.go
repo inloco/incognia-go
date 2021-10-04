@@ -86,9 +86,9 @@ type TransactionAddress struct {
 }
 
 type postTransactionRequestBody struct {
-	ExternalId     string                `json:"external_id,omitempty"`
-	InstallationId string                `json:"installation_id"`
+	ExternalID     string                `json:"external_id,omitempty"`
+	InstallationID string                `json:"installation_id"`
 	Type           transactionType       `json:"type"`
-	AccountId      string                `json:"account_id"`
+	AccountID      string                `json:"account_id"`
 	Addresses      []*TransactionAddress `json:"addresses,omitempty"`
 }

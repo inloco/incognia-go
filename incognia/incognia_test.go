@@ -91,7 +91,7 @@ var (
 	}
 	transactionAssessmentFixture = &TransactionAssessment{
 		Id:             "some-id",
-		DeviceId:       "some-device-id",
+		DeviceID:       "some-device-id",
 		RiskAssessment: LowRisk,
 		Evidence: map[string]interface{}{
 			"device_model":                 "Moto Z2 Play",
@@ -113,9 +113,9 @@ var (
 		},
 	}
 	postPaymentRequestBodyFixture = &postTransactionRequestBody{
-		InstallationId: "installation-id",
-		AccountId:      "account-id",
-		ExternalId:     "external-id",
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
 		Type:           paymentType,
 		Addresses: []*TransactionAddress{
 			{
@@ -142,9 +142,9 @@ var (
 		},
 	}
 	paymentFixture = &Payment{
-		InstallationId: "installation-id",
-		AccountId:      "account-id",
-		ExternalId:     "external-id",
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
 		Addresses: []*TransactionAddress{
 			{
 				Type: Billing,
@@ -397,13 +397,13 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentAfterTokenExpiration()
 	suite.Equal(transactionAssessmentFixture, response)
 }
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyInstallationId() {
-	response, err := suite.client.RegisterPayment(&Payment{AccountId: "some-account-id"})
+	response, err := suite.client.RegisterPayment(&Payment{AccountID: "some-account-id"})
 	suite.EqualError(err, "missing installation id")
 	suite.Nil(response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyAccountId() {
-	response, err := suite.client.RegisterPayment(&Payment{InstallationId: "some-installation-id"})
+	response, err := suite.client.RegisterPayment(&Payment{InstallationID: "some-installation-id"})
 	suite.EqualError(err, "missing account id")
 	suite.Nil(response)
 }

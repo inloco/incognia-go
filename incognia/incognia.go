@@ -23,9 +23,9 @@ type IncogniaClientConfig struct {
 }
 
 type Payment struct {
-	InstallationId string
-	AccountId      string
-	ExternalId     string
+	InstallationID string
+	AccountID      string
+	ExternalID     string
 	Addresses      []*TransactionAddress
 }
 
@@ -139,19 +139,19 @@ func (client *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *ti
 }
 
 func (c *Client) RegisterPayment(payment *Payment) (*TransactionAssessment, error) {
-	if payment.InstallationId == "" {
+	if payment.InstallationID == "" {
 		return nil, errors.New("missing installation id")
 	}
 
-	if payment.AccountId == "" {
+	if payment.AccountID == "" {
 		return nil, errors.New("missing account id")
 	}
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{
-		InstallationId: payment.InstallationId,
+		InstallationID: payment.InstallationID,
 		Type:           paymentType,
-		AccountId:      payment.AccountId,
-		ExternalId:     payment.ExternalId,
+		AccountID:      payment.AccountID,
+		ExternalID:     payment.ExternalID,
 		Addresses:      payment.Addresses,
 	})
 	if err != nil {
