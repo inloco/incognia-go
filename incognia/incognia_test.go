@@ -383,11 +383,7 @@ func mockGetSignupsEndpoint(expectedToken, expectedSignupID string, expectedResp
 func isRequestAuthorized(request *http.Request, expectedToken string) bool {
 	tokenType, token := readAuthorizationHeader(request)
 
-	if token != expectedToken || tokenType != "Bearer" {
-		return false
-	}
-
-	return true
+	return token == expectedToken && tokenType == "Bearer"
 }
 
 func readAuthorizationHeader(request *http.Request) (string, string) {
