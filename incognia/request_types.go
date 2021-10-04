@@ -41,6 +41,7 @@ const (
 	PaymentDeclinedByAcquirer     FeedbackType = "payment_declined_by_acquirer"
 	PaymentDeclinedByBusiness     FeedbackType = "payment_declined_by_business"
 	PaymentDeclinedByManualReview FeedbackType = "payment_declined_by_manual_review"
+	PaymentAcceptedByThirdParty   FeedbackType = "payment_accepted_by_third_party"
 	LoginAccepted                 FeedbackType = "login_accepted"
 	LoginDeclined                 FeedbackType = "login_declined"
 	SignupAccepted                FeedbackType = "signup_accepted"

@@ -38,6 +38,3 @@ type SignupAssessment struct {
 	RiskAssessment Assessment             `json:"risk_assessment"`
 	Evidence       map[string]interface{} `json:"evidence"`
 }
-
-type feedbackResponse struct {
-}
