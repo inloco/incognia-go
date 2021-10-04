@@ -11,19 +11,19 @@ import (
 )
 
 type Client struct {
-	clientId     string
+	clientID     string
 	clientSecret string
 	tokenManager *clientCredentialsTokenManager
 	netClient    *http.Client
 }
 
 type IncogniaClientConfig struct {
-	ClientId     string
+	ClientID     string
 	ClientSecret string
 }
 
 func New(config *IncogniaClientConfig) (*Client, error) {
-	if config.ClientId == "" || config.ClientSecret == "" {
+	if config.ClientID == "" || config.ClientSecret == "" {
 		return nil, errors.New("client id and client secret are required")
 	}
 
@@ -31,9 +31,9 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		Timeout: time.Second * 10,
 	}
 
-	tokenManager := newClientCredentialsTokenManager(config.ClientId, config.ClientSecret)
+	tokenManager := newClientCredentialsTokenManager(config.ClientID, config.ClientSecret)
 
-	client := &Client{config.ClientId, config.ClientSecret, tokenManager, netClient}
+	client := &Client{config.ClientID, config.ClientSecret, tokenManager, netClient}
 
 	return client, nil
 }

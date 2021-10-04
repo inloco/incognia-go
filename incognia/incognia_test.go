@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	clientId     string = "client-id"
+	ClientID     string = "client-id"
 	clientSecret string = "client-secret"
 )
 
@@ -71,46 +71,46 @@ var (
 )
 
 func TestSuccessGetSignupAssessment(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
+	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
 
 	token := "some-token"
 	tokenExpiresIn := "500"
 	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
 	defer tokenServer.Close()
 
-	signupID := "signup-id"
-	signupServer := mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
+	signupId := "signup-id"
+	signupServer := mockGetSignupsEndpoint(token, signupId, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.GetSignupAssessment(signupID)
+	response, err := client.GetSignupAssessment(signupId)
 	assert.NoError(t, err)
 	assert.Equal(t, signupAssessmentFixture, response)
 }
 
 func TestSuccessGetSignupAssessmentAfterTokenExpiration(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
+	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
 
 	token := "some-token"
 	tokenExpiresIn := "500"
 	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
 	defer tokenServer.Close()
 
-	signupID := "signup-id"
-	signupServer := mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
+	signupId := "signup-id"
+	signupServer := mockGetSignupsEndpoint(token, signupId, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.GetSignupAssessment(signupID)
+	response, err := client.GetSignupAssessment(signupId)
 	assert.NoError(t, err)
 	assert.Equal(t, signupAssessmentFixture, response)
 
 	client.tokenManager.getToken().ExpiresIn = 0
 
-	response, err = client.GetSignupAssessment(signupID)
+	response, err = client.GetSignupAssessment(signupId)
 	assert.NoError(t, err)
 	assert.Equal(t, signupAssessmentFixture, response)
 }
-func TestGetSignupAssessmentEmptysignupID(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
+func TestGetSignupAssessmentEmptySignupId(t *testing.T) {
+	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
 
 	response, err := client.GetSignupAssessment("")
 	assert.EqualError(t, err, "no signupID provided")
@@ -118,24 +118,24 @@ func TestGetSignupAssessmentEmptysignupID(t *testing.T) {
 }
 
 func TestForbiddenGetSignupAssessment(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
+	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
 
 	token := "some-token"
 	tokenExpiresIn := "500"
 	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
 	defer tokenServer.Close()
 
-	signupID := "signup-id"
-	signupServer := mockGetSignupsEndpoint("some-other-token", signupID, signupAssessmentFixture)
+	signupId := "signup-id"
+	signupServer := mockGetSignupsEndpoint("some-other-token", signupId, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := client.GetSignupAssessment(signupID)
+	response, err := client.GetSignupAssessment(signupId)
 	assert.Nil(t, response)
 	assert.EqualError(t, err, "403 Forbidden")
 }
 
 func TestGetSignupAssessmentErrors(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
+	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
 
 	token := "some-token"
 	tokenExpiresIn := "500"
@@ -154,7 +154,7 @@ func TestGetSignupAssessmentErrors(t *testing.T) {
 }
 
 func TestSuccessRegisterSignup(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
+	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
 
 	token := "some-token"
 	tokenExpiresIn := "500"
@@ -170,7 +170,7 @@ func TestSuccessRegisterSignup(t *testing.T) {
 }
 
 func TestSuccessRegisterSignupAfterTokenExpiration(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
+	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
 
 	token := "some-token"
 	tokenExpiresIn := "500"
@@ -191,7 +191,7 @@ func TestSuccessRegisterSignupAfterTokenExpiration(t *testing.T) {
 	assert.Equal(t, signupAssessmentFixture, response)
 }
 func TestRegisterSignupEmptyInstallationId(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
+	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
 
 	response, err := client.RegisterSignup("", &Address{})
 	assert.EqualError(t, err, "no installationId provided")
@@ -199,7 +199,7 @@ func TestRegisterSignupEmptyInstallationId(t *testing.T) {
 }
 
 func TestForbiddenRegisterSignup(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
+	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
 
 	token := "some-token"
 	tokenExpiresIn := "500"
@@ -215,7 +215,7 @@ func TestForbiddenRegisterSignup(t *testing.T) {
 }
 
 func TestRegisterSignupErrors(t *testing.T) {
-	client, _ := New(&IncogniaClientConfig{clientId, clientSecret})
+	client, _ := New(&IncogniaClientConfig{ClientID, clientSecret})
 
 	token := "some-token"
 	tokenExpiresIn := "500"
@@ -269,7 +269,7 @@ func mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentR
 	return signupsServer
 }
 
-func mockGetSignupsEndpoint(expectedToken, expectedsignupID string, expectedResponse *SignupAssessment) *httptest.Server {
+func mockGetSignupsEndpoint(expectedToken, expectedSignupId string, expectedResponse *SignupAssessment) *httptest.Server {
 	getSignupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
@@ -283,9 +283,9 @@ func mockGetSignupsEndpoint(expectedToken, expectedsignupID string, expectedResp
 		defer r.Body.Close()
 
 		splitUrl := strings.Split(r.URL.RequestURI(), "/")
-		requestsignupID := splitUrl[len(splitUrl)-1]
+		requestSignupId := splitUrl[len(splitUrl)-1]
 
-		if requestsignupID == expectedsignupID {
+		if requestSignupId == expectedSignupId {
 			res, _ := json.Marshal(expectedResponse)
 			w.Write(res)
 			return
@@ -319,7 +319,7 @@ func mockTokenEndpoint(expectedToken string, expiresIn string) *httptest.Server 
 
 		username, password, ok := r.BasicAuth()
 
-		if !ok || username != clientId || password != clientSecret {
+		if !ok || username != ClientID || password != clientSecret {
 			w.WriteHeader(401)
 			return
 		}
