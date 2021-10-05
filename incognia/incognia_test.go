@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -70,6 +71,24 @@ var (
 		StructuredAddress: postSignupRequestBodyFixture.StructuredAddress,
 		AddressLine:       postSignupRequestBodyFixture.AddressLine,
 	}
+	postFeedbackRequestBodyFixture = &postFeedbackRequestBody{
+		Event:          SignupAccepted,
+		Timestamp:      time.Now().UnixMilli(),
+		InstallationID: "some-installation-id",
+		LoginID:        "some-login-id",
+		PaymentID:      "some-payment-id",
+		SignupID:       "some-signup-id",
+		AccountID:      "some-account-id",
+		ExternalID:     "some-external-id",
+	}
+	feedbackIdentifiersFixture = &FeedbackIdentifiers{
+		InstallationID: "some-installation-id",
+		LoginID:        "some-login-id",
+		PaymentID:      "some-payment-id",
+		SignupID:       "some-signup-id",
+		AccountID:      "some-account-id",
+		ExternalID:     "some-external-id",
+	}
 )
 
 type IncogniaTestSuite struct {
@@ -92,11 +111,11 @@ func (suite *IncogniaTestSuite) SetupTest() {
 func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
 	defer suite.tokenServer.Close()
 
-	signupId := "signup-id"
-	signupServer := mockGetSignupsEndpoint(token, signupId, signupAssessmentFixture)
+	signupID := "signup-id"
+	signupServer := mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := suite.client.GetSignupAssessment(signupId)
+	response, err := suite.client.GetSignupAssessment(signupID)
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 }
@@ -104,18 +123,18 @@ func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
 func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessmentAfterTokenExpiration() {
 	defer suite.tokenServer.Close()
 
-	signupId := "signup-id"
-	signupServer := mockGetSignupsEndpoint(token, signupId, signupAssessmentFixture)
+	signupID := "signup-id"
+	signupServer := mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := suite.client.GetSignupAssessment(signupId)
+	response, err := suite.client.GetSignupAssessment(signupID)
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 
 	token, _ := suite.client.tokenManager.getToken()
 	token.ExpiresIn = 0
 
-	response, err = suite.client.GetSignupAssessment(signupId)
+	response, err = suite.client.GetSignupAssessment(signupID)
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 }
@@ -130,11 +149,11 @@ func (suite *IncogniaTestSuite) TestGetSignupAssessmentEmptySignupId() {
 func (suite *IncogniaTestSuite) TestForbiddenGetSignupAssessment() {
 	defer suite.tokenServer.Close()
 
-	signupId := "signup-id"
-	signupServer := mockGetSignupsEndpoint("some-other-token", signupId, signupAssessmentFixture)
+	signupID := "signup-id"
+	signupServer := mockGetSignupsEndpoint("some-other-token", signupID, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := suite.client.GetSignupAssessment(signupId)
+	response, err := suite.client.GetSignupAssessment(signupID)
 	suite.Nil(response)
 	suite.EqualError(err, "403 Forbidden")
 }
@@ -214,8 +233,88 @@ func (suite *IncogniaTestSuite) TestRegisterSignupErrors() {
 	}
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterFeedback() {
+	defer suite.tokenServer.Close()
+
+	feedbackServer := mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
+	defer feedbackServer.Close()
+
+	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	suite.NoError(err)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackAfterTokenExpiration() {
+	defer suite.tokenServer.Close()
+
+	feedbackServer := mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
+	defer feedbackServer.Close()
+
+	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
+
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	suite.NoError(err)
+
+	token, _ := suite.client.tokenManager.getToken()
+	token.ExpiresIn = 0
+
+	err = suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	suite.NoError(err)
+}
+
+func (suite *IncogniaTestSuite) TestForbiddenRegisterFeedback() {
+	defer suite.tokenServer.Close()
+
+	feedbackServer := mockFeedbackEndpoint("some-other-token", postFeedbackRequestBodyFixture)
+	defer feedbackServer.Close()
+
+	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	suite.EqualError(err, "403 Forbidden")
+}
+
+func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
+	defer suite.tokenServer.Close()
+
+	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
+
+	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
+	for _, status := range errors {
+		statusServer := mockStatusServer(status)
+		feedbackEndpoint = statusServer.URL
+
+		err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+		suite.Contains(err.Error(), strconv.Itoa(status))
+	}
+}
+
 func TestIncogniaTestSuite(t *testing.T) {
 	suite.Run(t, new(IncogniaTestSuite))
+}
+
+func mockFeedbackEndpoint(expectedToken string, expectedBody *postFeedbackRequestBody) *httptest.Server {
+	feedbackServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+
+		if !isRequestAuthorized(r, expectedToken) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		var requestBody postFeedbackRequestBody
+		json.NewDecoder(r.Body).Decode(&requestBody)
+
+		if reflect.DeepEqual(&requestBody, expectedBody) {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+
+	feedbackEndpoint = feedbackServer.URL
+
+	return feedbackServer
 }
 
 func mockStatusServer(statusCode int) *httptest.Server {
@@ -231,9 +330,8 @@ func mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentR
 	signupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
-		tokenType, token := readAuthorizationHeader(r)
-		if token != expectedToken || tokenType != "Bearer" {
-			w.WriteHeader(403)
+		if !isRequestAuthorized(r, expectedToken) {
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 
@@ -258,10 +356,8 @@ func mockGetSignupsEndpoint(expectedToken, expectedSignupID string, expectedResp
 	getSignupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
-		tokenType, token := readAuthorizationHeader(r)
-
-		if token != expectedToken || tokenType != "Bearer" {
-			w.WriteHeader(403)
+		if !isRequestAuthorized(r, expectedToken) {
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 
@@ -282,6 +378,12 @@ func mockGetSignupsEndpoint(expectedToken, expectedSignupID string, expectedResp
 	signupsEndpoint = getSignupsServer.URL
 
 	return getSignupsServer
+}
+
+func isRequestAuthorized(request *http.Request, expectedToken string) bool {
+	tokenType, token := readAuthorizationHeader(request)
+
+	return token == expectedToken && tokenType == "Bearer"
 }
 
 func readAuthorizationHeader(request *http.Request) (string, string) {

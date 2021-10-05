@@ -80,8 +80,6 @@ func (c *Client) RegisterSignup(installationID string, address *Address) (*Signu
 
 	var signupAssessment SignupAssessment
 
-	req.Header.Add("Content-Type", "application/json")
-
 	err = c.doRequest(req, &signupAssessment)
 	if err != nil {
 		return nil, err
@@ -90,7 +88,37 @@ func (c *Client) RegisterSignup(installationID string, address *Address) (*Signu
 	return &signupAssessment, nil
 }
 
+func (client *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) error {
+	requestBody, err := json.Marshal(postFeedbackRequestBody{
+		Event:          feedbackEvent,
+		Timestamp:      timestamp.UnixMilli(),
+		InstallationID: feedbackIdentifiers.InstallationID,
+		LoginID:        feedbackIdentifiers.LoginID,
+		PaymentID:      feedbackIdentifiers.PaymentID,
+		SignupID:       feedbackIdentifiers.SignupID,
+		AccountID:      feedbackIdentifiers.AccountID,
+		ExternalID:     feedbackIdentifiers.ExternalID,
+	})
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", feedbackEndpoint, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return err
+	}
+
+	err = client.doRequest(req, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Client) doRequest(request *http.Request, response interface{}) error {
+	request.Header.Add("Content-Type", "application/json")
+
 	err := c.authorizeRequest(request)
 	if err != nil {
 		return err
@@ -103,12 +131,12 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return err
-		}
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
 
+	if res.StatusCode != http.StatusOK {
 		if len(body) > 0 {
 			return errors.New(res.Status + " " + string(body))
 		}
@@ -116,9 +144,11 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 		return errors.New(res.Status)
 	}
 
-	err = json.NewDecoder(res.Body).Decode(&response)
-	if err != nil {
-		return err
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
