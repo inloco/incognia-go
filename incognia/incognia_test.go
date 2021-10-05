@@ -90,7 +90,7 @@ var (
 		ExternalID:     "some-external-id",
 	}
 	transactionAssessmentFixture = &TransactionAssessment{
-		Id:             "some-id",
+		ID:             "some-id",
 		DeviceID:       "some-device-id",
 		RiskAssessment: LowRisk,
 		Evidence: map[string]interface{}{

@@ -40,7 +40,7 @@ type SignupAssessment struct {
 }
 
 type TransactionAssessment struct {
-	Id             string                 `json:"id"`
+	ID             string                 `json:"id"`
 	RiskAssessment Assessment             `json:"risk_assessment"`
 	DeviceID       string                 `json:"device_id"`
 	Evidence       map[string]interface{} `json:"evidence"`
