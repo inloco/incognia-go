@@ -27,6 +27,8 @@ type Payment struct {
 	AccountID      string
 	ExternalID     string
 	Addresses      []*TransactionAddress
+	Value          *PaymentValue
+	Methods        []*PaymentMethod
 }
 
 type FeedbackIdentifiers struct {
@@ -153,6 +155,8 @@ func (c *Client) RegisterPayment(payment *Payment) (*TransactionAssessment, erro
 		AccountID:      payment.AccountID,
 		ExternalID:     payment.ExternalID,
 		Addresses:      payment.Addresses,
+		PaymentValue:   payment.Value,
+		PaymentMethods: payment.Methods,
 	})
 	if err != nil {
 		return nil, err
@@ -195,7 +199,7 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 
 	if res.StatusCode != http.StatusOK {
 		if len(body) > 0 {
-			return errors.New(res.Status + " " + string(body))
+			return fmt.Errorf("%s %s", res.Status, string(body))
 		}
 
 		return errors.New(res.Status)
@@ -217,7 +221,7 @@ func (c *Client) authorizeRequest(request *http.Request) error {
 		return err
 	}
 
-	request.Header.Add("Authorization", token.TokenType+" "+token.AccessToken)
+	request.Header.Add("Authorization", fmt.Sprintf("%s %s", token.TokenType, token.AccessToken))
 
 	return nil
 }

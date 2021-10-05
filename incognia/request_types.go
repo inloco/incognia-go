@@ -85,10 +85,37 @@ type TransactionAddress struct {
 	AddressLine       string             `json:"address_line"`
 }
 
+type PaymentValue struct {
+	Amount   float64 `json:"amount"`
+	Currency string  `json:"currency"`
+}
+
+type paymentMethodType string
+
+const (
+	CreditCard paymentMethodType = "credit_card"
+	DebitCard  paymentMethodType = "debit_card"
+)
+
+type CardInfo struct {
+	Bin            string `json:"bin"`
+	LastFourDigits string `json:"last_four_digits"`
+	ExpiryYear     string `json:"expiry_year,omitempty"`
+	ExpiryMonth    string `json:"expiry_month,omitempty"`
+}
+
+type PaymentMethod struct {
+	Type       paymentMethodType `json:"type"`
+	CreditCard *CardInfo         `json:"credit_card_info,omitempty"`
+	DebitCard  *CardInfo         `json:"debit_card_info,omitempty"`
+}
+
 type postTransactionRequestBody struct {
 	ExternalID     string                `json:"external_id,omitempty"`
 	InstallationID string                `json:"installation_id"`
 	Type           transactionType       `json:"type"`
 	AccountID      string                `json:"account_id"`
 	Addresses      []*TransactionAddress `json:"addresses,omitempty"`
+	PaymentValue   *PaymentValue         `json:"payment_value,omitempty"`
+	PaymentMethods []*PaymentMethod      `json:"payment_methods,omitempty"`
 }

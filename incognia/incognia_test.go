@@ -140,6 +140,21 @@ var (
 				},
 			},
 		},
+		PaymentValue: &PaymentValue{
+			Amount:   55.02,
+			Currency: "BRL",
+		},
+		PaymentMethods: []*PaymentMethod{
+			{
+				Type: CreditCard,
+				CreditCard: &CardInfo{
+					Bin:            "29282",
+					LastFourDigits: "2222",
+					ExpiryYear:     "2020",
+					ExpiryMonth:    "10",
+				},
+			},
+		},
 	}
 	paymentFixture = &Payment{
 		InstallationID: "installation-id",
@@ -165,6 +180,21 @@ var (
 				Coordinates: &Coordinates{
 					Lat: -23.561414,
 					Lng: -46.6558819,
+				},
+			},
+		},
+		Value: &PaymentValue{
+			Amount:   55.02,
+			Currency: "BRL",
+		},
+		Methods: []*PaymentMethod{
+			{
+				Type: CreditCard,
+				CreditCard: &CardInfo{
+					Bin:            "29282",
+					LastFourDigits: "2222",
+					ExpiryYear:     "2020",
+					ExpiryMonth:    "10",
 				},
 			},
 		},
