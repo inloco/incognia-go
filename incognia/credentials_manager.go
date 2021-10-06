@@ -43,7 +43,10 @@ func (tm *clientCredentialsTokenManager) getToken() (*accessToken, error) {
 }
 
 func (tm *clientCredentialsTokenManager) refreshToken() error {
-	req, _ := http.NewRequest("POST", tm.TokenEndpoint, nil)
+	req, err := http.NewRequest("POST", tm.TokenEndpoint, nil)
+	if err != nil {
+		return err
+	}
 
 	req.SetBasicAuth(tm.ClientID, tm.ClientSecret)
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
