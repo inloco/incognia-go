@@ -131,7 +131,7 @@ func (c *Client) RegisterSignup(installationID string, address *Address) (*Signu
 func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) error {
 	requestBody, err := json.Marshal(postFeedbackRequestBody{
 		Event:          feedbackEvent,
-		Timestamp:      timestamp.UnixMilli(),
+		Timestamp:      timestamp.UnixNano() / 1000000,
 		InstallationID: feedbackIdentifiers.InstallationID,
 		LoginID:        feedbackIdentifiers.LoginID,
 		PaymentID:      feedbackIdentifiers.PaymentID,

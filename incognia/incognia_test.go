@@ -73,7 +73,7 @@ var (
 	}
 	postFeedbackRequestBodyFixture = &postFeedbackRequestBody{
 		Event:          SignupAccepted,
-		Timestamp:      time.Now().UnixMilli(),
+		Timestamp:      time.Now().UnixNano() / 1000000,
 		InstallationID: "some-installation-id",
 		LoginID:        "some-login-id",
 		PaymentID:      "some-payment-id",
@@ -332,7 +332,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedback() {
 	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
-	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
+	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
 	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
 	suite.NoError(err)
 }
@@ -341,8 +341,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackAfterTokenExpiration(
 	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
-	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
-
+	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
 	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
 	suite.NoError(err)
 
@@ -357,13 +356,13 @@ func (suite *IncogniaTestSuite) TestForbiddenRegisterFeedback() {
 	feedbackServer := suite.mockFeedbackEndpoint("some-other-token", postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
-	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
+	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
 	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
 	suite.EqualError(err, "403 Forbidden")
 }
 
 func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
-	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
+	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
 
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
