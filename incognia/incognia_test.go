@@ -210,12 +210,13 @@ type IncogniaTestSuite struct {
 }
 
 func (suite *IncogniaTestSuite) SetupTest() {
-	client, _ := New(&IncogniaClientConfig{clientID, clientSecret})
+	client, _ := New(&IncogniaClientConfig{ClientID: clientID, ClientSecret: clientSecret})
 	suite.client = client
 
-	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
+	tokenServer := suite.mockTokenEndpoint(token, tokenExpiresIn)
 	suite.token = token
 	suite.tokenServer = tokenServer
+	suite.client.endpoints.Token = tokenServer.URL
 }
 
 func (suite *IncogniaTestSuite) TearDownTest() {
@@ -224,7 +225,7 @@ func (suite *IncogniaTestSuite) TearDownTest() {
 
 func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
 	signupID := "signup-id"
-	signupServer := mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
+	signupServer := suite.mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
 	defer signupServer.Close()
 
 	response, err := suite.client.GetSignupAssessment(signupID)
@@ -234,7 +235,7 @@ func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
 
 func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessmentAfterTokenExpiration() {
 	signupID := "signup-id"
-	signupServer := mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
+	signupServer := suite.mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
 	defer signupServer.Close()
 
 	response, err := suite.client.GetSignupAssessment(signupID)
@@ -256,7 +257,7 @@ func (suite *IncogniaTestSuite) TestGetSignupAssessmentEmptySignupId() {
 
 func (suite *IncogniaTestSuite) TestForbiddenGetSignupAssessment() {
 	signupID := "signup-id"
-	signupServer := mockGetSignupsEndpoint("some-other-token", signupID, signupAssessmentFixture)
+	signupServer := suite.mockGetSignupsEndpoint("some-other-token", signupID, signupAssessmentFixture)
 	defer signupServer.Close()
 
 	response, err := suite.client.GetSignupAssessment(signupID)
@@ -268,7 +269,7 @@ func (suite *IncogniaTestSuite) TestGetSignupAssessmentErrors() {
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
 		statusServer := mockStatusServer(status)
-		signupsEndpoint = statusServer.URL
+		suite.client.endpoints.Signups = statusServer.URL
 
 		response, err := suite.client.GetSignupAssessment("any-signup-id")
 		suite.Nil(response)
@@ -277,7 +278,7 @@ func (suite *IncogniaTestSuite) TestGetSignupAssessmentErrors() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignup() {
-	signupServer := mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
+	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
 	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
@@ -286,7 +287,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignup() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() {
-	signupServer := mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
+	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
 	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
@@ -307,7 +308,7 @@ func (suite *IncogniaTestSuite) TestRegisterSignupEmptyInstallationId() {
 }
 
 func (suite *IncogniaTestSuite) TestForbiddenRegisterSignup() {
-	signupServer := mockPostSignupsEndpoint("some-other-token", postSignupRequestBodyFixture, signupAssessmentFixture)
+	signupServer := suite.mockPostSignupsEndpoint("some-other-token", postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
 	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
@@ -319,7 +320,7 @@ func (suite *IncogniaTestSuite) TestRegisterSignupErrors() {
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
 		statusServer := mockStatusServer(status)
-		signupsEndpoint = statusServer.URL
+		suite.client.endpoints.Signups = statusServer.URL
 
 		response, err := suite.client.RegisterSignup("any-signup-id", &Address{})
 		suite.Nil(response)
@@ -328,7 +329,7 @@ func (suite *IncogniaTestSuite) TestRegisterSignupErrors() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterFeedback() {
-	feedbackServer := mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
 	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
@@ -337,7 +338,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedback() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackAfterTokenExpiration() {
-	feedbackServer := mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
 	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
@@ -353,7 +354,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackAfterTokenExpiration(
 }
 
 func (suite *IncogniaTestSuite) TestForbiddenRegisterFeedback() {
-	feedbackServer := mockFeedbackEndpoint("some-other-token", postFeedbackRequestBodyFixture)
+	feedbackServer := suite.mockFeedbackEndpoint("some-other-token", postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
 	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
@@ -367,7 +368,7 @@ func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
 		statusServer := mockStatusServer(status)
-		feedbackEndpoint = statusServer.URL
+		suite.client.endpoints.Feedback = statusServer.URL
 
 		err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
 		suite.Contains(err.Error(), strconv.Itoa(status))
@@ -375,7 +376,7 @@ func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
-	transactionServer := mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture)
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterPayment(paymentFixture)
@@ -384,7 +385,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentAfterTokenExpiration() {
-	transactionServer := mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture)
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterPayment(paymentFixture)
@@ -411,7 +412,7 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyAccountId() {
 }
 
 func (suite *IncogniaTestSuite) TestForbiddenRegisterPayment() {
-	transactionServer := mockPostTransactionsEndpoint("some-other-token", postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	transactionServer := suite.mockPostTransactionsEndpoint("some-other-token", postPaymentRequestBodyFixture, transactionAssessmentFixture)
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterPayment(paymentFixture)
@@ -423,7 +424,7 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentErrors() {
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
 		statusServer := mockStatusServer(status)
-		transactionsEndpoint = statusServer.URL
+		suite.client.endpoints.Transactions = statusServer.URL
 
 		response, err := suite.client.RegisterPayment(paymentFixture)
 		suite.Nil(response)
@@ -435,7 +436,7 @@ func TestIncogniaTestSuite(t *testing.T) {
 	suite.Run(t, new(IncogniaTestSuite))
 }
 
-func mockFeedbackEndpoint(expectedToken string, expectedBody *postFeedbackRequestBody) *httptest.Server {
+func (suite *IncogniaTestSuite) mockFeedbackEndpoint(expectedToken string, expectedBody *postFeedbackRequestBody) *httptest.Server {
 	feedbackServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
@@ -455,7 +456,7 @@ func mockFeedbackEndpoint(expectedToken string, expectedBody *postFeedbackReques
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 
-	feedbackEndpoint = feedbackServer.URL
+	suite.client.endpoints.Feedback = feedbackServer.URL
 
 	return feedbackServer
 }
@@ -469,7 +470,7 @@ func mockStatusServer(statusCode int) *httptest.Server {
 	return statusServer
 }
 
-func mockPostTransactionsEndpoint(expectedToken string, expectedBody *postTransactionRequestBody, expectedResponse *TransactionAssessment) *httptest.Server {
+func (suite *IncogniaTestSuite) mockPostTransactionsEndpoint(expectedToken string, expectedBody *postTransactionRequestBody, expectedResponse *TransactionAssessment) *httptest.Server {
 	transactionsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
@@ -490,12 +491,12 @@ func mockPostTransactionsEndpoint(expectedToken string, expectedBody *postTransa
 		w.WriteHeader(http.StatusBadRequest)
 	}))
 
-	transactionsEndpoint = transactionsServer.URL
+	suite.client.endpoints.Transactions = transactionsServer.URL
 
 	return transactionsServer
 }
 
-func mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentRequestBody, expectedResponse *SignupAssessment) *httptest.Server {
+func (suite *IncogniaTestSuite) mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentRequestBody, expectedResponse *SignupAssessment) *httptest.Server {
 	signupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
@@ -516,12 +517,12 @@ func mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentR
 		w.WriteHeader(http.StatusBadRequest)
 	}))
 
-	signupsEndpoint = signupsServer.URL
+	suite.client.endpoints.Signups = signupsServer.URL
 
 	return signupsServer
 }
 
-func mockGetSignupsEndpoint(expectedToken, expectedSignupID string, expectedResponse *SignupAssessment) *httptest.Server {
+func (suite *IncogniaTestSuite) mockGetSignupsEndpoint(expectedToken, expectedSignupID string, expectedResponse *SignupAssessment) *httptest.Server {
 	getSignupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
@@ -544,7 +545,7 @@ func mockGetSignupsEndpoint(expectedToken, expectedSignupID string, expectedResp
 		w.WriteHeader(http.StatusNotFound)
 	}))
 
-	signupsEndpoint = getSignupsServer.URL
+	suite.client.endpoints.Signups = getSignupsServer.URL
 
 	return getSignupsServer
 }
@@ -563,7 +564,7 @@ func readAuthorizationHeader(request *http.Request) (string, string) {
 	return tokenType, token
 }
 
-func mockTokenEndpoint(expectedToken string, expiresIn string) *httptest.Server {
+func (suite *IncogniaTestSuite) mockTokenEndpoint(expectedToken string, expiresIn string) *httptest.Server {
 	tokenResponse := map[string]string{
 		"access_token": expectedToken,
 		"expires_in":   expiresIn,
@@ -584,7 +585,7 @@ func mockTokenEndpoint(expectedToken string, expiresIn string) *httptest.Server 
 		w.Write(res)
 	}))
 
-	tokenEndpoint = tokenServer.URL
+	suite.client.tokenManager.TokenEndpoint = tokenServer.URL
 
 	return tokenServer
 }
