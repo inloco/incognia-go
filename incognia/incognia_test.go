@@ -89,6 +89,116 @@ var (
 		AccountID:      "some-account-id",
 		ExternalID:     "some-external-id",
 	}
+	transactionAssessmentFixture = &TransactionAssessment{
+		ID:             "some-id",
+		DeviceID:       "some-device-id",
+		RiskAssessment: LowRisk,
+		Evidence: map[string]interface{}{
+			"device_model":                 "Moto Z2 Play",
+			"geocode_quality":              "good",
+			"address_quality":              "good",
+			"address_match":                "street",
+			"location_events_near_address": 38.0,
+			"location_events_quantity":     288.0,
+			"location_services": map[string]interface{}{
+				"location_permission_enabled": true,
+				"location_sensors_enabled":    true,
+			},
+			"device_integrity": map[string]interface{}{
+				"probable_root":       false,
+				"emulator":            false,
+				"gps_spoofing":        false,
+				"from_official_store": true,
+			},
+		},
+	}
+	postPaymentRequestBodyFixture = &postTransactionRequestBody{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		Type:           paymentType,
+		Addresses: []*TransactionAddress{
+			{
+				Type: Billing,
+				StructuredAddress: &StructuredAddress{
+					Locale:       "locale",
+					CountryName:  "country-name",
+					CountryCode:  "country-code",
+					State:        "state",
+					City:         "city",
+					Borough:      "borough",
+					Neighborhood: "neighborhood",
+					Street:       "street",
+					Number:       "number",
+					Complements:  "complements",
+					PostalCode:   "postalcode",
+				},
+				AddressLine: "address line",
+				Coordinates: &Coordinates{
+					Lat: -23.561414,
+					Lng: -46.6558819,
+				},
+			},
+		},
+		PaymentValue: &PaymentValue{
+			Amount:   55.02,
+			Currency: "BRL",
+		},
+		PaymentMethods: []*PaymentMethod{
+			{
+				Type: CreditCard,
+				CreditCard: &CardInfo{
+					Bin:            "29282",
+					LastFourDigits: "2222",
+					ExpiryYear:     "2020",
+					ExpiryMonth:    "10",
+				},
+			},
+		},
+	}
+	paymentFixture = &Payment{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		Addresses: []*TransactionAddress{
+			{
+				Type: Billing,
+				StructuredAddress: &StructuredAddress{
+					Locale:       "locale",
+					CountryName:  "country-name",
+					CountryCode:  "country-code",
+					State:        "state",
+					City:         "city",
+					Borough:      "borough",
+					Neighborhood: "neighborhood",
+					Street:       "street",
+					Number:       "number",
+					Complements:  "complements",
+					PostalCode:   "postalcode",
+				},
+				AddressLine: "address line",
+				Coordinates: &Coordinates{
+					Lat: -23.561414,
+					Lng: -46.6558819,
+				},
+			},
+		},
+		Value: &PaymentValue{
+			Amount:   55.02,
+			Currency: "BRL",
+		},
+		Methods: []*PaymentMethod{
+			{
+				Type: CreditCard,
+				CreditCard: &CardInfo{
+					Bin:            "29282",
+					LastFourDigits: "2222",
+					ExpiryYear:     "2020",
+					ExpiryMonth:    "10",
+				},
+			},
+		},
+	}
 )
 
 type IncogniaTestSuite struct {
@@ -108,9 +218,11 @@ func (suite *IncogniaTestSuite) SetupTest() {
 	suite.tokenServer = tokenServer
 }
 
-func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
+func (suite *IncogniaTestSuite) TearDownTest() {
 	defer suite.tokenServer.Close()
+}
 
+func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
 	signupID := "signup-id"
 	signupServer := mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
 	defer signupServer.Close()
@@ -121,8 +233,6 @@ func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessmentAfterTokenExpiration() {
-	defer suite.tokenServer.Close()
-
 	signupID := "signup-id"
 	signupServer := mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
 	defer signupServer.Close()
@@ -139,16 +249,12 @@ func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessmentAfterTokenExpirati
 	suite.Equal(signupAssessmentFixture, response)
 }
 func (suite *IncogniaTestSuite) TestGetSignupAssessmentEmptySignupId() {
-	defer suite.tokenServer.Close()
-
 	response, err := suite.client.GetSignupAssessment("")
 	suite.EqualError(err, "no signupID provided")
 	suite.Nil(response)
 }
 
 func (suite *IncogniaTestSuite) TestForbiddenGetSignupAssessment() {
-	defer suite.tokenServer.Close()
-
 	signupID := "signup-id"
 	signupServer := mockGetSignupsEndpoint("some-other-token", signupID, signupAssessmentFixture)
 	defer signupServer.Close()
@@ -159,8 +265,6 @@ func (suite *IncogniaTestSuite) TestForbiddenGetSignupAssessment() {
 }
 
 func (suite *IncogniaTestSuite) TestGetSignupAssessmentErrors() {
-	defer suite.tokenServer.Close()
-
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
 		statusServer := mockStatusServer(status)
@@ -173,8 +277,6 @@ func (suite *IncogniaTestSuite) TestGetSignupAssessmentErrors() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignup() {
-	defer suite.tokenServer.Close()
-
 	signupServer := mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
@@ -184,8 +286,6 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignup() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() {
-	defer suite.tokenServer.Close()
-
 	signupServer := mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
@@ -201,16 +301,12 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() 
 	suite.Equal(signupAssessmentFixture, response)
 }
 func (suite *IncogniaTestSuite) TestRegisterSignupEmptyInstallationId() {
-	defer suite.tokenServer.Close()
-
 	response, err := suite.client.RegisterSignup("", &Address{})
 	suite.EqualError(err, "no installationId provided")
 	suite.Nil(response)
 }
 
 func (suite *IncogniaTestSuite) TestForbiddenRegisterSignup() {
-	defer suite.tokenServer.Close()
-
 	signupServer := mockPostSignupsEndpoint("some-other-token", postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
@@ -220,8 +316,6 @@ func (suite *IncogniaTestSuite) TestForbiddenRegisterSignup() {
 }
 
 func (suite *IncogniaTestSuite) TestRegisterSignupErrors() {
-	defer suite.tokenServer.Close()
-
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
 		statusServer := mockStatusServer(status)
@@ -234,8 +328,6 @@ func (suite *IncogniaTestSuite) TestRegisterSignupErrors() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterFeedback() {
-	defer suite.tokenServer.Close()
-
 	feedbackServer := mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
@@ -245,8 +337,6 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedback() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackAfterTokenExpiration() {
-	defer suite.tokenServer.Close()
-
 	feedbackServer := mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
@@ -263,8 +353,6 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackAfterTokenExpiration(
 }
 
 func (suite *IncogniaTestSuite) TestForbiddenRegisterFeedback() {
-	defer suite.tokenServer.Close()
-
 	feedbackServer := mockFeedbackEndpoint("some-other-token", postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
@@ -274,8 +362,6 @@ func (suite *IncogniaTestSuite) TestForbiddenRegisterFeedback() {
 }
 
 func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
-	defer suite.tokenServer.Close()
-
 	timestamp := time.UnixMilli(postFeedbackRequestBodyFixture.Timestamp)
 
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
@@ -284,6 +370,63 @@ func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
 		feedbackEndpoint = statusServer.URL
 
 		err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+		suite.Contains(err.Error(), strconv.Itoa(status))
+	}
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
+	transactionServer := mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(paymentFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentAfterTokenExpiration() {
+	transactionServer := mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(paymentFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+
+	token, _ := suite.client.tokenManager.getToken()
+	token.ExpiresIn = 0
+
+	response, err = suite.client.RegisterPayment(paymentFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyInstallationId() {
+	response, err := suite.client.RegisterPayment(&Payment{AccountID: "some-account-id"})
+	suite.EqualError(err, "missing installation id")
+	suite.Nil(response)
+}
+
+func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyAccountId() {
+	response, err := suite.client.RegisterPayment(&Payment{InstallationID: "some-installation-id"})
+	suite.EqualError(err, "missing account id")
+	suite.Nil(response)
+}
+
+func (suite *IncogniaTestSuite) TestForbiddenRegisterPayment() {
+	transactionServer := mockPostTransactionsEndpoint("some-other-token", postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(paymentFixture)
+	suite.Nil(response)
+	suite.EqualError(err, "403 Forbidden")
+}
+
+func (suite *IncogniaTestSuite) TestRegisterPaymentErrors() {
+	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
+	for _, status := range errors {
+		statusServer := mockStatusServer(status)
+		transactionsEndpoint = statusServer.URL
+
+		response, err := suite.client.RegisterPayment(paymentFixture)
+		suite.Nil(response)
 		suite.Contains(err.Error(), strconv.Itoa(status))
 	}
 }
@@ -326,6 +469,32 @@ func mockStatusServer(statusCode int) *httptest.Server {
 	return statusServer
 }
 
+func mockPostTransactionsEndpoint(expectedToken string, expectedBody *postTransactionRequestBody, expectedResponse *TransactionAssessment) *httptest.Server {
+	transactionsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+
+		if !isRequestAuthorized(r, expectedToken) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		var requestBody postTransactionRequestBody
+		json.NewDecoder(r.Body).Decode(&requestBody)
+
+		if reflect.DeepEqual(&requestBody, expectedBody) {
+			res, _ := json.Marshal(expectedResponse)
+			w.Write(res)
+			return
+		}
+
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+
+	transactionsEndpoint = transactionsServer.URL
+
+	return transactionsServer
+}
+
 func mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentRequestBody, expectedResponse *SignupAssessment) *httptest.Server {
 	signupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
@@ -344,7 +513,7 @@ func mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentR
 			return
 		}
 
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
 	}))
 
 	signupsEndpoint = signupsServer.URL
@@ -407,7 +576,7 @@ func mockTokenEndpoint(expectedToken string, expiresIn string) *httptest.Server 
 		username, password, ok := r.BasicAuth()
 
 		if !ok || username != clientID || password != clientSecret {
-			w.WriteHeader(401)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 

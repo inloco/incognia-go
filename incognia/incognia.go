@@ -22,6 +22,30 @@ type IncogniaClientConfig struct {
 	ClientSecret string
 }
 
+type Payment struct {
+	InstallationID string
+	AccountID      string
+	ExternalID     string
+	Addresses      []*TransactionAddress
+	Value          *PaymentValue
+	Methods        []*PaymentMethod
+}
+
+type FeedbackIdentifiers struct {
+	InstallationID string
+	LoginID        string
+	PaymentID      string
+	SignupID       string
+	AccountID      string
+	ExternalID     string
+}
+
+type Address struct {
+	Coordinates       *Coordinates
+	StructuredAddress *StructuredAddress
+	AddressLine       string
+}
+
 func New(config *IncogniaClientConfig) (*Client, error) {
 	if config.ClientID == "" || config.ClientSecret == "" {
 		return nil, errors.New("client id and client secret are required")
@@ -116,6 +140,43 @@ func (client *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *ti
 	return nil
 }
 
+func (c *Client) RegisterPayment(payment *Payment) (*TransactionAssessment, error) {
+	if payment.InstallationID == "" {
+		return nil, errors.New("missing installation id")
+	}
+
+	if payment.AccountID == "" {
+		return nil, errors.New("missing account id")
+	}
+
+	requestBody, err := json.Marshal(postTransactionRequestBody{
+		InstallationID: payment.InstallationID,
+		Type:           paymentType,
+		AccountID:      payment.AccountID,
+		ExternalID:     payment.ExternalID,
+		Addresses:      payment.Addresses,
+		PaymentValue:   payment.Value,
+		PaymentMethods: payment.Methods,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", transactionsEndpoint, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, err
+	}
+
+	var paymentAssesment TransactionAssessment
+
+	err = c.doRequest(req, &paymentAssesment)
+	if err != nil {
+		return nil, err
+	}
+
+	return &paymentAssesment, nil
+}
+
 func (c *Client) doRequest(request *http.Request, response interface{}) error {
 	request.Header.Add("Content-Type", "application/json")
 
@@ -138,7 +199,7 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 
 	if res.StatusCode != http.StatusOK {
 		if len(body) > 0 {
-			return errors.New(res.Status + " " + string(body))
+			return fmt.Errorf("%s %s", res.Status, string(body))
 		}
 
 		return errors.New(res.Status)
@@ -160,7 +221,7 @@ func (c *Client) authorizeRequest(request *http.Request) error {
 		return err
 	}
 
-	request.Header.Add("Authorization", token.TokenType+" "+token.AccessToken)
+	request.Header.Add("Authorization", fmt.Sprintf("%s %s", token.TokenType, token.AccessToken))
 
 	return nil
 }
