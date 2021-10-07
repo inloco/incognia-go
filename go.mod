@@ -1,4 +1,4 @@
-module github.com/inloco/incognia-go
+module repo.incognia.com/go/incognia
 
 go 1.13
 
