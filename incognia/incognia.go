@@ -10,16 +10,25 @@ import (
 	"time"
 )
 
+type Region int64
+
+const (
+	US Region = iota
+	BR
+)
+
 type Client struct {
 	clientID     string
 	clientSecret string
 	tokenManager *clientCredentialsTokenManager
 	netClient    *http.Client
+	endpoints    *endpoints
 }
 
 type IncogniaClientConfig struct {
 	ClientID     string
 	ClientSecret string
+	Region       Region
 }
 
 type Payment struct {
@@ -55,9 +64,16 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		Timeout: time.Second * 10,
 	}
 
-	tokenManager := newClientCredentialsTokenManager(config.ClientID, config.ClientSecret)
+	endpoints := newEndpoints(config.Region)
 
-	client := &Client{config.ClientID, config.ClientSecret, tokenManager, netClient}
+	tokenManager := newClientCredentialsTokenManager(&clientCredentialsManagerConfig{
+		ClientID:     config.ClientID,
+		ClientSecret: config.ClientSecret,
+		Endpoint:     endpoints.Token,
+		NetClient:    netClient,
+	})
+
+	client := &Client{config.ClientID, config.ClientSecret, tokenManager, netClient, &endpoints}
 
 	return client, nil
 }
@@ -67,7 +83,7 @@ func (c *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error)
 		return nil, errors.New("no signupID provided")
 	}
 
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", signupsEndpoint, signupID), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", c.endpoints.Signups, signupID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +113,7 @@ func (c *Client) RegisterSignup(installationID string, address *Address) (*Signu
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", signupsEndpoint, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", c.endpoints.Signups, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +128,7 @@ func (c *Client) RegisterSignup(installationID string, address *Address) (*Signu
 	return &signupAssessment, nil
 }
 
-func (client *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) error {
+func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) error {
 	requestBody, err := json.Marshal(postFeedbackRequestBody{
 		Event:          feedbackEvent,
 		Timestamp:      timestamp.UnixMilli(),
@@ -127,12 +143,12 @@ func (client *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *ti
 		return err
 	}
 
-	req, err := http.NewRequest("POST", feedbackEndpoint, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", c.endpoints.Feedback, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return err
 	}
 
-	err = client.doRequest(req, nil)
+	err = c.doRequest(req, nil)
 	if err != nil {
 		return err
 	}
@@ -162,7 +178,7 @@ func (c *Client) RegisterPayment(payment *Payment) (*TransactionAssessment, erro
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", transactionsEndpoint, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", c.endpoints.Transactions, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
 	}

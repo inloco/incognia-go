@@ -16,9 +16,18 @@ go get github.com/inloco/incognia-go
 Before calling the API methods, you need to create an instance of the `Client` struct.
 
 ```go
+// to use the US region
 client, err := incognia.New(&incognia.IncogniaClientConfig{
     ClientID:     "your-client-id",
     ClientSecret: "your-client-secret",
+    Region:       incognia.US,
+})
+
+// to use the BR region
+client, err := incognia.New(&incognia.IncogniaClientConfig{
+    ClientID:     "your-client-id",
+    ClientSecret: "your-client-secret",
+    Region:       incognia.BR,
 })
 if err != nil {
     log.Fatal("could not initialize Incognia client")
@@ -38,11 +47,6 @@ Authentication is done transparently, so you don't need to worry about it.
 This method registers a new signup for the given installation and address, returning a `SignupAssessment`, containing the risk assessment and supporting evidence:
 
 ```go
-client, _ := incognia.New(&incognia.IncogniaClientConfig{
-    ClientID:     "your-client-id",
-    ClientSecret: "your-client-secret",
-})
-
 assessment, err := client.RegisterSignup("installation-id", &incognia.Address{
         AddressLine:    "20 W 34th St, New York, NY 10001, United States",
 		StructuredAddress: &incognia.StructuredAddress{
@@ -71,11 +75,6 @@ assessment, err := client.RegisterSignup("installation-id", &incognia.Address{
 This method allows you to query the latest assessment for a given signup event, returning a `SignupAssessment`, containing the risk assessment and supporting evidence:
 
 ```go
-client, _ := incognia.New(&incognia.IncogniaClientConfig{
-    ClientID:     "your-client-id",
-    ClientSecret: "your-client-secret",
-})
-
 signupID := "c9ac2803-c868-4b7a-8323-8a6b96298ebe"
 assessment, err := client.GetSignupAssessment(signupID)
 ```
@@ -85,11 +84,6 @@ assessment, err := client.GetSignupAssessment(signupID)
 This method registers a new payment for the given installation and account, returning a `TransactionAssessment`, containing the risk assessment and supporting evidence.
 
 ```go
-client, _ := incognia.New(&incognia.IncogniaClientConfig{
-    ClientID:     "your-client-id",
-    ClientSecret: "your-client-secret",
-})
-
 assessment, err := client.RegisterPayment(&incognia.Payment{
     InstallationID: "installation-id",
     AccountID:      "account-id",
@@ -140,11 +134,6 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
 This method registers a feedback event for the given identifiers (represented in `FeedbackIdentifiers`) related to a signup, login or payment.
 
 ```go
-client, _ := incognia.New(&incognia.IncogniaClientConfig{
-    ClientID:     "your-client-id",
-    ClientSecret: "your-client-secret",
-})
-
 timestamp := time.Now()
 feedbackEvent := incognia.SignupAccepted
 err := client.RegisterFeedback(feedbackEvent, &timestamp, &incognia.FeedbackIdentifiers{

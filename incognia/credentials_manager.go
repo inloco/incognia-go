@@ -7,44 +7,51 @@ import (
 )
 
 type clientCredentialsTokenManager struct {
-	clientID     string
-	clientSecret string
-	netClient    *http.Client
-	token        *accessToken
+	ClientID      string
+	ClientSecret  string
+	NetClient     *http.Client
+	Token         *accessToken
+	TokenEndpoint string
 }
 
-func newClientCredentialsTokenManager(clientID, clientSecret string) *clientCredentialsTokenManager {
-	netClient := &http.Client{
-		Timeout: time.Second * 10,
-	}
+type clientCredentialsManagerConfig struct {
+	ClientID     string
+	ClientSecret string
+	Endpoint     string
+	NetClient    *http.Client
+}
 
+func newClientCredentialsTokenManager(config *clientCredentialsManagerConfig) *clientCredentialsTokenManager {
 	return &clientCredentialsTokenManager{
-		clientID,
-		clientSecret,
-		netClient,
-		nil,
+		ClientID:      config.ClientID,
+		ClientSecret:  config.ClientSecret,
+		NetClient:     config.NetClient,
+		TokenEndpoint: config.Endpoint,
 	}
 }
 
-func (tokenManager *clientCredentialsTokenManager) getToken() (*accessToken, error) {
-	if tokenManager.token == nil || !tokenManager.token.isValid() {
-		err := tokenManager.refreshToken()
+func (tm *clientCredentialsTokenManager) getToken() (*accessToken, error) {
+	if tm.Token == nil || !tm.Token.isValid() {
+		err := tm.refreshToken()
 
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return tokenManager.token, nil
+	return tm.Token, nil
 }
 
-func (tokenManager *clientCredentialsTokenManager) refreshToken() error {
-	req, _ := http.NewRequest("POST", tokenEndpoint, nil)
+func (tm *clientCredentialsTokenManager) refreshToken() error {
+	req, err := http.NewRequest("POST", tm.TokenEndpoint, nil)
+	if err != nil {
+		return err
+	}
 
-	req.SetBasicAuth(tokenManager.clientID, tokenManager.clientSecret)
+	req.SetBasicAuth(tm.ClientID, tm.ClientSecret)
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
 
-	res, err := tokenManager.netClient.Do(req)
+	res, err := tm.NetClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -60,7 +67,7 @@ func (tokenManager *clientCredentialsTokenManager) refreshToken() error {
 		return err
 	}
 
-	tokenManager.token = &result
+	tm.Token = &result
 
 	return nil
 }
