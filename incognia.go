@@ -40,6 +40,12 @@ type Payment struct {
 	Methods        []*PaymentMethod
 }
 
+type Login struct {
+	InstallationID string
+	AccountID      string
+	ExternalID     string
+}
+
 type FeedbackIdentifiers struct {
 	InstallationID string
 	LoginID        string
@@ -191,6 +197,40 @@ func (c *Client) RegisterPayment(payment *Payment) (*TransactionAssessment, erro
 	}
 
 	return &paymentAssesment, nil
+}
+
+func (c *Client) RegisterLogin(login *Login) (*TransactionAssessment, error) {
+	if login.InstallationID == "" {
+		return nil, errors.New("missing installation id")
+	}
+
+	if login.AccountID == "" {
+		return nil, errors.New("missing account id")
+	}
+
+	requestBody, err := json.Marshal(postTransactionRequestBody{
+		InstallationID: login.InstallationID,
+		Type:           loginType,
+		AccountID:      login.AccountID,
+		ExternalID:     login.ExternalID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", c.endpoints.Transactions, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, err
+	}
+
+	var loginAssessment TransactionAssessment
+
+	err = c.doRequest(req, &loginAssessment)
+	if err != nil {
+		return nil, err
+	}
+
+	return &loginAssessment, nil
 }
 
 func (c *Client) doRequest(request *http.Request, response interface{}) error {

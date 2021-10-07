@@ -128,6 +128,18 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
 })
 ```
 
+### Registering Login
+
+This method registers a new login for the given installation and account, returning a `TransactionAssessment`, containing the risk assessment and supporting evidence.
+
+```go
+assessment, err := client.RegisterLogin(&incognia.Login{
+    InstallationID: "installation-id",
+    AccountID:      "account-id",
+    ExternalID:     "external-id",
+})
+```
+
 ### Sending Feedback
 
 This method registers a feedback event for the given identifiers (represented in `FeedbackIdentifiers`) related to a signup, login or payment.
