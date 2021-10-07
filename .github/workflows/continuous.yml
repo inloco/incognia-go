@@ -3,11 +3,7 @@ on: push
 jobs:
   test-and-build:
     name: Test
-    runs-on:
-      - self-hosted
-      - ci
-      - linux
-      - amd64
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v2
