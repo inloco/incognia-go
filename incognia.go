@@ -61,9 +61,16 @@ type Address struct {
 	AddressLine       string
 }
 
+var (
+	ErrMissingInstallationID         = errors.New("missing installation id")
+	ErrMissingAccountID              = errors.New("missing account id")
+	ErrMissingSignupID               = errors.New("missing signup id")
+	ErrMissingClientIDOrClientSecret = errors.New("client id and client secret are required")
+)
+
 func New(config *IncogniaClientConfig) (*Client, error) {
 	if config.ClientID == "" || config.ClientSecret == "" {
-		return nil, errors.New("client id and client secret are required")
+		return nil, ErrMissingClientIDOrClientSecret
 	}
 
 	netClient := &http.Client{
@@ -86,7 +93,7 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 
 func (c *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error) {
 	if signupID == "" {
-		return nil, errors.New("no signupID provided")
+		return nil, ErrMissingSignupID
 	}
 
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", c.endpoints.Signups, signupID), nil)
@@ -106,7 +113,7 @@ func (c *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error)
 
 func (c *Client) RegisterSignup(installationID string, address *Address) (*SignupAssessment, error) {
 	if installationID == "" {
-		return nil, errors.New("no installationId provided")
+		return nil, ErrMissingInstallationID
 	}
 
 	requestBody, err := json.Marshal(postAssessmentRequestBody{
@@ -164,11 +171,11 @@ func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Ti
 
 func (c *Client) RegisterPayment(payment *Payment) (*TransactionAssessment, error) {
 	if payment.InstallationID == "" {
-		return nil, errors.New("missing installation id")
+		return nil, ErrMissingInstallationID
 	}
 
 	if payment.AccountID == "" {
-		return nil, errors.New("missing account id")
+		return nil, ErrMissingAccountID
 	}
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{
@@ -201,11 +208,11 @@ func (c *Client) RegisterPayment(payment *Payment) (*TransactionAssessment, erro
 
 func (c *Client) RegisterLogin(login *Login) (*TransactionAssessment, error) {
 	if login.InstallationID == "" {
-		return nil, errors.New("missing installation id")
+		return nil, ErrMissingInstallationID
 	}
 
 	if login.AccountID == "" {
-		return nil, errors.New("missing account id")
+		return nil, ErrMissingAccountID
 	}
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{

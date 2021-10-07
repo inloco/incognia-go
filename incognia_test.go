@@ -262,7 +262,7 @@ func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessmentAfterTokenExpirati
 }
 func (suite *IncogniaTestSuite) TestGetSignupAssessmentEmptySignupId() {
 	response, err := suite.client.GetSignupAssessment("")
-	suite.EqualError(err, "no signupID provided")
+	suite.EqualError(err, ErrMissingSignupID.Error())
 	suite.Nil(response)
 }
 
@@ -314,7 +314,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() 
 }
 func (suite *IncogniaTestSuite) TestRegisterSignupEmptyInstallationId() {
 	response, err := suite.client.RegisterSignup("", &Address{})
-	suite.EqualError(err, "no installationId provided")
+	suite.EqualError(err, ErrMissingInstallationID.Error())
 	suite.Nil(response)
 }
 
@@ -411,13 +411,13 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentAfterTokenExpiration()
 }
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyInstallationId() {
 	response, err := suite.client.RegisterPayment(&Payment{AccountID: "some-account-id"})
-	suite.EqualError(err, "missing installation id")
+	suite.EqualError(err, ErrMissingInstallationID.Error())
 	suite.Nil(response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyAccountId() {
 	response, err := suite.client.RegisterPayment(&Payment{InstallationID: "some-installation-id"})
-	suite.EqualError(err, "missing account id")
+	suite.EqualError(err, ErrMissingAccountID.Error())
 	suite.Nil(response)
 }
 
@@ -468,13 +468,13 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
 }
 func (suite *IncogniaTestSuite) TestRegisterLoginEmptyInstallationId() {
 	response, err := suite.client.RegisterLogin(&Login{AccountID: "some-account-id"})
-	suite.EqualError(err, "missing installation id")
+	suite.EqualError(err, ErrMissingInstallationID.Error())
 	suite.Nil(response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterLoginEmptyAccountId() {
 	response, err := suite.client.RegisterLogin(&Login{InstallationID: "some-installation-id"})
-	suite.EqualError(err, "missing account id")
+	suite.EqualError(err, ErrMissingAccountID.Error())
 	suite.Nil(response)
 }
 
