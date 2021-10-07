@@ -47,26 +47,26 @@ Authentication is done transparently, so you don't need to worry about it.
 This method registers a new signup for the given installation and address, returning a `SignupAssessment`, containing the risk assessment and supporting evidence:
 
 ```go
-	assessment, err := client.RegisterSignup("installation-id", &incognia.Address{
-		AddressLine: "20 W 34th St, New York, NY 10001, United States",
-		StructuredAddress: &incognia.StructuredAddress{
-			Locale:       "en-US",
-			CountryName:  "United States of America",
-			CountryCode:  "US",
-			State:        "NY",
-			City:         "New York City",
-			Borough:      "Manhattan",
-			Neighborhood: "Midtown",
-			Street:       "W 34th St.",
-			Number:       "20",
-			Complements:  "Floor 2",
-			PostalCode:   "10001",
-		},
-		Coordinates: &incognia.Coordinates{
-			Lat: -23.561414,
-			Lng: -46.6558819,
-		},
-	})
+assessment, err := client.RegisterSignup("installation-id", &incognia.Address{
+    AddressLine: "20 W 34th St, New York, NY 10001, United States",
+    StructuredAddress: &incognia.StructuredAddress{
+        Locale:       "en-US",
+        CountryName:  "United States of America",
+        CountryCode:  "US",
+        State:        "NY",
+        City:         "New York City",
+        Borough:      "Manhattan",
+        Neighborhood: "Midtown",
+        Street:       "W 34th St.",
+        Number:       "20",
+        Complements:  "Floor 2",
+        PostalCode:   "10001",
+    },
+    Coordinates: &incognia.Coordinates{
+        Lat: -23.561414,
+        Lng: -46.6558819,
+    },
+})
 ```
 
 ### Getting a Signup
@@ -125,6 +125,18 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
             },
         },
     },
+})
+```
+
+### Registering Login
+
+This method registers a new login for the given installation and account, returning a `TransactionAssessment`, containing the risk assessment and supporting evidence.
+
+```go
+assessment, err := client.RegisterLogin(&incognia.Login{
+    InstallationID: "installation-id",
+    AccountID:      "account-id",
+    ExternalID:     "external-id",
 })
 ```
 

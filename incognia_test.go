@@ -199,6 +199,17 @@ var (
 			},
 		},
 	}
+	loginFixture = &Login{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+	}
+	postLoginRequestBodyFixture = &postTransactionRequestBody{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		Type:           loginType,
+	}
 )
 
 type IncogniaTestSuite struct {
@@ -251,7 +262,7 @@ func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessmentAfterTokenExpirati
 }
 func (suite *IncogniaTestSuite) TestGetSignupAssessmentEmptySignupId() {
 	response, err := suite.client.GetSignupAssessment("")
-	suite.EqualError(err, "no signupID provided")
+	suite.EqualError(err, ErrMissingSignupID.Error())
 	suite.Nil(response)
 }
 
@@ -303,7 +314,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() 
 }
 func (suite *IncogniaTestSuite) TestRegisterSignupEmptyInstallationId() {
 	response, err := suite.client.RegisterSignup("", &Address{})
-	suite.EqualError(err, "no installationId provided")
+	suite.EqualError(err, ErrMissingInstallationID.Error())
 	suite.Nil(response)
 }
 
@@ -400,13 +411,13 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentAfterTokenExpiration()
 }
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyInstallationId() {
 	response, err := suite.client.RegisterPayment(&Payment{AccountID: "some-account-id"})
-	suite.EqualError(err, "missing installation id")
+	suite.EqualError(err, ErrMissingInstallationID.Error())
 	suite.Nil(response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyAccountId() {
 	response, err := suite.client.RegisterPayment(&Payment{InstallationID: "some-installation-id"})
-	suite.EqualError(err, "missing account id")
+	suite.EqualError(err, ErrMissingAccountID.Error())
 	suite.Nil(response)
 }
 
@@ -426,6 +437,63 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentErrors() {
 		suite.client.endpoints.Transactions = statusServer.URL
 
 		response, err := suite.client.RegisterPayment(paymentFixture)
+		suite.Nil(response)
+		suite.Contains(err.Error(), strconv.Itoa(status))
+	}
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterLogin() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterLogin(loginFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterLogin(loginFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+
+	token, _ := suite.client.tokenManager.getToken()
+	token.ExpiresIn = 0
+
+	response, err = suite.client.RegisterLogin(loginFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+func (suite *IncogniaTestSuite) TestRegisterLoginEmptyInstallationId() {
+	response, err := suite.client.RegisterLogin(&Login{AccountID: "some-account-id"})
+	suite.EqualError(err, ErrMissingInstallationID.Error())
+	suite.Nil(response)
+}
+
+func (suite *IncogniaTestSuite) TestRegisterLoginEmptyAccountId() {
+	response, err := suite.client.RegisterLogin(&Login{InstallationID: "some-installation-id"})
+	suite.EqualError(err, ErrMissingAccountID.Error())
+	suite.Nil(response)
+}
+
+func (suite *IncogniaTestSuite) TestForbiddenRegisterLogin() {
+	transactionServer := suite.mockPostTransactionsEndpoint("some-other-token", postLoginRequestBodyFixture, transactionAssessmentFixture)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterLogin(loginFixture)
+	suite.Nil(response)
+	suite.EqualError(err, "403 Forbidden")
+}
+
+func (suite *IncogniaTestSuite) TestRegisterLoginErrors() {
+	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
+	for _, status := range errors {
+		statusServer := mockStatusServer(status)
+		suite.client.endpoints.Transactions = statusServer.URL
+
+		response, err := suite.client.RegisterLogin(loginFixture)
 		suite.Nil(response)
 		suite.Contains(err.Error(), strconv.Itoa(status))
 	}
