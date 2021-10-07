@@ -3,28 +3,13 @@ on: push
 jobs:
   test-and-build:
     name: Test
-    runs-on:
-      - self-hosted
-      - ci
-      - linux
-      - amd64
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Cache go dependencies
-        uses: inloco/actions-cache@HEAD
-        id: cache-dependencies
-        with:
-          path: |
-            /go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
       - uses: actions/setup-go@v2
         with:
           go-version: '1.13'
-      - name: Install gcc
-        run: sudo apt update && sudo apt install -y gcc
       - name: Check code format
         run: |
           UNFORMATED=$(gofmt -l ./)
