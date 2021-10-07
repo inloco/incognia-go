@@ -27,7 +27,7 @@ jobs:
         run: sudo apt update && sudo apt install -y gcc
       - name: Check code format
         run: |
-          UNFORMATED=$(gofmt -l ./incognia/)
+          UNFORMATED=$(gofmt -l ./)
           COUNT=$(echo $UNFORMATED | wc -w)
           if [ $COUNT -eq 0 ]; then
               echo "Files formatted properly!"

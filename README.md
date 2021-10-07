@@ -47,8 +47,8 @@ Authentication is done transparently, so you don't need to worry about it.
 This method registers a new signup for the given installation and address, returning a `SignupAssessment`, containing the risk assessment and supporting evidence:
 
 ```go
-assessment, err := client.RegisterSignup("installation-id", &incognia.Address{
-        AddressLine:    "20 W 34th St, New York, NY 10001, United States",
+	assessment, err := client.RegisterSignup("installation-id", &incognia.Address{
+		AddressLine: "20 W 34th St, New York, NY 10001, United States",
 		StructuredAddress: &incognia.StructuredAddress{
 			Locale:       "en-US",
 			CountryName:  "United States of America",
@@ -66,8 +66,7 @@ assessment, err := client.RegisterSignup("installation-id", &incognia.Address{
 			Lat: -23.561414,
 			Lng: -46.6558819,
 		},
-    }
-)
+	})
 ```
 
 ### Getting a Signup
