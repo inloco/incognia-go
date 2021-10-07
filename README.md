@@ -91,7 +91,7 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
         {
             Type: incognia.Billing,
             AddressLine:    "20 W 34th St, New York, NY 10001, United States",
-            StructuredAddress: &StructuredAddress{
+            StructuredAddress: &incognia.StructuredAddress{
                 Locale:       "en-US",
                 CountryName:  "United States of America",
                 CountryCode:  "US",
