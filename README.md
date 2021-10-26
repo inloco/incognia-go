@@ -159,7 +159,39 @@ err := client.RegisterFeedback(feedbackEvent, &timestamp, &incognia.FeedbackIden
 
 ## Evidences
 
-Every assessment response (`TransactionAssessment` and `SignupAssessment`) includes supporting evidence in a generic `map[string]interface{}`.
+Every assessment response (`TransactionAssessment` and `SignupAssessment`) includes supporting evidence in the type `Evidence`, which provides methods "GetEvidence" and "GetEvidenceAsInt64" to help you getting and parsing values. You can see usage examples below:
+
+```go
+var deviceModel string
+
+err := assessment.Evidence.GetEvidence("device_model", &deviceModel)
+if err != nil {
+    return err
+}
+
+fmt.Println(deviceModel)
+```
+
+```go
+/*
+    you can access specific object evidences by requesting the evidence as "outer_object.inner_evidence"
+    
+    for example, the evidence got from below code is originated from
+    {
+        ...
+        "account_integrity": {
+            "risk_window_remaining": 12812817373
+        }
+    }
+*/
+riskWindowRemaining, err := assessment.Evidence.GetEvidenceAsInt64("account_integrity.risk_window_remaining")
+if err != nil {
+    return err
+}
+
+fmt.Println(riskWindowRemaining)
+```
+
 You can find all available evidence [here](https://docs.incognia.com/apis/understanding-assessment-evidence#risk-assessment-evidence).
 
 ## How to Contribute
