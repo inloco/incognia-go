@@ -159,7 +159,7 @@ err := client.RegisterFeedback(feedbackEvent, &timestamp, &incognia.FeedbackIden
 
 ## Evidences
 
-Every assessment response (`TransactionAssessment` and `SignupAssessment`) includes supporting evidence in the type `Evidence`, which provides methods "GetEvidence" and "GetEvidenceAsInt64" to help you getting and parsing values. You can see usage examples below:
+Every assessment response (`TransactionAssessment` and `SignupAssessment`) includes supporting evidence in the type `Evidence`, which provides methods `GetEvidence` and `GetEvidenceAsInt64` to help you getting and parsing values. You can see usage examples below:
 
 ```go
 var deviceModel string
@@ -172,18 +172,18 @@ if err != nil {
 fmt.Println(deviceModel)
 ```
 
-```go
-/*
-    you can access specific object evidences by requesting the evidence as "outer_object.inner_evidence"
-    
-    for example, the evidence got from below code is originated from
-    {
-        ...
-        "account_integrity": {
-            "risk_window_remaining": 12812817373
-        }
+You can access specific object evidences by requesting the evidence as "outer_object.inner_evidence".
+For example, the evidence got from below code is originated from
+```json
+{
+    ...
+    "account_integrity": {
+        "risk_window_remaining": 12812817373
     }
-*/
+}
+```
+
+```go
 riskWindowRemaining, err := assessment.Evidence.GetEvidenceAsInt64("account_integrity.risk_window_remaining")
 if err != nil {
     return err
