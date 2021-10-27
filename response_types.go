@@ -61,6 +61,55 @@ func (a Evidence) GetEvidenceAsInt64(evidenceName string) (int64, error) {
 	return int64(evidenceOut), nil
 }
 
+func (a Evidence) getEvidenceWithPath(evidenceMap Evidence, evidencePath []string, evidenceOut interface{}) error {
+	if evidenceMap == nil {
+		return ErrEvidenceNotFound
+	}
+
+	if len(evidencePath) == 0 {
+		return ErrEvidenceNotFound
+	}
+
+	for len(evidencePath) > 1 {
+		evidenceName := evidencePath[0]
+		evidencePath = evidencePath[1:]
+
+		evidence, ok := evidenceMap[evidenceName]
+		if !ok {
+			return ErrEvidenceNotFound
+		}
+
+		evidenceSubMap, ok := evidence.(map[string]interface{})
+		if !ok {
+			return ErrEvidenceNotFound
+		}
+
+		evidenceMap = evidenceSubMap
+	}
+
+	return a.getEvidence(evidenceMap, evidencePath[0], evidenceOut)
+}
+
+func (a Evidence) getEvidence(evidenceMap map[string]interface{}, evidenceName string, evidenceOut interface{}) error {
+	if evidenceMap == nil {
+		return ErrEvidenceNotFound
+	}
+
+	evidence, ok := evidenceMap[evidenceName]
+	if !ok {
+		return ErrEvidenceNotFound
+	}
+	if evidence == nil {
+		return ErrEvidenceNotFound
+	}
+
+	if evidenceSlice, ok := evidence.([]interface{}); ok {
+		return a.setEvidenceToSlice(evidenceSlice, evidenceOut)
+	}
+
+	return a.setEvidenceToPointer(evidence, evidenceOut)
+}
+
 func (a Evidence) setEvidenceToPointer(evidence interface{}, evidenceOut interface{}) error {
 	evidenceOutReflectValue := reflect.ValueOf(evidenceOut)
 	if evidenceOutReflectValue.Kind() != reflect.Ptr {
@@ -114,55 +163,6 @@ func (a Evidence) setEvidenceToSlice(evidenceSlice []interface{}, evidenceOut in
 
 	evidenceOutIndirectReflectValue.Set(evidenceSliceReflectValue)
 	return nil
-}
-
-func (a Evidence) getEvidence(evidenceMap map[string]interface{}, evidenceName string, evidenceOut interface{}) error {
-	if evidenceMap == nil {
-		return ErrEvidenceNotFound
-	}
-
-	evidence, ok := evidenceMap[evidenceName]
-	if !ok {
-		return ErrEvidenceNotFound
-	}
-	if evidence == nil {
-		return ErrEvidenceNotFound
-	}
-
-	if evidenceSlice, ok := evidence.([]interface{}); ok {
-		return a.setEvidenceToSlice(evidenceSlice, evidenceOut)
-	}
-
-	return a.setEvidenceToPointer(evidence, evidenceOut)
-}
-
-func (a Evidence) getEvidenceWithPath(evidenceMap Evidence, evidencePath []string, evidenceOut interface{}) error {
-	if evidenceMap == nil {
-		return ErrEvidenceNotFound
-	}
-
-	if len(evidencePath) == 0 {
-		return ErrEvidenceNotFound
-	}
-
-	for len(evidencePath) > 1 {
-		evidenceName := evidencePath[0]
-		evidencePath = evidencePath[1:]
-
-		evidence, ok := evidenceMap[evidenceName]
-		if !ok {
-			return ErrEvidenceNotFound
-		}
-
-		evidenceSubMap, ok := evidence.(map[string]interface{})
-		if !ok {
-			return ErrEvidenceNotFound
-		}
-
-		evidenceMap = evidenceSubMap
-	}
-
-	return a.getEvidence(evidenceMap, evidencePath[0], evidenceOut)
 }
 
 type SignupAssessment struct {
