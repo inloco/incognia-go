@@ -172,8 +172,7 @@ if err != nil {
 fmt.Println(deviceModel)
 ```
 
-You can access specific object evidences by requesting the evidence as "outer_object.inner_evidence".
-For example, the evidence got from below code is originated from
+You can also access specific evidences using their full path. For example, to get risk_window_remaining evidence from the following response:
 ```json
 {
     ...
@@ -182,6 +181,8 @@ For example, the evidence got from below code is originated from
     }
 }
 ```
+
+call any type of `GetEvidence` method using the evidence's full path:
 
 ```go
 riskWindowRemaining, err := assessment.Evidence.GetEvidenceAsInt64("account_integrity.risk_window_remaining")
