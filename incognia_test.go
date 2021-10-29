@@ -26,7 +26,7 @@ var (
 		DeviceID:       "some-device-id",
 		RequestID:      "some-request-id",
 		RiskAssessment: LowRisk,
-		Evidence: map[string]interface{}{
+		Evidence: Evidence{
 			"device_model":                 "Moto Z2 Play",
 			"geocode_quality":              "good",
 			"address_quality":              "good",
@@ -93,7 +93,7 @@ var (
 		ID:             "some-id",
 		DeviceID:       "some-device-id",
 		RiskAssessment: LowRisk,
-		Evidence: map[string]interface{}{
+		Evidence: Evidence{
 			"device_model":                 "Moto Z2 Play",
 			"geocode_quality":              "good",
 			"address_quality":              "good",
