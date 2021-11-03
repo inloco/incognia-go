@@ -50,6 +50,7 @@ const (
 	PromotionAbuse                FeedbackType = "promotion_abuse"
 	AccountTakeover               FeedbackType = "account_takeover"
 	MposFraud                     FeedbackType = "mpos_fraud"
+	ChargebackNotification        FeedbackType = "chargeback_notification"
 )
 
 type postFeedbackRequestBody struct {
