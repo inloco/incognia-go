@@ -175,6 +175,8 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
     ...
 ```
 
+Turning off the risk assessment evaluation allows you to register a new transaction (Login or Payment), but the response will be an empty response (`TransactionAssessment` and `SignupAssessment`). For instance, if you're using the risk assessment only for some payment transactions you still should register all the other ones: this will avoid any bias on the risk assessment computation.
+
 ### Sending Feedback
 
 This method registers a feedback event for the given identifiers (represented in `FeedbackIdentifiers`) related to a signup, login or payment.
