@@ -140,6 +140,41 @@ assessment, err := client.RegisterLogin(&incognia.Login{
 })
 ```
 
+### Registering Payment or Login without evaluating its risk assessment
+
+To register a login or a payment without evaluating its risk assessment, you should use the `Eval *bool` atribute as follows:
+
+Login example:
+```go
+shouldEval := false
+
+assessment, err := client.RegisterLogin(&incognia.Login{
+    Eval:           &shouldEval,
+    InstallationID: "installation-id",
+    AccountID:      "account-id",
+    ExternalID:     "external-id",
+})
+```
+
+Payment example:
+```go
+shouldEval := false
+
+assessment, err := client.RegisterPayment(&incognia.Payment{
+    Eval:            &shouldEval,
+    InstallationID: "installation-id",
+    AccountID:      "account-id",
+    ExternalID:     "external-id",
+    Addresses: []*incognia.TransactionAddress{
+        {
+            Type: incognia.Billing,
+            AddressLine:    "20 W 34th St, New York, NY 10001, United States",
+            StructuredAddress: &incognia.StructuredAddress{
+                Locale:       "en-US",
+                CountryName:  "United States of America",
+    ...
+```
+
 ### Sending Feedback
 
 This method registers a feedback event for the given identifiers (represented in `FeedbackIdentifiers`) related to a signup, login or payment.
