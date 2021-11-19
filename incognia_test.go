@@ -21,12 +21,12 @@ const (
 )
 
 var (
-	shouldEval     bool   = true
-	shouldNotEval  bool   = false
-	emptyQueryString map[string][]string = nil
-	queryStringWithFalseEval = map[string][]string{"eval": []string{"false"}}
-	queryStringWithTrueEval = map[string][]string{"eval": []string{"true"}}
-	signupAssessmentFixture = &SignupAssessment{
+	shouldEval               bool                = true
+	shouldNotEval            bool                = false
+	emptyQueryString         map[string][]string = nil
+	queryStringWithFalseEval                     = map[string][]string{"eval": []string{"false"}}
+	queryStringWithTrueEval                      = map[string][]string{"eval": []string{"true"}}
+	signupAssessmentFixture                      = &SignupAssessment{
 		ID:             "some-id",
 		DeviceID:       "some-device-id",
 		RequestID:      "some-request-id",
