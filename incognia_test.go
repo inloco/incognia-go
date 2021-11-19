@@ -21,6 +21,11 @@ const (
 )
 
 var (
+	shouldEval     bool   = true
+	shouldNotEval  bool   = false
+	emptyQueryString map[string][]string = nil
+	queryStringWithFalseEval = map[string][]string{"eval": []string{"false"}}
+	queryStringWithTrueEval = map[string][]string{"eval": []string{"true"}}
 	signupAssessmentFixture = &SignupAssessment{
 		ID:             "some-id",
 		DeviceID:       "some-device-id",
@@ -160,6 +165,7 @@ var (
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
+		Eval:           &shouldNotEval,
 		Addresses: []*TransactionAddress{
 			{
 				Type: Billing,
@@ -203,6 +209,12 @@ var (
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
+	}
+	loginFixtureWithEval = &Login{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		Eval:           &shouldEval,
 	}
 	postLoginRequestBodyFixture = &postTransactionRequestBody{
 		InstallationID: "installation-id",
@@ -386,16 +398,17 @@ func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
-	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture, queryStringWithFalseEval)
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterPayment(paymentFixture)
+
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentAfterTokenExpiration() {
-	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterPayment(paymentFixture)
@@ -422,7 +435,7 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyAccountId() {
 }
 
 func (suite *IncogniaTestSuite) TestForbiddenRegisterPayment() {
-	transactionServer := suite.mockPostTransactionsEndpoint("some-other-token", postPaymentRequestBodyFixture, transactionAssessmentFixture)
+	transactionServer := suite.mockPostTransactionsEndpoint("some-other-token", postPaymentRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterPayment(paymentFixture)
@@ -443,7 +456,7 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentErrors() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterLogin() {
-	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture)
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterLogin(loginFixture)
@@ -451,8 +464,17 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLogin() {
 	suite.Equal(transactionAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithEval() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, queryStringWithTrueEval)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterLogin(loginFixtureWithEval)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
-	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture)
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterLogin(loginFixture)
@@ -479,7 +501,7 @@ func (suite *IncogniaTestSuite) TestRegisterLoginEmptyAccountId() {
 }
 
 func (suite *IncogniaTestSuite) TestForbiddenRegisterLogin() {
-	transactionServer := suite.mockPostTransactionsEndpoint("some-other-token", postLoginRequestBodyFixture, transactionAssessmentFixture)
+	transactionServer := suite.mockPostTransactionsEndpoint("some-other-token", postLoginRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterLogin(loginFixture)
@@ -537,13 +559,18 @@ func mockStatusServer(statusCode int) *httptest.Server {
 	return statusServer
 }
 
-func (suite *IncogniaTestSuite) mockPostTransactionsEndpoint(expectedToken string, expectedBody *postTransactionRequestBody, expectedResponse *TransactionAssessment) *httptest.Server {
+func (suite *IncogniaTestSuite) mockPostTransactionsEndpoint(expectedToken string, expectedBody *postTransactionRequestBody, expectedResponse *TransactionAssessment, expectedQueryString map[string][]string) *httptest.Server {
 	transactionsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
 		if !isRequestAuthorized(r, expectedToken) {
 			w.WriteHeader(http.StatusForbidden)
 			return
+		}
+
+		if expectedQueryString != nil {
+			requestQueryString := r.URL.Query()
+			suite.Equal(expectedQueryString["eval"], requestQueryString["eval"])
 		}
 
 		var requestBody postTransactionRequestBody
