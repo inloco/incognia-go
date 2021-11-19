@@ -38,12 +38,14 @@ type Payment struct {
 	Addresses      []*TransactionAddress
 	Value          *PaymentValue
 	Methods        []*PaymentMethod
+	Eval           *bool
 }
 
 type Login struct {
 	InstallationID string
 	AccountID      string
 	ExternalID     string
+	Eval           *bool
 }
 
 type FeedbackIdentifiers struct {
@@ -196,6 +198,12 @@ func (c *Client) RegisterPayment(payment *Payment) (*TransactionAssessment, erro
 		return nil, err
 	}
 
+	if payment.Eval != nil {
+		q := req.URL.Query()
+		q.Add("eval", fmt.Sprintf("%t", *payment.Eval))
+		req.URL.RawQuery = q.Encode()
+	}
+
 	var paymentAssesment TransactionAssessment
 
 	err = c.doRequest(req, &paymentAssesment)
@@ -228,6 +236,12 @@ func (c *Client) RegisterLogin(login *Login) (*TransactionAssessment, error) {
 	req, err := http.NewRequest("POST", c.endpoints.Transactions, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
+	}
+
+	if login.Eval != nil {
+		q := req.URL.Query()
+		q.Add("eval", fmt.Sprintf("%t", *login.Eval))
+		req.URL.RawQuery = q.Encode()
 	}
 
 	var loginAssessment TransactionAssessment
