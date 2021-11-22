@@ -142,7 +142,9 @@ assessment, err := client.RegisterLogin(&incognia.Login{
 
 ### Registering Payment or Login without evaluating its risk assessment
 
-To register a login or a payment without evaluating its risk assessment, you should use the `Eval *bool` atribute as follows:
+Turning off the risk assessment evaluation allows you to register a new transaction (Login or Payment), but the response will be an empty response (`TransactionAssessment` and `SignupAssessment`). For instance, if you're using the risk assessment only for some payment transactions you still should register all the other ones: this will avoid any bias on the risk assessment computation.
+
+To register a login or a payment without evaluating its risk assessment, you should use the `Eval *bool` attribute as follows:
 
 Login example:
 ```go
@@ -174,8 +176,6 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
                 CountryName:  "United States of America",
     ...
 ```
-
-Turning off the risk assessment evaluation allows you to register a new transaction (Login or Payment), but the response will be an empty response (`TransactionAssessment` and `SignupAssessment`). For instance, if you're using the risk assessment only for some payment transactions you still should register all the other ones: this will avoid any bias on the risk assessment computation.
 
 ### Sending Feedback
 
