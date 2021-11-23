@@ -94,7 +94,8 @@ var (
 		AccountID:      "some-account-id",
 		ExternalID:     "some-external-id",
 	}
-	transactionAssessmentFixture = &TransactionAssessment{
+	emptyTransactionAssessmentFixture = &TransactionAssessment{}
+	transactionAssessmentFixture      = &TransactionAssessment{
 		ID:             "some-id",
 		DeviceID:       "some-device-id",
 		RiskAssessment: LowRisk,
@@ -165,7 +166,6 @@ var (
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
-		Eval:           &shouldNotEval,
 		Addresses: []*TransactionAddress{
 			{
 				Type: Billing,
@@ -205,16 +205,45 @@ var (
 			},
 		},
 	}
+	simplePaymentFixture = &Payment{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+	}
+	simplePaymentFixtureWithShouldEval = &Payment{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		Eval:           &shouldEval,
+	}
+	simplePaymentFixtureWithShouldNotEval = &Payment{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		Eval:           &shouldNotEval,
+	}
+	postSimplePaymentRequestBodyFixture = &postTransactionRequestBody{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		Type:           paymentType,
+	}
 	loginFixture = &Login{
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 	}
-	loginFixtureWithEval = &Login{
+	loginFixtureWithShouldEval = &Login{
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 		Eval:           &shouldEval,
+	}
+	loginFixtureWithShouldNotEval = &Login{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		Eval:           &shouldNotEval,
 	}
 	postLoginRequestBodyFixture = &postTransactionRequestBody{
 		InstallationID: "installation-id",
@@ -398,7 +427,7 @@ func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
-	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture, queryStringWithFalseEval)
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterPayment(paymentFixture)
@@ -455,6 +484,24 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentErrors() {
 	}
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithEval() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postSimplePaymentRequestBodyFixture, transactionAssessmentFixture, queryStringWithTrueEval)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(simplePaymentFixtureWithShouldEval)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithFalseEval() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postSimplePaymentRequestBodyFixture, transactionAssessmentFixture, queryStringWithFalseEval)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(simplePaymentFixtureWithShouldNotEval)
+	suite.NoError(err)
+	suite.Equal(emptyTransactionAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterLogin() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
@@ -468,9 +515,18 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithEval() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, queryStringWithTrueEval)
 	defer transactionServer.Close()
 
-	response, err := suite.client.RegisterLogin(loginFixtureWithEval)
+	response, err := suite.client.RegisterLogin(loginFixtureWithShouldEval)
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithFalseEval() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, queryStringWithFalseEval)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterLogin(loginFixtureWithShouldNotEval)
+	suite.NoError(err)
+	suite.Equal(emptyTransactionAssessmentFixture, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
@@ -568,13 +624,18 @@ func (suite *IncogniaTestSuite) mockPostTransactionsEndpoint(expectedToken strin
 			return
 		}
 
-		if expectedQueryString != nil {
-			requestQueryString := r.URL.Query()
-			suite.Equal(expectedQueryString["eval"], requestQueryString["eval"])
-		}
+		requestQueryString := r.URL.Query()
+		requestEvalQueryString := requestQueryString["eval"]
+		suite.Equal(expectedQueryString["eval"], requestEvalQueryString)
 
 		var requestBody postTransactionRequestBody
 		json.NewDecoder(r.Body).Decode(&requestBody)
+
+		if requestEvalQueryString != nil && requestEvalQueryString[0] == "false" {
+			res, _ := json.Marshal(emptyTransactionAssessmentFixture)
+			w.Write(res)
+			return
+		}
 
 		if reflect.DeepEqual(&requestBody, expectedBody) {
 			res, _ := json.Marshal(expectedResponse)
