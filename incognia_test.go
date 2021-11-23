@@ -625,17 +625,19 @@ func (suite *IncogniaTestSuite) mockPostTransactionsEndpoint(expectedToken strin
 		}
 
 		requestQueryString := r.URL.Query()
+		for parameter := range requestQueryString {
+			suite.Equal(expectedQueryString[parameter], requestQueryString[parameter])
+		}
+
 		requestEvalQueryString := requestQueryString["eval"]
-		suite.Equal(expectedQueryString["eval"], requestEvalQueryString)
-
-		var requestBody postTransactionRequestBody
-		json.NewDecoder(r.Body).Decode(&requestBody)
-
 		if requestEvalQueryString != nil && requestEvalQueryString[0] == "false" {
 			res, _ := json.Marshal(emptyTransactionAssessmentFixture)
 			w.Write(res)
 			return
 		}
+
+		var requestBody postTransactionRequestBody
+		json.NewDecoder(r.Body).Decode(&requestBody)
 
 		if reflect.DeepEqual(&requestBody, expectedBody) {
 			res, _ := json.Marshal(expectedResponse)
