@@ -29,6 +29,7 @@ type IncogniaClientConfig struct {
 	ClientID     string
 	ClientSecret string
 	Region       Region
+	Timeout      time.Duration
 }
 
 type Payment struct {
@@ -75,8 +76,12 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		return nil, ErrMissingClientIDOrClientSecret
 	}
 
+	if config.Timeout == 0 {
+		config.Timeout = time.Second * 10
+	}
+
 	netClient := &http.Client{
-		Timeout: time.Second * 10,
+		Timeout: config.Timeout,
 	}
 
 	endpoints := newEndpoints(config.Region)
