@@ -13,21 +13,37 @@ go get repo.incognia.com/go/incognia
 
 ### Configuration
 
-Before calling the API methods, you need to create an instance of the `Client` struct.
+First, you need to obtain an instance of the API client using `New`. It receives a configuration
+object of `IncogniaClientConfig` that contains the following parameters:
+
+| Parameter | Description | Required | Default |
+| --- | --- | --- | --- |
+| `ClientID` | Your client ID | **Yes** | - |
+| `ClientSecret` | Your client secret | **Yes** | - |
+| `Region` | Incognia's service region, either `BR` or `US` | **No** | `US` |
+| `Timeout` | Request timeout | **No** | 10 seconds |
+
+For instance, if you need a client for the US region:
 
 ```go
-// to use the US region
 client, err := incognia.New(&incognia.IncogniaClientConfig{
     ClientID:     "your-client-id",
     ClientSecret: "your-client-secret",
-    Region:       incognia.US,
 })
+if err != nil {
+    log.Fatal("could not initialize Incognia client")
+}
+```
 
+or if you need a client for the BR region that uses a specific timeout:
+
+```go
 // to use the BR region
 client, err := incognia.New(&incognia.IncogniaClientConfig{
     ClientID:     "your-client-id",
     ClientSecret: "your-client-secret",
     Region:       incognia.BR,
+    Timeout:      time.Second * 2,
 })
 if err != nil {
     log.Fatal("could not initialize Incognia client")
