@@ -565,6 +565,28 @@ func (suite *IncogniaTestSuite) TestForbiddenRegisterLogin() {
 	suite.EqualError(err, "403 Forbidden")
 }
 
+func (suite *IncogniaTestSuite) TestUnauthorizedTokenGeneration() {
+	tokenServer := suite.mockTokenEndpointUnauthorized()
+	suite.client.tokenManager.TokenEndpoint = tokenServer.URL
+	defer tokenServer.Close()
+
+	responsePayment, err := suite.client.RegisterPayment(paymentFixture)
+	suite.Nil(responsePayment)
+	suite.EqualError(err, ErrInvalidCredentials.Error())
+
+	responseLogin, err := suite.client.RegisterLogin(loginFixture)
+	suite.Nil(responseLogin)
+	suite.EqualError(err, ErrInvalidCredentials.Error())
+
+	responseSignUp, err := suite.client.RegisterSignup("installation-id", addressFixture)
+	suite.Nil(responseSignUp)
+	suite.EqualError(err, ErrInvalidCredentials.Error())
+
+	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
+	err = suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	suite.EqualError(err, ErrInvalidCredentials.Error())
+}
+
 func (suite *IncogniaTestSuite) TestRegisterLoginErrors() {
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
@@ -613,6 +635,15 @@ func mockStatusServer(statusCode int) *httptest.Server {
 	}))
 
 	return statusServer
+}
+
+func (suite *IncogniaTestSuite) mockTokenEndpointUnauthorized() *httptest.Server {
+	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+
+	return tokenServer
 }
 
 func (suite *IncogniaTestSuite) mockPostTransactionsEndpoint(expectedToken string, expectedBody *postTransactionRequestBody, expectedResponse *TransactionAssessment, expectedQueryString map[string][]string) *httptest.Server {

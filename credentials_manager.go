@@ -2,6 +2,7 @@ package incognia
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 )
@@ -20,6 +21,8 @@ type clientCredentialsManagerConfig struct {
 	Endpoint     string
 	NetClient    *http.Client
 }
+
+var ErrInvalidCredentials = errors.New("invalid credentials")
 
 func newClientCredentialsTokenManager(config *clientCredentialsManagerConfig) *clientCredentialsTokenManager {
 	return &clientCredentialsTokenManager{
@@ -54,6 +57,10 @@ func (tm *clientCredentialsTokenManager) refreshToken() error {
 	res, err := tm.NetClient.Do(req)
 	if err != nil {
 		return err
+	}
+
+	if res.StatusCode == http.StatusUnauthorized {
+		return ErrInvalidCredentials
 	}
 
 	defer res.Body.Close()
