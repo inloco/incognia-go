@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -61,6 +62,10 @@ func (tm *clientCredentialsTokenManager) refreshToken() error {
 
 	if res.StatusCode == http.StatusUnauthorized {
 		return ErrInvalidCredentials
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return errors.New("Error refreshing token: " + strconv.Itoa(res.StatusCode))
 	}
 
 	defer res.Body.Close()

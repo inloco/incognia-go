@@ -98,6 +98,18 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 	return client, nil
 }
 
+func (c *Client) Authenticate() error {
+	return c.tokenManager.refreshToken()
+}
+
+func (c *Client) GetAuthenticationExpiresInSeconds() int64 {
+	token := c.tokenManager.Token
+	if token != nil {
+		return token.ExpiresIn
+	}
+	return 0
+}
+
 func (c *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error) {
 	if signupID == "" {
 		return nil, ErrMissingSignupID

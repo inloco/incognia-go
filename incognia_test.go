@@ -275,6 +275,39 @@ func (suite *IncogniaTestSuite) TearDownTest() {
 	defer suite.tokenServer.Close()
 }
 
+func (suite *IncogniaTestSuite) TestSuccessAuthenticate() {
+	err := suite.client.Authenticate()
+	suite.NoError(err)
+	token := suite.client.tokenManager.Token
+	suite.NotNil(token)
+	suite.True(token.isValid())
+}
+
+func (suite *IncogniaTestSuite) TestAuthenticateErrors() {
+	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
+	for _, status := range errors {
+		statusServer := mockStatusServer(status)
+		suite.tokenServer = statusServer
+		suite.client.tokenManager.TokenEndpoint = statusServer.URL
+
+		err := suite.client.Authenticate()
+		suite.Contains(err.Error(), strconv.Itoa(status))
+	}
+}
+
+func (suite *IncogniaTestSuite) TestSuccessGetAuthenticationExpiresInSeconds() {
+	err := suite.client.Authenticate()
+	expiresInSeconds := suite.client.GetAuthenticationExpiresInSeconds()
+	suite.NoError(err)
+	expectedExpiresIn, _ := strconv.ParseInt(tokenExpiresIn, 10, 64)
+	suite.Equal(expiresInSeconds, expectedExpiresIn)
+}
+
+func (suite *IncogniaTestSuite) TestGetAuthenticationExpiresInSecondsNoToken() {
+	expiresInSeconds := suite.client.GetAuthenticationExpiresInSeconds()
+	suite.Equal(expiresInSeconds, int64(0))
+}
+
 func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
 	signupID := "signup-id"
 	signupServer := suite.mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
