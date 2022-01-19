@@ -16,18 +16,15 @@ type accessToken struct {
 	TokenType   string `json:"token_type"`
 }
 
-func (token *accessToken) isValid() bool {
+func (token *accessToken) IsExpired() bool {
+	expiresAt := token.GetExpiresAt()
+	return time.Now().After(expiresAt)
+}
+
+func (token *accessToken) GetExpiresAt() time.Time {
 	createdAt := token.CreatedAt
 	expiresIn := token.ExpiresIn
-
-	expirationLimit := createdAt + expiresIn
-	nowInSeconds := time.Now().Unix()
-
-	if nowInSeconds >= expirationLimit {
-		return false
-	}
-
-	return true
+	return time.Unix(createdAt+expiresIn, 0)
 }
 
 type Assessment string
