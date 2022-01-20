@@ -26,11 +26,12 @@ type Client struct {
 }
 
 type IncogniaClientConfig struct {
-	ClientID      string
-	ClientSecret  string
-	TokenProvider TokenProvider
-	Region        Region
-	Timeout       time.Duration
+	ClientID          string
+	ClientSecret      string
+	TokenProvider     TokenProvider
+	Region            Region
+	Timeout           time.Duration
+	TokenRouteTimeout time.Duration
 }
 
 type Payment struct {
@@ -90,9 +91,15 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		Timeout: timeout,
 	}
 
+	var tokenRouteTimeout time.Duration = config.TokenRouteTimeout
+	if tokenRouteTimeout == 0 {
+		tokenRouteTimeout = defaultNetClientTimeout
+	}
+
 	tokenClient := NewTokenClient(&TokenClientConfig{
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
+		Timeout:      tokenRouteTimeout,
 	})
 
 	var tokenProvider TokenProvider = config.TokenProvider
