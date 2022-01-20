@@ -293,6 +293,8 @@ func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderErrorTokenNotFound
 func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderSuccess() {
 	tokenProvider := NewManualRefreshTokenProvider(NewTokenClient(&TokenClientConfig{ClientID: clientID, ClientSecret: clientSecret}))
 	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
+	defer tokenServer.Close()
+
 	tokenProvider.tokenClient.tokenEndpoint = tokenServer.URL
 	client, _ := New(&IncogniaClientConfig{ClientID: clientID, ClientSecret: clientSecret, TokenProvider: tokenProvider})
 
