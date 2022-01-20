@@ -205,11 +205,6 @@ var (
 			},
 		},
 	}
-	simplePaymentFixture = &Payment{
-		InstallationID: "installation-id",
-		AccountID:      "account-id",
-		ExternalID:     "external-id",
-	}
 	simplePaymentFixtureWithShouldEval = &Payment{
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
@@ -265,10 +260,12 @@ func (suite *IncogniaTestSuite) SetupTest() {
 	client, _ := New(&IncogniaClientConfig{ClientID: clientID, ClientSecret: clientSecret})
 	suite.client = client
 
-	tokenServer := suite.mockTokenEndpoint(token, tokenExpiresIn)
+	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
+	suite.client.tokenProvider.(*AutoRefreshTokenProvider).tokenClient.tokenEndpoint = tokenServer.URL
+
+	suite.client.endpoints.Token = tokenServer.URL
 	suite.token = token
 	suite.tokenServer = tokenServer
-	suite.client.endpoints.Token = tokenServer.URL
 }
 
 func (suite *IncogniaTestSuite) TearDownTest() {
@@ -752,7 +749,7 @@ func readAuthorizationHeader(request *http.Request) (string, string) {
 	return tokenType, token
 }
 
-func (suite *IncogniaTestSuite) mockTokenEndpoint(expectedToken string, expiresIn string) *httptest.Server {
+func mockTokenEndpoint(expectedToken string, expiresIn string) *httptest.Server {
 	tokenResponse := map[string]string{
 		"access_token": expectedToken,
 		"expires_in":   expiresIn,
@@ -772,8 +769,6 @@ func (suite *IncogniaTestSuite) mockTokenEndpoint(expectedToken string, expiresI
 		res, _ := json.Marshal(tokenResponse)
 		w.Write(res)
 	}))
-
-	suite.client.tokenProvider.(*AutoRefreshTokenProvider).tokenClient.tokenEndpoint = tokenServer.URL
 
 	return tokenServer
 }

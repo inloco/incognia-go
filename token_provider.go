@@ -2,7 +2,13 @@ package incognia
 
 import (
 	"errors"
+	"net/http"
 	"time"
+)
+
+var (
+	ErrTokenNotFound = errors.New("token not found in memory")
+	ErrTokenExpired  = errors.New("incognia token expired")
 )
 
 type TokenProvider interface {
@@ -12,12 +18,9 @@ type TokenProvider interface {
 type Token interface {
 	IsExpired() bool
 	GetExpiresAt() time.Time
+	Type() string
+	SetAuthHeader(*http.Request)
 }
-
-var (
-	ErrTokenNotFound = errors.New("token not found in memory")
-	ErrTokenExpired  = errors.New("incognia token expired")
-)
 
 type ManualRefreshTokenProvider struct {
 	tokenClient *TokenClient

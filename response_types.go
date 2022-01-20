@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"net/http"
 	"reflect"
 	"strings"
 	"time"
@@ -25,6 +26,14 @@ func (token accessToken) GetExpiresAt() time.Time {
 	createdAt := token.CreatedAt
 	expiresIn := token.ExpiresIn
 	return time.Unix(createdAt+expiresIn, 0)
+}
+
+func (token accessToken) Type() string {
+	return token.TokenType
+}
+
+func (token accessToken) SetAuthHeader(request *http.Request) {
+	request.Header.Add("Authorization", fmt.Sprintf("%s %s", token.Type(), token.AccessToken))
 }
 
 type Assessment string

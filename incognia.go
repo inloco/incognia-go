@@ -10,6 +10,17 @@ import (
 	"time"
 )
 
+const (
+	defaultNetClientTimeout = 5 * time.Second
+)
+
+var (
+	ErrMissingInstallationID         = errors.New("missing installation id")
+	ErrMissingAccountID              = errors.New("missing account id")
+	ErrMissingSignupID               = errors.New("missing signup id")
+	ErrMissingClientIDOrClientSecret = errors.New("client id and client secret are required")
+)
+
 type Region int64
 
 const (
@@ -66,24 +77,12 @@ type Address struct {
 	AddressLine       string
 }
 
-const (
-	defaultNetClientTimeout = 5 * time.Second
-)
-
-var (
-	ErrMissingInstallationID         = errors.New("missing installation id")
-	ErrMissingAccountID              = errors.New("missing account id")
-	ErrMissingSignupID               = errors.New("missing signup id")
-	ErrMissingClientIDOrClientSecret = errors.New("client id and client secret are required")
-	ErrExpectingOAuthToken           = errors.New("expecting oAuth token")
-)
-
 func New(config *IncogniaClientConfig) (*Client, error) {
 	if config.ClientID == "" || config.ClientSecret == "" {
 		return nil, ErrMissingClientIDOrClientSecret
 	}
 
-	var timeout time.Duration = config.Timeout
+	timeout := config.Timeout
 	if timeout == 0 {
 		timeout = defaultNetClientTimeout
 	}
@@ -91,7 +90,7 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		Timeout: timeout,
 	}
 
-	var tokenRouteTimeout time.Duration = config.TokenRouteTimeout
+	tokenRouteTimeout := config.TokenRouteTimeout
 	if tokenRouteTimeout == 0 {
 		tokenRouteTimeout = defaultNetClientTimeout
 	}
@@ -102,7 +101,7 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		Timeout:      tokenRouteTimeout,
 	})
 
-	var tokenProvider TokenProvider = config.TokenProvider
+	tokenProvider := config.TokenProvider
 	if tokenProvider == nil {
 		tokenProvider = NewAutoRefreshTokenProvider(tokenClient)
 	}
@@ -317,12 +316,7 @@ func (c *Client) authorizeRequest(request *http.Request) error {
 		return err
 	}
 
-	accessToken, ok := token.(*accessToken)
-	if !ok {
-		return ErrExpectingOAuthToken
-	}
-
-	request.Header.Add("Authorization", fmt.Sprintf("%s %s", accessToken.TokenType, accessToken.AccessToken))
+	token.SetAuthHeader(request)
 
 	return nil
 }
