@@ -19,6 +19,7 @@ var (
 	ErrMissingAccountID              = errors.New("missing account id")
 	ErrMissingSignupID               = errors.New("missing signup id")
 	ErrMissingClientIDOrClientSecret = errors.New("client id and client secret are required")
+	ErrConfigIsNil                   = errors.New("incognia client config is required")
 )
 
 type Region int64
@@ -79,6 +80,10 @@ type Address struct {
 }
 
 func New(config *IncogniaClientConfig) (*Client, error) {
+	if config == nil {
+		return nil, ErrConfigIsNil
+	}
+
 	if config.ClientID == "" || config.ClientSecret == "" {
 		return nil, ErrMissingClientIDOrClientSecret
 	}
