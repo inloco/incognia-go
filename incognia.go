@@ -40,9 +40,10 @@ type IncogniaClientConfig struct {
 	ClientID          string
 	ClientSecret      string
 	TokenProvider     TokenProvider
-	Region            Region
 	Timeout           time.Duration
 	TokenRouteTimeout time.Duration
+	// Deprecated: Region is no longer used to determine endpoints
+	Region Region
 }
 
 type Payment struct {
