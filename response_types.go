@@ -16,12 +16,12 @@ type accessToken struct {
 	TokenType   string `json:"token_type"`
 }
 
-func (token *accessToken) IsExpired() bool {
+func (token accessToken) IsExpired() bool {
 	expiresAt := token.GetExpiresAt()
 	return time.Now().After(expiresAt)
 }
 
-func (token *accessToken) GetExpiresAt() time.Time {
+func (token accessToken) GetExpiresAt() time.Time {
 	createdAt := token.CreatedAt
 	expiresIn := token.ExpiresIn
 	return time.Unix(createdAt+expiresIn, 0)

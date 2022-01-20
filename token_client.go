@@ -45,7 +45,7 @@ func NewTokenClient(config *TokenClientConfig) *TokenClient {
 	}
 }
 
-func (tm *TokenClient) requestToken() (Token, error) {
+func (tm TokenClient) requestToken() (Token, error) {
 	req, err := http.NewRequest("POST", tm.tokenEndpoint, nil)
 	if err != nil {
 		return nil, err
