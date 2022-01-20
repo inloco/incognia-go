@@ -7,7 +7,9 @@ const (
 	feedbackEndpoint     = "/v2/feedbacks"
 )
 
-var baseEndpoint string = "https://api.incognia.com/api"
+var (
+	baseEndpoint = "https://api.incognia.com/api"
+)
 
 type endpoints struct {
 	Token        string
