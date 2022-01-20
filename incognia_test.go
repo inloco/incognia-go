@@ -272,6 +272,57 @@ func (suite *IncogniaTestSuite) TearDownTest() {
 	defer suite.tokenServer.Close()
 }
 
+func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderErrorTokenNotFound() {
+	tokenProvider := NewManualRefreshTokenProvider(NewTokenClient(&TokenClientConfig{ClientID: clientID, ClientSecret: clientSecret}))
+	client, _ := New(&IncogniaClientConfig{ClientID: clientID, ClientSecret: clientSecret, TokenProvider: tokenProvider})
+
+	_, err := client.GetSignupAssessment("any-signup-id")
+	suite.EqualError(err, ErrTokenNotFound.Error())
+
+	_, err = client.RegisterLogin(loginFixture)
+	suite.EqualError(err, ErrTokenNotFound.Error())
+
+	_, err = client.RegisterPayment(paymentFixture)
+	suite.EqualError(err, ErrTokenNotFound.Error())
+
+	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
+	err = client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	suite.EqualError(err, ErrTokenNotFound.Error())
+}
+
+func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderSuccess() {
+	tokenProvider := NewManualRefreshTokenProvider(NewTokenClient(&TokenClientConfig{ClientID: clientID, ClientSecret: clientSecret}))
+	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
+	tokenProvider.tokenClient.tokenEndpoint = tokenServer.URL
+	client, _ := New(&IncogniaClientConfig{ClientID: clientID, ClientSecret: clientSecret, TokenProvider: tokenProvider})
+
+	tokenProvider.Refresh()
+
+	suite.client = client
+	signupID := "signup-id"
+
+	signupServer := suite.mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
+	defer signupServer.Close()
+	_, err := client.GetSignupAssessment(signupID)
+	suite.NoError(err)
+
+	loginServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer loginServer.Close()
+	_, err = client.RegisterLogin(loginFixture)
+	suite.NoError(err)
+
+	paymentServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer paymentServer.Close()
+	_, err = client.RegisterPayment(paymentFixture)
+	suite.NoError(err)
+
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
+	defer feedbackServer.Close()
+	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
+	err = client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	suite.NoError(err)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
 	signupID := "signup-id"
 	signupServer := suite.mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
