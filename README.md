@@ -210,6 +210,32 @@ err := client.RegisterFeedback(feedbackEvent, &timestamp, &incognia.FeedbackIden
 })
 ```
 
+### Authentication
+
+Our library authenticates clients automatically, but clients may want to authenticate manually because our token route has a long response time (to avoid brute force attacks). If that's you case, you can choose the moment which authentication occurs by leveraging `ManualRefreshTokenProvider`, as shown by the example:
+
+```go
+tokenClient := incognia.NewTokenClient(&TokenClientConfig{clientID: clientID, clientSecret: clientSecret})
+tokenProvider := incognia.NewManualRefreshTokenProvider(tokenClient)
+c, err := incognia.New(&IncogniaClientConfig{TokenProvider: tokenProvider})
+if err != nil {
+    log.Fatal("could not initialize Incognia client")
+}
+
+go func(i *incognia.Client) {
+  for {
+      accessToken, err := tokenProvider.Refresh()
+      if (err != nil) {
+          log.PrintLn("could not refresh incognia token")
+          continue
+      }
+      time.Sleep(time.Until(accessToken.GetExpiresAt()))
+   }
+}(c)
+```
+
+You can also keep the default automatic authentication but increase the token route timeout by changing the `TokenRouteTimeout` parameter of your `IncogniaClientConfig`.
+
 ## Evidences
 
 Every assessment response (`TransactionAssessment` and `SignupAssessment`) includes supporting evidence in the type `Evidence`, which provides methods `GetEvidence` and `GetEvidenceAsInt64` to help you getting and parsing values. You can see usage examples below:
