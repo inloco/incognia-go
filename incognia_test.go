@@ -205,11 +205,6 @@ var (
 			},
 		},
 	}
-	simplePaymentFixture = &Payment{
-		InstallationID: "installation-id",
-		AccountID:      "account-id",
-		ExternalID:     "external-id",
-	}
 	simplePaymentFixtureWithShouldEval = &Payment{
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
@@ -265,14 +260,69 @@ func (suite *IncogniaTestSuite) SetupTest() {
 	client, _ := New(&IncogniaClientConfig{ClientID: clientID, ClientSecret: clientSecret})
 	suite.client = client
 
-	tokenServer := suite.mockTokenEndpoint(token, tokenExpiresIn)
+	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
+	suite.client.tokenProvider.(*AutoRefreshTokenProvider).tokenClient.tokenEndpoint = tokenServer.URL
+
+	suite.client.endpoints.Token = tokenServer.URL
 	suite.token = token
 	suite.tokenServer = tokenServer
-	suite.client.endpoints.Token = tokenServer.URL
 }
 
 func (suite *IncogniaTestSuite) TearDownTest() {
 	defer suite.tokenServer.Close()
+}
+
+func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderErrorTokenNotFound() {
+	tokenProvider := NewManualRefreshTokenProvider(NewTokenClient(&TokenClientConfig{ClientID: clientID, ClientSecret: clientSecret}))
+	client, _ := New(&IncogniaClientConfig{ClientID: clientID, ClientSecret: clientSecret, TokenProvider: tokenProvider})
+
+	_, err := client.GetSignupAssessment("any-signup-id")
+	suite.EqualError(err, ErrTokenNotFound.Error())
+
+	_, err = client.RegisterLogin(loginFixture)
+	suite.EqualError(err, ErrTokenNotFound.Error())
+
+	_, err = client.RegisterPayment(paymentFixture)
+	suite.EqualError(err, ErrTokenNotFound.Error())
+
+	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
+	err = client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	suite.EqualError(err, ErrTokenNotFound.Error())
+}
+
+func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderSuccess() {
+	tokenProvider := NewManualRefreshTokenProvider(NewTokenClient(&TokenClientConfig{ClientID: clientID, ClientSecret: clientSecret}))
+	tokenServer := mockTokenEndpoint(token, tokenExpiresIn)
+	defer tokenServer.Close()
+
+	tokenProvider.tokenClient.tokenEndpoint = tokenServer.URL
+	client, _ := New(&IncogniaClientConfig{ClientID: clientID, ClientSecret: clientSecret, TokenProvider: tokenProvider})
+
+	tokenProvider.Refresh()
+
+	suite.client = client
+	signupID := "signup-id"
+
+	signupServer := suite.mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
+	defer signupServer.Close()
+	_, err := client.GetSignupAssessment(signupID)
+	suite.NoError(err)
+
+	loginServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer loginServer.Close()
+	_, err = client.RegisterLogin(loginFixture)
+	suite.NoError(err)
+
+	paymentServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer paymentServer.Close()
+	_, err = client.RegisterPayment(paymentFixture)
+	suite.NoError(err)
+
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
+	defer feedbackServer.Close()
+	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
+	err = client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	suite.NoError(err)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
@@ -294,8 +344,8 @@ func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessmentAfterTokenExpirati
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 
-	token, _ := suite.client.tokenManager.getToken()
-	token.ExpiresIn = 0
+	token, _ := suite.client.tokenProvider.GetToken()
+	token.(*accessToken).ExpiresIn = 0
 
 	response, err = suite.client.GetSignupAssessment(signupID)
 	suite.NoError(err)
@@ -346,8 +396,8 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() 
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 
-	token, _ := suite.client.tokenManager.getToken()
-	token.ExpiresIn = 0
+	token, _ := suite.client.tokenProvider.GetToken()
+	token.(*accessToken).ExpiresIn = 0
 
 	response, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
 	suite.NoError(err)
@@ -397,8 +447,8 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackAfterTokenExpiration(
 	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
 	suite.NoError(err)
 
-	token, _ := suite.client.tokenManager.getToken()
-	token.ExpiresIn = 0
+	token, _ := suite.client.tokenProvider.GetToken()
+	token.(*accessToken).ExpiresIn = 0
 
 	err = suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
 	suite.NoError(err)
@@ -444,8 +494,8 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentAfterTokenExpiration()
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
 
-	token, _ := suite.client.tokenManager.getToken()
-	token.ExpiresIn = 0
+	token, _ := suite.client.tokenProvider.GetToken()
+	token.(*accessToken).ExpiresIn = 0
 
 	response, err = suite.client.RegisterPayment(paymentFixture)
 	suite.NoError(err)
@@ -537,8 +587,8 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
 
-	token, _ := suite.client.tokenManager.getToken()
-	token.ExpiresIn = 0
+	token, _ := suite.client.tokenProvider.GetToken()
+	token.(*accessToken).ExpiresIn = 0
 
 	response, err = suite.client.RegisterLogin(loginFixture)
 	suite.NoError(err)
@@ -567,7 +617,7 @@ func (suite *IncogniaTestSuite) TestForbiddenRegisterLogin() {
 
 func (suite *IncogniaTestSuite) TestUnauthorizedTokenGeneration() {
 	tokenServer := suite.mockTokenEndpointUnauthorized()
-	suite.client.tokenManager.TokenEndpoint = tokenServer.URL
+	suite.client.tokenProvider.(*AutoRefreshTokenProvider).tokenClient.tokenEndpoint = tokenServer.URL
 	defer tokenServer.Close()
 
 	responsePayment, err := suite.client.RegisterPayment(paymentFixture)
@@ -752,7 +802,7 @@ func readAuthorizationHeader(request *http.Request) (string, string) {
 	return tokenType, token
 }
 
-func (suite *IncogniaTestSuite) mockTokenEndpoint(expectedToken string, expiresIn string) *httptest.Server {
+func mockTokenEndpoint(expectedToken string, expiresIn string) *httptest.Server {
 	tokenResponse := map[string]string{
 		"access_token": expectedToken,
 		"expires_in":   expiresIn,
@@ -772,8 +822,6 @@ func (suite *IncogniaTestSuite) mockTokenEndpoint(expectedToken string, expiresI
 		res, _ := json.Marshal(tokenResponse)
 		w.Write(res)
 	}))
-
-	suite.client.tokenManager.TokenEndpoint = tokenServer.URL
 
 	return tokenServer
 }

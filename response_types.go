@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"net/http"
 	"reflect"
 	"strings"
 	"time"
@@ -16,18 +17,23 @@ type accessToken struct {
 	TokenType   string `json:"token_type"`
 }
 
-func (token *accessToken) isValid() bool {
+func (token accessToken) IsExpired() bool {
+	expiresAt := token.GetExpiresAt()
+	return time.Now().After(expiresAt)
+}
+
+func (token accessToken) GetExpiresAt() time.Time {
 	createdAt := token.CreatedAt
 	expiresIn := token.ExpiresIn
+	return time.Unix(createdAt+expiresIn, 0)
+}
 
-	expirationLimit := createdAt + expiresIn
-	nowInSeconds := time.Now().Unix()
+func (token accessToken) Type() string {
+	return token.TokenType
+}
 
-	if nowInSeconds >= expirationLimit {
-		return false
-	}
-
-	return true
+func (token accessToken) SetAuthHeader(request *http.Request) {
+	request.Header.Add("Authorization", fmt.Sprintf("%s %s", token.Type(), token.AccessToken))
 }
 
 type Assessment string

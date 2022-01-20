@@ -7,10 +7,9 @@ const (
 	feedbackEndpoint     = "/v2/feedbacks"
 )
 
-var baseEndpoint map[Region]string = map[Region]string{
-	US: "https://api.us.incognia.com/api",
-	BR: "https://api.br.incognia.com/api",
-}
+var (
+	baseEndpoint = "https://api.incognia.com/api"
+)
 
 type endpoints struct {
 	Token        string
@@ -19,11 +18,11 @@ type endpoints struct {
 	Feedback     string
 }
 
-func newEndpoints(region Region) endpoints {
+func getEndpoints() endpoints {
 	return endpoints{
-		Token:        baseEndpoint[region] + tokenEndpoint,
-		Signups:      baseEndpoint[region] + signupsEndpoint,
-		Transactions: baseEndpoint[region] + transactionsEndpoint,
-		Feedback:     baseEndpoint[region] + feedbackEndpoint,
+		Token:        baseEndpoint + tokenEndpoint,
+		Signups:      baseEndpoint + signupsEndpoint,
+		Transactions: baseEndpoint + transactionsEndpoint,
+		Feedback:     baseEndpoint + feedbackEndpoint,
 	}
 }

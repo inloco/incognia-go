@@ -10,6 +10,18 @@ import (
 	"time"
 )
 
+const (
+	defaultNetClientTimeout = 5 * time.Second
+)
+
+var (
+	ErrMissingInstallationID         = errors.New("missing installation id")
+	ErrMissingAccountID              = errors.New("missing account id")
+	ErrMissingSignupID               = errors.New("missing signup id")
+	ErrMissingClientIDOrClientSecret = errors.New("client id and client secret are required")
+	ErrConfigIsNil                   = errors.New("incognia client config is required")
+)
+
 type Region int64
 
 const (
@@ -18,18 +30,21 @@ const (
 )
 
 type Client struct {
-	clientID     string
-	clientSecret string
-	tokenManager *clientCredentialsTokenManager
-	netClient    *http.Client
-	endpoints    *endpoints
+	clientID      string
+	clientSecret  string
+	tokenProvider TokenProvider
+	netClient     *http.Client
+	endpoints     *endpoints
 }
 
 type IncogniaClientConfig struct {
-	ClientID     string
-	ClientSecret string
-	Region       Region
-	Timeout      time.Duration
+	ClientID          string
+	ClientSecret      string
+	TokenProvider     TokenProvider
+	Timeout           time.Duration
+	TokenRouteTimeout time.Duration
+	// Deprecated: Region is no longer used to determine endpoints
+	Region Region
 }
 
 type Payment struct {
@@ -64,38 +79,42 @@ type Address struct {
 	AddressLine       string
 }
 
-var (
-	ErrMissingInstallationID         = errors.New("missing installation id")
-	ErrMissingAccountID              = errors.New("missing account id")
-	ErrMissingSignupID               = errors.New("missing signup id")
-	ErrMissingClientIDOrClientSecret = errors.New("client id and client secret are required")
-)
-
 func New(config *IncogniaClientConfig) (*Client, error) {
+	if config == nil {
+		return nil, ErrConfigIsNil
+	}
+
 	if config.ClientID == "" || config.ClientSecret == "" {
 		return nil, ErrMissingClientIDOrClientSecret
 	}
 
-	if config.Timeout == 0 {
-		config.Timeout = time.Second * 10
+	timeout := config.Timeout
+	if timeout == 0 {
+		timeout = defaultNetClientTimeout
 	}
-
 	netClient := &http.Client{
-		Timeout: config.Timeout,
+		Timeout: timeout,
 	}
 
-	endpoints := newEndpoints(config.Region)
+	tokenRouteTimeout := config.TokenRouteTimeout
+	if tokenRouteTimeout == 0 {
+		tokenRouteTimeout = defaultNetClientTimeout
+	}
 
-	tokenManager := newClientCredentialsTokenManager(&clientCredentialsManagerConfig{
+	tokenClient := NewTokenClient(&TokenClientConfig{
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
-		Endpoint:     endpoints.Token,
-		NetClient:    netClient,
+		Timeout:      tokenRouteTimeout,
 	})
 
-	client := &Client{config.ClientID, config.ClientSecret, tokenManager, netClient, &endpoints}
+	tokenProvider := config.TokenProvider
+	if tokenProvider == nil {
+		tokenProvider = NewAutoRefreshTokenProvider(tokenClient)
+	}
 
-	return client, nil
+	endpoints := getEndpoints()
+
+	return &Client{clientID: config.ClientID, clientSecret: config.ClientSecret, tokenProvider: tokenProvider, netClient: netClient, endpoints: &endpoints}, nil
 }
 
 func (c *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error) {
@@ -298,12 +317,12 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 }
 
 func (c *Client) authorizeRequest(request *http.Request) error {
-	token, err := c.tokenManager.getToken()
+	token, err := c.tokenProvider.GetToken()
 	if err != nil {
 		return err
 	}
 
-	request.Header.Add("Authorization", fmt.Sprintf("%s %s", token.TokenType, token.AccessToken))
+	token.SetAuthHeader(request)
 
 	return nil
 }
