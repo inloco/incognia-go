@@ -58,6 +58,7 @@ func (tm TokenClient) requestToken() (Token, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode == http.StatusUnauthorized {
 		return nil, ErrInvalidCredentials
@@ -71,7 +72,6 @@ func (tm TokenClient) requestToken() (Token, error) {
 		CreatedAt: time.Now().Unix(),
 	}
 
-	defer res.Body.Close()
 	if err := json.NewDecoder(res.Body).Decode(result); err != nil {
 		return nil, err
 	}
