@@ -212,7 +212,7 @@ err := client.RegisterFeedback(feedbackEvent, &timestamp, &incognia.FeedbackIden
 
 ### Authentication
 
-Our library authenticates clients automatically, but clients may want to authenticate manually because our token route has a long response time (to avoid brute force attacks). If that's you case, you can choose the moment which authentication occurs by leveraging `ManualRefreshTokenProvider`, as shown by the example:
+Our library authenticates clients automatically, but clients may want to authenticate manually because our token route has a long response time (to avoid brute force attacks). If that's your case, you can choose the moment which authentication occurs by leveraging `ManualRefreshTokenProvider`, as shown by the example:
 
 ```go
 tokenClient := incognia.NewTokenClient(&TokenClientConfig{clientID: clientID, clientSecret: clientSecret})
