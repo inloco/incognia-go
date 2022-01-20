@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+const (
+	tokenNetClientTimeout = 5 * time.Second
+)
+
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+)
+
 type TokenClient struct {
 	ClientID      string
 	ClientSecret  string
@@ -20,14 +28,6 @@ type TokenClientConfig struct {
 	ClientSecret string
 	Timeout      time.Duration
 }
-
-var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
-)
-
-const (
-	tokenNetClientTimeout = 5 * time.Second
-)
 
 func NewTokenClient(config *TokenClientConfig) *TokenClient {
 	incogniaEndpoints := getEndpoints()
