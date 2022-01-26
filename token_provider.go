@@ -3,6 +3,7 @@ package incognia
 import (
 	"errors"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -25,6 +26,7 @@ type Token interface {
 type ManualRefreshTokenProvider struct {
 	tokenClient *TokenClient
 	token       Token
+	tokenMutex  sync.RWMutex
 }
 
 func NewManualRefreshTokenProvider(tokenClient *TokenClient) *ManualRefreshTokenProvider {
@@ -32,6 +34,9 @@ func NewManualRefreshTokenProvider(tokenClient *TokenClient) *ManualRefreshToken
 }
 
 func (t *ManualRefreshTokenProvider) GetToken() (Token, error) {
+	t.tokenMutex.RLock()
+	defer t.tokenMutex.RUnlock()
+
 	if t.token == nil {
 		return nil, ErrTokenNotFound
 	}
@@ -49,6 +54,9 @@ func (t *ManualRefreshTokenProvider) Refresh() (Token, error) {
 		return nil, err
 	}
 
+	t.tokenMutex.Lock()
+	defer t.tokenMutex.Unlock()
+
 	t.token = accessToken
 
 	return t.token, nil
@@ -57,6 +65,7 @@ func (t *ManualRefreshTokenProvider) Refresh() (Token, error) {
 type AutoRefreshTokenProvider struct {
 	tokenClient *TokenClient
 	token       Token
+	tokenMutex  sync.RWMutex
 }
 
 func NewAutoRefreshTokenProvider(tokenClient *TokenClient) *AutoRefreshTokenProvider {
@@ -66,7 +75,13 @@ func NewAutoRefreshTokenProvider(tokenClient *TokenClient) *AutoRefreshTokenProv
 }
 
 func (t *AutoRefreshTokenProvider) GetToken() (Token, error) {
+	var unlockOnce sync.Once
+
+	t.tokenMutex.RLock()
+	defer unlockOnce.Do(t.tokenMutex.RUnlock)
+
 	if t.token == nil || t.token.IsExpired() {
+		unlockOnce.Do(t.tokenMutex.RUnlock)
 		return t.refresh()
 	}
 
@@ -74,6 +89,13 @@ func (t *AutoRefreshTokenProvider) GetToken() (Token, error) {
 }
 
 func (t *AutoRefreshTokenProvider) refresh() (Token, error) {
+	t.tokenMutex.Lock()
+	defer t.tokenMutex.Unlock()
+
+	if t.token != nil && !t.token.IsExpired() {
+		return t.token, nil
+	}
+
 	accessToken, err := t.tokenClient.requestToken()
 	if err != nil {
 		return nil, err
