@@ -117,7 +117,18 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 	return &Client{clientID: config.ClientID, clientSecret: config.ClientSecret, tokenProvider: tokenProvider, netClient: netClient, endpoints: &endpoints}, nil
 }
 
-func (c *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error) {
+func (c *Client) GetSignupAssessment(signupID string) (ret *SignupAssessment, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+			ret = nil
+		}
+	}()
+
+	return c.getSignupAssessment(signupID)
+}
+
+func (c *Client) getSignupAssessment(signupID string) (ret *SignupAssessment, err error) {
 	if signupID == "" {
 		return nil, ErrMissingSignupID
 	}
@@ -137,7 +148,18 @@ func (c *Client) GetSignupAssessment(signupID string) (*SignupAssessment, error)
 	return &signupAssessment, nil
 }
 
-func (c *Client) RegisterSignup(installationID string, address *Address) (*SignupAssessment, error) {
+func (c *Client) RegisterSignup(installationID string, address *Address) (ret *SignupAssessment, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+			ret = nil
+		}
+	}()
+
+	return c.registerSignup(installationID, address)
+}
+
+func (c *Client) registerSignup(installationID string, address *Address) (ret *SignupAssessment, err error) {
 	if installationID == "" {
 		return nil, ErrMissingInstallationID
 	}
@@ -167,7 +189,17 @@ func (c *Client) RegisterSignup(installationID string, address *Address) (*Signu
 	return &signupAssessment, nil
 }
 
-func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) error {
+func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+		}
+	}()
+
+	return c.registerFeedback(feedbackEvent, timestamp, feedbackIdentifiers)
+}
+
+func (c *Client) registerFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
 	requestBody, err := json.Marshal(postFeedbackRequestBody{
 		Event:          feedbackEvent,
 		Timestamp:      timestamp.UnixNano() / 1000000,
@@ -195,7 +227,18 @@ func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Ti
 	return nil
 }
 
-func (c *Client) RegisterPayment(payment *Payment) (*TransactionAssessment, error) {
+func (c *Client) RegisterPayment(payment *Payment) (ret *TransactionAssessment, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+			ret = nil
+		}
+	}()
+
+	return c.registerPayment(payment)
+}
+
+func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, err error) {
 	if payment.InstallationID == "" {
 		return nil, ErrMissingInstallationID
 	}
@@ -238,7 +281,18 @@ func (c *Client) RegisterPayment(payment *Payment) (*TransactionAssessment, erro
 	return &paymentAssesment, nil
 }
 
-func (c *Client) RegisterLogin(login *Login) (*TransactionAssessment, error) {
+func (c *Client) RegisterLogin(login *Login) (ret *TransactionAssessment, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+			ret = nil
+		}
+	}()
+
+	return c.registerLogin(login)
+}
+
+func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 	if login.InstallationID == "" {
 		return nil, ErrMissingInstallationID
 	}

@@ -248,6 +248,14 @@ var (
 	}
 )
 
+type PanickingTokenProvider struct {
+	panicString string
+}
+
+func (tokenProvider PanickingTokenProvider) GetToken() (Token, error) {
+	panic(tokenProvider.panicString)
+}
+
 type IncogniaTestSuite struct {
 	suite.Suite
 
@@ -647,6 +655,24 @@ func (suite *IncogniaTestSuite) TestRegisterLoginErrors() {
 		suite.Nil(response)
 		suite.Contains(err.Error(), strconv.Itoa(status))
 	}
+}
+
+func (suite *IncogniaTestSuite) TestPanic() {
+	defer func() { suite.Nil(recover()) }()
+
+	panicString := "error getting token"
+	suite.client.tokenProvider = &PanickingTokenProvider{panicString: panicString}
+
+	suite.client.RegisterLogin(loginFixture)
+	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	suite.Equal(err.Error(), panicString)
+	_, err = suite.client.RegisterSignup("some-installationId", addressFixture)
+	suite.Equal(err.Error(), panicString)
+	_, err = suite.client.GetSignupAssessment("some-signup-id")
+	suite.Equal(err.Error(), panicString)
+	_, err = suite.client.RegisterPayment(paymentFixture)
+	suite.Equal(err.Error(), panicString)
 }
 
 func TestIncogniaTestSuite(t *testing.T) {
