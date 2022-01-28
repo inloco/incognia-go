@@ -75,17 +75,15 @@ func NewAutoRefreshTokenProvider(tokenClient *TokenClient) *AutoRefreshTokenProv
 }
 
 func (t *AutoRefreshTokenProvider) GetToken() (Token, error) {
-	var unlockOnce sync.Once
-
 	t.tokenMutex.RLock()
-	defer unlockOnce.Do(t.tokenMutex.RUnlock)
+	token := t.token
+	t.tokenMutex.RUnlock()
 
-	if t.token == nil || t.token.IsExpired() {
-		unlockOnce.Do(t.tokenMutex.RUnlock)
-		return t.refresh()
+	if token != nil && !token.IsExpired() {
+		return token, nil
 	}
 
-	return t.token, nil
+	return t.refresh()
 }
 
 func (t *AutoRefreshTokenProvider) refresh() (Token, error) {
