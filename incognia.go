@@ -164,17 +164,21 @@ func (c *Client) registerSignup(installationID string, address *Address) (ret *S
 		return nil, ErrMissingInstallationID
 	}
 
-	requestBody, err := json.Marshal(postAssessmentRequestBody{
-		InstallationID:    installationID,
-		AddressLine:       address.AddressLine,
-		StructuredAddress: address.StructuredAddress,
-		Coordinates:       address.Coordinates,
-	})
+	requestBody := postAssessmentRequestBody{
+		InstallationID: installationID,
+	}
+	if address != nil {
+		requestBody.AddressLine = address.AddressLine
+		requestBody.StructuredAddress = address.StructuredAddress
+		requestBody.Coordinates = address.Coordinates
+	}
+
+	requestBodyBytes, err := json.Marshal(requestBody)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", c.endpoints.Signups, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", c.endpoints.Signups, bytes.NewBuffer(requestBodyBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -200,21 +204,24 @@ func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Ti
 }
 
 func (c *Client) registerFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
-	requestBody, err := json.Marshal(postFeedbackRequestBody{
-		Event:          feedbackEvent,
-		Timestamp:      timestamp.UnixNano() / 1000000,
-		InstallationID: feedbackIdentifiers.InstallationID,
-		LoginID:        feedbackIdentifiers.LoginID,
-		PaymentID:      feedbackIdentifiers.PaymentID,
-		SignupID:       feedbackIdentifiers.SignupID,
-		AccountID:      feedbackIdentifiers.AccountID,
-		ExternalID:     feedbackIdentifiers.ExternalID,
-	})
+	requestBody := postFeedbackRequestBody{
+		Event:     feedbackEvent,
+		Timestamp: timestamp.UnixNano() / 1000000,
+	}
+	if feedbackIdentifiers != nil {
+		requestBody.InstallationID = feedbackIdentifiers.InstallationID
+		requestBody.LoginID = feedbackIdentifiers.LoginID
+		requestBody.PaymentID = feedbackIdentifiers.PaymentID
+		requestBody.SignupID = feedbackIdentifiers.SignupID
+		requestBody.AccountID = feedbackIdentifiers.AccountID
+		requestBody.ExternalID = feedbackIdentifiers.ExternalID
+	}
+	requestBodyBytes, err := json.Marshal(requestBody)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", c.endpoints.Feedback, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", c.endpoints.Feedback, bytes.NewBuffer(requestBodyBytes))
 	if err != nil {
 		return err
 	}

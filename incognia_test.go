@@ -71,6 +71,9 @@ var (
 			Lng: -46.6558819,
 		},
 	}
+	postSignupRequestBodyRequiredFieldsFixture = &postAssessmentRequestBody{
+		InstallationID: "installation-id",
+	}
 	addressFixture = &Address{
 		Coordinates:       postSignupRequestBodyFixture.Coordinates,
 		StructuredAddress: postSignupRequestBodyFixture.StructuredAddress,
@@ -85,6 +88,10 @@ var (
 		SignupID:       "some-signup-id",
 		AccountID:      "some-account-id",
 		ExternalID:     "some-external-id",
+	}
+	postFeedbackRequestBodyRequiredFieldsFixture = &postFeedbackRequestBody{
+		Event:     SignupAccepted,
+		Timestamp: time.Now().UnixNano() / 1000000,
 	}
 	feedbackIdentifiersFixture = &FeedbackIdentifiers{
 		InstallationID: "some-installation-id",
@@ -162,6 +169,11 @@ var (
 			},
 		},
 	}
+	postPaymentRequestBodyRequiredFieldsFixture = &postTransactionRequestBody{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
+		Type:           paymentType,
+	}
 	paymentFixture = &Payment{
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
@@ -204,6 +216,10 @@ var (
 				},
 			},
 		},
+	}
+	paymentFixtureRequiredFields = &Payment{
+		InstallationID: "installation-id",
+		AccountID:      "account-id",
 	}
 	simplePaymentFixtureWithShouldEval = &Payment{
 		InstallationID: "installation-id",
@@ -396,6 +412,15 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignup() {
 	suite.Equal(signupAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterSignupNilOptional() {
+	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyRequiredFieldsFixture, signupAssessmentFixture)
+	defer signupServer.Close()
+
+	response, err := suite.client.RegisterSignup(postSignupRequestBodyRequiredFieldsFixture.InstallationID, nil)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() {
 	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
@@ -411,6 +436,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() 
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 }
+
 func (suite *IncogniaTestSuite) TestRegisterSignupEmptyInstallationId() {
 	response, err := suite.client.RegisterSignup("", &Address{})
 	suite.EqualError(err, ErrMissingInstallationID.Error())
@@ -444,6 +470,15 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedback() {
 
 	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
 	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	suite.NoError(err)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackNilOptional() {
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyRequiredFieldsFixture)
+	defer feedbackServer.Close()
+
+	timestamp := time.Unix(0, postFeedbackRequestBodyRequiredFieldsFixture.Timestamp*int64(1000000))
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyRequiredFieldsFixture.Event, &timestamp, nil)
 	suite.NoError(err)
 }
 
@@ -489,6 +524,16 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterPayment(paymentFixture)
+
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentNilOptional() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyRequiredFieldsFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(paymentFixtureRequiredFields)
 
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
