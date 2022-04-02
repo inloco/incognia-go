@@ -506,6 +506,23 @@ func (suite *IncogniaTestSuite) TestForbiddenRegisterFeedback() {
 	suite.EqualError(err, "403 Forbidden")
 }
 
+func (suite *IncogniaTestSuite) TestErrorRegisterFeedbackInvalidFeedbackType() {
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
+	defer feedbackServer.Close()
+
+	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
+	err := suite.client.RegisterFeedback("invalid-type", &timestamp, feedbackIdentifiersFixture)
+	suite.EqualError(err, ErrInvalidFeedbackType.Error())
+}
+
+func (suite *IncogniaTestSuite) TestErrorRegisterFeedbackNilTimestamp() {
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
+	defer feedbackServer.Close()
+
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, nil, feedbackIdentifiersFixture)
+	suite.EqualError(err, ErrMissingTimestamp.Error())
+}
+
 func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
 	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
 
@@ -554,6 +571,13 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentAfterTokenExpiration()
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
 }
+
+func (suite *IncogniaTestSuite) TestRegisterPaymentNilPayment() {
+	response, err := suite.client.RegisterPayment(nil)
+	suite.EqualError(err, ErrMissingPayment.Error())
+	suite.Nil(response)
+}
+
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyInstallationId() {
 	response, err := suite.client.RegisterPayment(&Payment{AccountID: "some-account-id"})
 	suite.EqualError(err, ErrMissingInstallationID.Error())
@@ -647,6 +671,13 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
 }
+
+func (suite *IncogniaTestSuite) TestRegisterLoginNilLogin() {
+	response, err := suite.client.RegisterLogin(nil)
+	suite.EqualError(err, ErrMissingLogin.Error())
+	suite.Nil(response)
+}
+
 func (suite *IncogniaTestSuite) TestRegisterLoginEmptyInstallationId() {
 	response, err := suite.client.RegisterLogin(&Login{AccountID: "some-account-id"})
 	suite.EqualError(err, ErrMissingInstallationID.Error())

@@ -15,9 +15,13 @@ const (
 )
 
 var (
+	ErrMissingPayment                = errors.New("missing payment parameters")
+	ErrMissingLogin                  = errors.New("missing login parameters")
 	ErrMissingInstallationID         = errors.New("missing installation id")
 	ErrMissingAccountID              = errors.New("missing account id")
 	ErrMissingSignupID               = errors.New("missing signup id")
+	ErrMissingTimestamp              = errors.New("missing timestamp")
+	ErrInvalidFeedbackType           = errors.New("invalid feedback type")
 	ErrMissingClientIDOrClientSecret = errors.New("client id and client secret are required")
 	ErrConfigIsNil                   = errors.New("incognia client config is required")
 )
@@ -204,6 +208,13 @@ func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Ti
 }
 
 func (c *Client) registerFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
+	if !isValidFeedbackType(feedbackEvent) {
+		return ErrInvalidFeedbackType
+	}
+	if timestamp == nil {
+		return ErrMissingTimestamp
+	}
+
 	requestBody := postFeedbackRequestBody{
 		Event:     feedbackEvent,
 		Timestamp: timestamp.UnixNano() / 1000000,
@@ -246,6 +257,10 @@ func (c *Client) RegisterPayment(payment *Payment) (ret *TransactionAssessment, 
 }
 
 func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, err error) {
+	if payment == nil {
+		return nil, ErrMissingPayment
+	}
+
 	if payment.InstallationID == "" {
 		return nil, ErrMissingInstallationID
 	}
@@ -300,6 +315,10 @@ func (c *Client) RegisterLogin(login *Login) (ret *TransactionAssessment, err er
 }
 
 func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
+	if login == nil {
+		return nil, ErrMissingLogin
+	}
+
 	if login.InstallationID == "" {
 		return nil, ErrMissingInstallationID
 	}
@@ -386,4 +405,35 @@ func (c *Client) authorizeRequest(request *http.Request) error {
 	token.SetAuthHeader(request)
 
 	return nil
+}
+
+func isValidFeedbackType(feedbackType FeedbackType) bool {
+	switch feedbackType {
+	case
+		PaymentAccepted,
+		PaymentDeclined,
+		PaymentDeclinedByRiskAnalysis,
+		PaymentDeclinedByAcquirer,
+		PaymentDeclinedByBusiness,
+		PaymentDeclinedByManualReview,
+		PaymentAcceptedByThirdParty,
+		LoginAccepted,
+		LoginDeclined,
+		SignupAccepted,
+		SignupDeclined,
+		ChallengePassed,
+		ChallengeFailed,
+		PasswordChangedSuccessfully,
+		PasswordChangeFailed,
+		Verified,
+		NotVerified,
+		Chargeback,
+		PromotionAbuse,
+		AccountTakeover,
+		MposFraud,
+		ChargebackNotification:
+		return true
+	default:
+		return false
+	}
 }
