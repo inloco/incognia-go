@@ -15,9 +15,13 @@ const (
 )
 
 var (
+	ErrMissingPayment                = errors.New("missing payment parameters")
+	ErrMissingLogin                  = errors.New("missing login parameters")
 	ErrMissingInstallationID         = errors.New("missing installation id")
 	ErrMissingAccountID              = errors.New("missing account id")
 	ErrMissingSignupID               = errors.New("missing signup id")
+	ErrMissingTimestamp              = errors.New("missing timestamp")
+	ErrInvalidFeedbackType           = errors.New("invalid feedback type")
 	ErrMissingClientIDOrClientSecret = errors.New("client id and client secret are required")
 	ErrConfigIsNil                   = errors.New("incognia client config is required")
 )
@@ -164,17 +168,21 @@ func (c *Client) registerSignup(installationID string, address *Address) (ret *S
 		return nil, ErrMissingInstallationID
 	}
 
-	requestBody, err := json.Marshal(postAssessmentRequestBody{
-		InstallationID:    installationID,
-		AddressLine:       address.AddressLine,
-		StructuredAddress: address.StructuredAddress,
-		Coordinates:       address.Coordinates,
-	})
+	requestBody := postAssessmentRequestBody{
+		InstallationID: installationID,
+	}
+	if address != nil {
+		requestBody.AddressLine = address.AddressLine
+		requestBody.StructuredAddress = address.StructuredAddress
+		requestBody.Coordinates = address.Coordinates
+	}
+
+	requestBodyBytes, err := json.Marshal(requestBody)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", c.endpoints.Signups, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", c.endpoints.Signups, bytes.NewBuffer(requestBodyBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -200,21 +208,31 @@ func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Ti
 }
 
 func (c *Client) registerFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
-	requestBody, err := json.Marshal(postFeedbackRequestBody{
-		Event:          feedbackEvent,
-		Timestamp:      timestamp.UnixNano() / 1000000,
-		InstallationID: feedbackIdentifiers.InstallationID,
-		LoginID:        feedbackIdentifiers.LoginID,
-		PaymentID:      feedbackIdentifiers.PaymentID,
-		SignupID:       feedbackIdentifiers.SignupID,
-		AccountID:      feedbackIdentifiers.AccountID,
-		ExternalID:     feedbackIdentifiers.ExternalID,
-	})
+	if !isValidFeedbackType(feedbackEvent) {
+		return ErrInvalidFeedbackType
+	}
+	if timestamp == nil {
+		return ErrMissingTimestamp
+	}
+
+	requestBody := postFeedbackRequestBody{
+		Event:     feedbackEvent,
+		Timestamp: timestamp.UnixNano() / 1000000,
+	}
+	if feedbackIdentifiers != nil {
+		requestBody.InstallationID = feedbackIdentifiers.InstallationID
+		requestBody.LoginID = feedbackIdentifiers.LoginID
+		requestBody.PaymentID = feedbackIdentifiers.PaymentID
+		requestBody.SignupID = feedbackIdentifiers.SignupID
+		requestBody.AccountID = feedbackIdentifiers.AccountID
+		requestBody.ExternalID = feedbackIdentifiers.ExternalID
+	}
+	requestBodyBytes, err := json.Marshal(requestBody)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", c.endpoints.Feedback, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", c.endpoints.Feedback, bytes.NewBuffer(requestBodyBytes))
 	if err != nil {
 		return err
 	}
@@ -239,6 +257,10 @@ func (c *Client) RegisterPayment(payment *Payment) (ret *TransactionAssessment, 
 }
 
 func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, err error) {
+	if payment == nil {
+		return nil, ErrMissingPayment
+	}
+
 	if payment.InstallationID == "" {
 		return nil, ErrMissingInstallationID
 	}
@@ -293,6 +315,10 @@ func (c *Client) RegisterLogin(login *Login) (ret *TransactionAssessment, err er
 }
 
 func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
+	if login == nil {
+		return nil, ErrMissingLogin
+	}
+
 	if login.InstallationID == "" {
 		return nil, ErrMissingInstallationID
 	}
@@ -379,4 +405,35 @@ func (c *Client) authorizeRequest(request *http.Request) error {
 	token.SetAuthHeader(request)
 
 	return nil
+}
+
+func isValidFeedbackType(feedbackType FeedbackType) bool {
+	switch feedbackType {
+	case
+		PaymentAccepted,
+		PaymentDeclined,
+		PaymentDeclinedByRiskAnalysis,
+		PaymentDeclinedByAcquirer,
+		PaymentDeclinedByBusiness,
+		PaymentDeclinedByManualReview,
+		PaymentAcceptedByThirdParty,
+		LoginAccepted,
+		LoginDeclined,
+		SignupAccepted,
+		SignupDeclined,
+		ChallengePassed,
+		ChallengeFailed,
+		PasswordChangedSuccessfully,
+		PasswordChangeFailed,
+		Verified,
+		NotVerified,
+		Chargeback,
+		PromotionAbuse,
+		AccountTakeover,
+		MposFraud,
+		ChargebackNotification:
+		return true
+	default:
+		return false
+	}
 }
