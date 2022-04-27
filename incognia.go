@@ -7,11 +7,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"runtime"
+	"syscall"
 	"time"
 )
 
 const (
 	defaultNetClientTimeout = 5 * time.Second
+	contentTypeKey          = "Content-Type"
+	userAgentKey            = "User-Agent"
+	libVersion              = "1.8.0"
 )
 
 var (
@@ -359,7 +364,10 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 }
 
 func (c *Client) doRequest(request *http.Request, response interface{}) error {
-	request.Header.Add("Content-Type", "application/json")
+	headers := getDefaultHeaders()
+	for k, v := range headers {
+		request.Header.Add(k, v)
+	}
 
 	err := c.authorizeRequest(request)
 	if err != nil {
@@ -436,4 +444,33 @@ func isValidFeedbackType(feedbackType FeedbackType) bool {
 	default:
 		return false
 	}
+}
+
+func getDefaultHeaders() map[string]string {
+	headers := make(map[string]string)
+	headers[contentTypeKey] = "application/json"
+	headers[userAgentKey] = generateUserAgentString()
+	return headers
+}
+
+func generateUserAgentString() string {
+	osName := runtime.GOOS
+	osArch := runtime.GOARCH
+
+	var uts syscall.Utsname
+	syscall.Uname(&uts)
+
+	kernelVersion := int8ToStr(uts.Release[:])
+	return fmt.Sprintf("incognia-go/%s (%s %s %s) golang/%s", libVersion, osName, kernelVersion, osArch, runtime.Version())
+}
+
+func int8ToStr(arr []int8) string {
+	b := make([]byte, 0, len(arr))
+	for _, v := range arr {
+		if v == 0x00 {
+			break
+		}
+		b = append(b, byte(v))
+	}
+	return string(b)
 }

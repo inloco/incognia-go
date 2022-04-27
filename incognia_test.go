@@ -764,6 +764,8 @@ func (suite *IncogniaTestSuite) mockFeedbackEndpoint(expectedToken string, expec
 			return
 		}
 
+		suite.Contains(r.Header, userAgentKey)
+
 		var requestBody postFeedbackRequestBody
 		json.NewDecoder(r.Body).Decode(&requestBody)
 
@@ -807,6 +809,8 @@ func (suite *IncogniaTestSuite) mockPostTransactionsEndpoint(expectedToken strin
 			return
 		}
 
+		suite.Contains(r.Header, userAgentKey)
+
 		requestQueryString := r.URL.Query()
 		for parameter := range requestQueryString {
 			suite.Equal(expectedQueryString[parameter], requestQueryString[parameter])
@@ -845,6 +849,8 @@ func (suite *IncogniaTestSuite) mockPostSignupsEndpoint(expectedToken string, ex
 			return
 		}
 
+		suite.Contains(r.Header, userAgentKey)
+
 		var requestBody postAssessmentRequestBody
 		json.NewDecoder(r.Body).Decode(&requestBody)
 
@@ -870,6 +876,8 @@ func (suite *IncogniaTestSuite) mockGetSignupsEndpoint(expectedToken, expectedSi
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
+
+		suite.Contains(r.Header, userAgentKey)
 
 		defer r.Body.Close()
 
