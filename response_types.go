@@ -50,6 +50,11 @@ var (
 
 type Evidence map[string]interface{}
 
+type Reason struct {
+	Code   string `json:"code"`
+	Source string `json:"source"`
+}
+
 func (a Evidence) GetEvidence(evidenceName string, evidenceOut interface{}) error {
 	return a.getEvidenceWithPath(a, strings.Split(evidenceName, "."), evidenceOut)
 }
@@ -177,6 +182,7 @@ type SignupAssessment struct {
 	RequestID      string     `json:"request_id"`
 	RiskAssessment Assessment `json:"risk_assessment"`
 	Evidence       Evidence   `json:"evidence"`
+	Reasons        []Reason   `json:"reasons"`
 }
 
 type TransactionAssessment struct {
@@ -184,4 +190,5 @@ type TransactionAssessment struct {
 	RiskAssessment Assessment `json:"risk_assessment"`
 	DeviceID       string     `json:"device_id"`
 	Evidence       Evidence   `json:"evidence"`
+	Reasons        []Reason   `json:"reasons"`
 }
