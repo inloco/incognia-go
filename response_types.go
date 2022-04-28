@@ -51,8 +51,8 @@ var (
 type Evidence map[string]interface{}
 
 type Reason struct {
-	Code   string `json:"code"`
-	Source string `json:"source"`
+	Code   string
+	Source string
 }
 
 func (a Evidence) GetEvidence(evidenceName string, evidenceOut interface{}) error {
