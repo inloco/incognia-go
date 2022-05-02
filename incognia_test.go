@@ -31,6 +31,7 @@ var (
 		DeviceID:       "some-device-id",
 		RequestID:      "some-request-id",
 		RiskAssessment: LowRisk,
+		Reasons:        []Reason{{Code: "mpos_fraud", Source: "global"}, {Code: "mpos_fraud", Source: "local"}},
 		Evidence: Evidence{
 			"device_model":                 "Moto Z2 Play",
 			"geocode_quality":              "good",
@@ -106,6 +107,7 @@ var (
 		ID:             "some-id",
 		DeviceID:       "some-device-id",
 		RiskAssessment: LowRisk,
+		Reasons:        []Reason{{Code: "mpos_fraud", Source: "global"}, {Code: "mpos_fraud", Source: "local"}},
 		Evidence: Evidence{
 			"device_model":                 "Moto Z2 Play",
 			"geocode_quality":              "good",
