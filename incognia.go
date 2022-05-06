@@ -8,15 +8,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"runtime"
-	"syscall"
 	"time"
+
+	"github.com/matishsiao/goInfo"
 )
 
 const (
 	defaultNetClientTimeout = 5 * time.Second
 	contentTypeKey          = "Content-Type"
 	userAgentKey            = "User-Agent"
-	libVersion              = "1.8.0"
+	libVersion              = "1.9.0"
 )
 
 var (
@@ -44,6 +45,7 @@ type Client struct {
 	tokenProvider TokenProvider
 	netClient     *http.Client
 	endpoints     *endpoints
+	Headers       map[string]string
 }
 
 type IncogniaClientConfig struct {
@@ -121,9 +123,11 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		tokenProvider = NewAutoRefreshTokenProvider(tokenClient)
 	}
 
+	headers := getDefaultHeaders()
+
 	endpoints := getEndpoints()
 
-	return &Client{clientID: config.ClientID, clientSecret: config.ClientSecret, tokenProvider: tokenProvider, netClient: netClient, endpoints: &endpoints}, nil
+	return &Client{clientID: config.ClientID, clientSecret: config.ClientSecret, tokenProvider: tokenProvider, netClient: netClient, endpoints: &endpoints, Headers: headers}, nil
 }
 
 func (c *Client) GetSignupAssessment(signupID string) (ret *SignupAssessment, err error) {
@@ -364,7 +368,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 }
 
 func (c *Client) doRequest(request *http.Request, response interface{}) error {
-	headers := getDefaultHeaders()
+	headers := c.Headers
 	for k, v := range headers {
 		request.Header.Add(k, v)
 	}
@@ -454,23 +458,13 @@ func getDefaultHeaders() map[string]string {
 }
 
 func generateUserAgentString() string {
-	osName := runtime.GOOS
-	osArch := runtime.GOARCH
-
-	var uts syscall.Utsname
-	syscall.Uname(&uts)
-
-	kernelVersion := int8ToStr(uts.Release[:])
-	return fmt.Sprintf("incognia-go/%s (%s %s %s) golang/%s", libVersion, osName, kernelVersion, osArch, runtime.Version())
-}
-
-func int8ToStr(arr []int8) string {
-	b := make([]byte, 0, len(arr))
-	for _, v := range arr {
-		if v == 0x00 {
-			break
-		}
-		b = append(b, byte(v))
+	osInfo, err := goInfo.GetInfo()
+	osName := osInfo.OS
+	osArch := osInfo.Platform
+	kernelVersion := ""
+	if err == nil {
+		kernelVersion = osInfo.Core
 	}
-	return string(b)
+
+	return fmt.Sprintf("incognia-go/%s (%s %s %s) golang/%s", libVersion, osName, kernelVersion, osArch, runtime.Version())
 }
