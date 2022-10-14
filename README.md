@@ -132,9 +132,12 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
     },
     Methods: []*incognia.PaymentMethod{
         {
+	    Type: incognia.GooglePay,
+	},
+        {
             Type: incognia.CreditCard,
             CreditCard: &incognia.CardInfo{
-                Bin:            "29282",
+                Bin:            "292821",
                 LastFourDigits: "2222",
                 ExpiryYear:     "2020",
                 ExpiryMonth:    "10",
