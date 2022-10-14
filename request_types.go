@@ -96,6 +96,7 @@ type paymentMethodType string
 const (
 	CreditCard paymentMethodType = "credit_card"
 	DebitCard  paymentMethodType = "debit_card"
+	GooglePay  paymentMethodType = "google_pay"
 )
 
 type CardInfo struct {
