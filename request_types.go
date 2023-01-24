@@ -94,9 +94,13 @@ type PaymentValue struct {
 type paymentMethodType string
 
 const (
-	CreditCard paymentMethodType = "credit_card"
-	DebitCard  paymentMethodType = "debit_card"
-	GooglePay  paymentMethodType = "google_pay"
+	CreditCard  paymentMethodType = "credit_card"
+	DebitCard   paymentMethodType = "debit_card"
+	GooglePay   paymentMethodType = "google_pay"
+	ApplePay    paymentMethodType = "apple_pay"
+	NuPay       paymentMethodType = "nu_pay"
+	Pix         paymentMethodType = "pix"
+	MealVoucher paymentMethodType = "meal_voucher"
 )
 
 type CardInfo struct {
