@@ -118,6 +118,7 @@ type PaymentMethod struct {
 
 type postTransactionRequestBody struct {
 	ExternalID     string                `json:"external_id,omitempty"`
+	PolicyID       string                `json:"policy_id,omitempty"`
 	InstallationID string                `json:"installation_id"`
 	Type           transactionType       `json:"type"`
 	AccountID      string                `json:"account_id"`

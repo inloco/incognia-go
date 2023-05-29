@@ -55,6 +55,7 @@ type Payment struct {
 	InstallationID string
 	AccountID      string
 	ExternalID     string
+	PolicyID       string
 	Addresses      []*TransactionAddress
 	Value          *PaymentValue
 	Methods        []*PaymentMethod
@@ -65,6 +66,7 @@ type Login struct {
 	InstallationID string
 	AccountID      string
 	ExternalID     string
+	PolicyID       string
 	Eval           *bool
 }
 
@@ -273,6 +275,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		InstallationID: payment.InstallationID,
 		Type:           paymentType,
 		AccountID:      payment.AccountID,
+		PolicyID:       payment.PolicyID,
 		ExternalID:     payment.ExternalID,
 		Addresses:      payment.Addresses,
 		PaymentValue:   payment.Value,
@@ -331,6 +334,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		InstallationID: login.InstallationID,
 		Type:           loginType,
 		AccountID:      login.AccountID,
+		PolicyID:       login.PolicyID,
 		ExternalID:     login.ExternalID,
 	})
 	if err != nil {
