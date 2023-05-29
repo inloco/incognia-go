@@ -131,6 +131,7 @@ var (
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
 		Type:           paymentType,
 		Addresses: []*TransactionAddress{
 			{
@@ -180,6 +181,7 @@ var (
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
 		Addresses: []*TransactionAddress{
 			{
 				Type: Billing,
@@ -227,41 +229,48 @@ var (
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
 		Eval:           &shouldEval,
 	}
 	simplePaymentFixtureWithShouldNotEval = &Payment{
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
 		Eval:           &shouldNotEval,
 	}
 	postSimplePaymentRequestBodyFixture = &postTransactionRequestBody{
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
 		Type:           paymentType,
 	}
 	loginFixture = &Login{
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
 	}
 	loginFixtureWithShouldEval = &Login{
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
 		Eval:           &shouldEval,
 	}
 	loginFixtureWithShouldNotEval = &Login{
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
 		Eval:           &shouldNotEval,
 	}
 	postLoginRequestBodyFixture = &postTransactionRequestBody{
 		InstallationID: "installation-id",
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
 		Type:           loginType,
 	}
 )

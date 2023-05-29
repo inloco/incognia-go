@@ -103,6 +103,7 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
     InstallationID: "installation-id",
     AccountID:      "account-id",
     ExternalID:     "external-id",
+    PolicyID:       "policy-id",
     Addresses: []*incognia.TransactionAddress{
         {
             Type: incognia.Billing,
@@ -156,6 +157,7 @@ assessment, err := client.RegisterLogin(&incognia.Login{
     InstallationID: "installation-id",
     AccountID:      "account-id",
     ExternalID:     "external-id",
+    PolicyID:       "policy-id",
 })
 ```
 
@@ -174,6 +176,7 @@ assessment, err := client.RegisterLogin(&incognia.Login{
     InstallationID: "installation-id",
     AccountID:      "account-id",
     ExternalID:     "external-id",
+    PolicyID:       "policy-id",
 })
 ```
 
@@ -186,6 +189,7 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
     InstallationID: "installation-id",
     AccountID:      "account-id",
     ExternalID:     "external-id",
+    PolicyID:       "policy-id",
     Addresses: []*incognia.TransactionAddress{
         {
             Type: incognia.Billing,
