@@ -154,10 +154,11 @@ This method registers a new login for the given installation and account, return
 
 ```go
 assessment, err := client.RegisterLogin(&incognia.Login{
-    InstallationID: "installation-id",
-    AccountID:      "account-id",
-    ExternalID:     "external-id",
-    PolicyID:       "policy-id",
+InstallationID:                 "installation-id",
+    AccountID:                  "account-id",
+    ExternalID:                 "external-id",
+    PolicyID:                   "policy-id",
+    PaymentMethodIdentifier:    "payment-method-identifier",
 })
 ```
 

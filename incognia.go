@@ -63,11 +63,12 @@ type Payment struct {
 }
 
 type Login struct {
-	InstallationID string
-	AccountID      string
-	ExternalID     string
-	PolicyID       string
-	Eval           *bool
+	InstallationID          string
+	AccountID               string
+	ExternalID              string
+	PolicyID                string
+	PaymentMethodIdentifier string
+	Eval                    *bool
 }
 
 type FeedbackIdentifiers struct {
@@ -331,11 +332,12 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 	}
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{
-		InstallationID: login.InstallationID,
-		Type:           loginType,
-		AccountID:      login.AccountID,
-		PolicyID:       login.PolicyID,
-		ExternalID:     login.ExternalID,
+		InstallationID:          login.InstallationID,
+		Type:                    loginType,
+		AccountID:               login.AccountID,
+		PolicyID:                login.PolicyID,
+		ExternalID:              login.ExternalID,
+		PaymentMethodIdentifier: login.PaymentMethodIdentifier,
 	})
 	if err != nil {
 		return nil, err
