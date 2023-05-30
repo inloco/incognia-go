@@ -247,17 +247,19 @@ var (
 		Type:           paymentType,
 	}
 	loginFixture = &Login{
-		InstallationID: "installation-id",
-		AccountID:      "account-id",
-		ExternalID:     "external-id",
-		PolicyID:       "policy-id",
+		InstallationID:          "installation-id",
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		PolicyID:                "policy-id",
+		PaymentMethodIdentifier: "payment-method-identifier",
 	}
 	loginFixtureWithShouldEval = &Login{
-		InstallationID: "installation-id",
-		AccountID:      "account-id",
-		ExternalID:     "external-id",
-		PolicyID:       "policy-id",
-		Eval:           &shouldEval,
+		InstallationID:          "installation-id",
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		PolicyID:                "policy-id",
+		PaymentMethodIdentifier: "payment-method-identifier",
+		Eval:                    &shouldEval,
 	}
 	loginFixtureWithShouldNotEval = &Login{
 		InstallationID: "installation-id",
@@ -267,11 +269,12 @@ var (
 		Eval:           &shouldNotEval,
 	}
 	postLoginRequestBodyFixture = &postTransactionRequestBody{
-		InstallationID: "installation-id",
-		AccountID:      "account-id",
-		ExternalID:     "external-id",
-		PolicyID:       "policy-id",
-		Type:           loginType,
+		InstallationID:          "installation-id",
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		PolicyID:                "policy-id",
+		PaymentMethodIdentifier: "payment-method-identifier",
+		Type:                    loginType,
 	}
 )
 
