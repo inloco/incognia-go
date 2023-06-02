@@ -162,7 +162,8 @@ var (
 		},
 		PaymentMethods: []*PaymentMethod{
 			{
-				Type: CreditCard,
+				Type:       CreditCard,
+				Identifier: "credit-card-hash-123",
 				CreditCard: &CardInfo{
 					Bin:            "29282",
 					LastFourDigits: "2222",
@@ -211,7 +212,8 @@ var (
 		},
 		Methods: []*PaymentMethod{
 			{
-				Type: CreditCard,
+				Type:       CreditCard,
+				Identifier: "credit-card-hash-123",
 				CreditCard: &CardInfo{
 					Bin:            "29282",
 					LastFourDigits: "2222",
