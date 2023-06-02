@@ -94,13 +94,14 @@ type PaymentValue struct {
 type paymentMethodType string
 
 const (
-	CreditCard  paymentMethodType = "credit_card"
-	DebitCard   paymentMethodType = "debit_card"
-	GooglePay   paymentMethodType = "google_pay"
-	ApplePay    paymentMethodType = "apple_pay"
-	NuPay       paymentMethodType = "nu_pay"
-	Pix         paymentMethodType = "pix"
-	MealVoucher paymentMethodType = "meal_voucher"
+	CreditCard     paymentMethodType = "credit_card"
+	DebitCard      paymentMethodType = "debit_card"
+	GooglePay      paymentMethodType = "google_pay"
+	ApplePay       paymentMethodType = "apple_pay"
+	NuPay          paymentMethodType = "nu_pay"
+	Pix            paymentMethodType = "pix"
+	MealVoucher    paymentMethodType = "meal_voucher"
+	AccountBalance paymentMethodType = "account_balance"
 )
 
 type CardInfo struct {
@@ -111,6 +112,7 @@ type CardInfo struct {
 }
 
 type PaymentMethod struct {
+	Identifier string            `json:"identifier,omitempty"`
 	Type       paymentMethodType `json:"type"`
 	CreditCard *CardInfo         `json:"credit_card_info,omitempty"`
 	DebitCard  *CardInfo         `json:"debit_card_info,omitempty"`
