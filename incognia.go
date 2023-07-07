@@ -15,15 +15,16 @@ const (
 )
 
 var (
-	ErrMissingPayment                = errors.New("missing payment parameters")
-	ErrMissingLogin                  = errors.New("missing login parameters")
-	ErrMissingInstallationID         = errors.New("missing installation id")
-	ErrMissingAccountID              = errors.New("missing account id")
-	ErrMissingSignupID               = errors.New("missing signup id")
-	ErrMissingTimestamp              = errors.New("missing timestamp")
-	ErrInvalidFeedbackType           = errors.New("invalid feedback type")
-	ErrMissingClientIDOrClientSecret = errors.New("client id and client secret are required")
-	ErrConfigIsNil                   = errors.New("incognia client config is required")
+	ErrMissingPayment                      = errors.New("missing payment parameters")
+	ErrMissingLogin                        = errors.New("missing login parameters")
+	ErrMissingInstallationID               = errors.New("missing installation id")
+	ErrMissingInstallationIDOrSessionToken = errors.New("missing installation id or session token")
+	ErrMissingAccountID                    = errors.New("missing account id")
+	ErrMissingSignupID                     = errors.New("missing signup id")
+	ErrMissingTimestamp                    = errors.New("missing timestamp")
+	ErrInvalidFeedbackType                 = errors.New("invalid feedback type")
+	ErrMissingClientIDOrClientSecret       = errors.New("client id and client secret are required")
+	ErrConfigIsNil                         = errors.New("incognia client config is required")
 )
 
 type Region int64
@@ -63,7 +64,8 @@ type Payment struct {
 }
 
 type Login struct {
-	InstallationID          string
+	InstallationID          *string
+	SessionToken            *string
 	AccountID               string
 	ExternalID              string
 	PolicyID                string
@@ -273,7 +275,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 	}
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{
-		InstallationID: payment.InstallationID,
+		InstallationID: &payment.InstallationID,
 		Type:           paymentType,
 		AccountID:      payment.AccountID,
 		PolicyID:       payment.PolicyID,
@@ -323,8 +325,8 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		return nil, ErrMissingLogin
 	}
 
-	if login.InstallationID == "" {
-		return nil, ErrMissingInstallationID
+	if login.InstallationID == nil && login.SessionToken == nil {
+		return nil, ErrMissingInstallationIDOrSessionToken
 	}
 
 	if login.AccountID == "" {
@@ -338,6 +340,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		PolicyID:                login.PolicyID,
 		ExternalID:              login.ExternalID,
 		PaymentMethodIdentifier: login.PaymentMethodIdentifier,
+		SessionToken:            login.SessionToken,
 	})
 	if err != nil {
 		return nil, err

@@ -21,6 +21,8 @@ const (
 )
 
 var (
+	installationId                               = "installation-id"
+	sessionToken                                 = "session-token"
 	shouldEval               bool                = true
 	shouldNotEval            bool                = false
 	emptyQueryString         map[string][]string = nil
@@ -52,7 +54,7 @@ var (
 		},
 	}
 	postSignupRequestBodyFixture = &postAssessmentRequestBody{
-		InstallationID: "installation-id",
+		InstallationID: installationId,
 		AddressLine:    "address line",
 		StructuredAddress: &StructuredAddress{
 			Locale:       "locale",
@@ -73,7 +75,7 @@ var (
 		},
 	}
 	postSignupRequestBodyRequiredFieldsFixture = &postAssessmentRequestBody{
-		InstallationID: "installation-id",
+		InstallationID: installationId,
 	}
 	addressFixture = &Address{
 		Coordinates:       postSignupRequestBodyFixture.Coordinates,
@@ -128,7 +130,7 @@ var (
 		},
 	}
 	postPaymentRequestBodyFixture = &postTransactionRequestBody{
-		InstallationID: "installation-id",
+		InstallationID: &installationId,
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 		PolicyID:       "policy-id",
@@ -174,12 +176,12 @@ var (
 		},
 	}
 	postPaymentRequestBodyRequiredFieldsFixture = &postTransactionRequestBody{
-		InstallationID: "installation-id",
+		InstallationID: &installationId,
 		AccountID:      "account-id",
 		Type:           paymentType,
 	}
 	paymentFixture = &Payment{
-		InstallationID: "installation-id",
+		InstallationID: installationId,
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 		PolicyID:       "policy-id",
@@ -224,39 +226,39 @@ var (
 		},
 	}
 	paymentFixtureRequiredFields = &Payment{
-		InstallationID: "installation-id",
+		InstallationID: installationId,
 		AccountID:      "account-id",
 	}
 	simplePaymentFixtureWithShouldEval = &Payment{
-		InstallationID: "installation-id",
+		InstallationID: installationId,
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 		PolicyID:       "policy-id",
 		Eval:           &shouldEval,
 	}
 	simplePaymentFixtureWithShouldNotEval = &Payment{
-		InstallationID: "installation-id",
+		InstallationID: installationId,
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 		PolicyID:       "policy-id",
 		Eval:           &shouldNotEval,
 	}
 	postSimplePaymentRequestBodyFixture = &postTransactionRequestBody{
-		InstallationID: "installation-id",
+		InstallationID: &installationId,
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 		PolicyID:       "policy-id",
 		Type:           paymentType,
 	}
 	loginFixture = &Login{
-		InstallationID:          "installation-id",
+		InstallationID:          &installationId,
 		AccountID:               "account-id",
 		ExternalID:              "external-id",
 		PolicyID:                "policy-id",
 		PaymentMethodIdentifier: "payment-method-identifier",
 	}
 	loginFixtureWithShouldEval = &Login{
-		InstallationID:          "installation-id",
+		InstallationID:          &installationId,
 		AccountID:               "account-id",
 		ExternalID:              "external-id",
 		PolicyID:                "policy-id",
@@ -264,19 +266,34 @@ var (
 		Eval:                    &shouldEval,
 	}
 	loginFixtureWithShouldNotEval = &Login{
-		InstallationID: "installation-id",
+		InstallationID: &installationId,
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 		PolicyID:       "policy-id",
 		Eval:           &shouldNotEval,
 	}
+	loginWebFixture = &Login{
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		PolicyID:                "policy-id",
+		PaymentMethodIdentifier: "payment-method-identifier",
+		SessionToken:            &sessionToken,
+	}
 	postLoginRequestBodyFixture = &postTransactionRequestBody{
-		InstallationID:          "installation-id",
+		InstallationID:          &installationId,
 		AccountID:               "account-id",
 		ExternalID:              "external-id",
 		PolicyID:                "policy-id",
 		PaymentMethodIdentifier: "payment-method-identifier",
 		Type:                    loginType,
+	}
+	postLoginWebRequestBodyFixture = &postTransactionRequestBody{
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		PolicyID:                "policy-id",
+		PaymentMethodIdentifier: "payment-method-identifier",
+		Type:                    loginType,
+		SessionToken:            &sessionToken,
 	}
 )
 
@@ -672,6 +689,15 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithFalseEval() {
 	suite.Equal(emptyTransactionAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWeb() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.registerLogin(loginWebFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
@@ -694,14 +720,14 @@ func (suite *IncogniaTestSuite) TestRegisterLoginNilLogin() {
 	suite.Nil(response)
 }
 
-func (suite *IncogniaTestSuite) TestRegisterLoginEmptyInstallationId() {
+func (suite *IncogniaTestSuite) TestRegisterLoginNullInstallationIdAndSessionToken() {
 	response, err := suite.client.RegisterLogin(&Login{AccountID: "some-account-id"})
-	suite.EqualError(err, ErrMissingInstallationID.Error())
+	suite.EqualError(err, ErrMissingInstallationIDOrSessionToken.Error())
 	suite.Nil(response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterLoginEmptyAccountId() {
-	response, err := suite.client.RegisterLogin(&Login{InstallationID: "some-installation-id"})
+	response, err := suite.client.RegisterLogin(&Login{InstallationID: &installationId})
 	suite.EqualError(err, ErrMissingAccountID.Error())
 	suite.Nil(response)
 }
@@ -728,7 +754,7 @@ func (suite *IncogniaTestSuite) TestUnauthorizedTokenGeneration() {
 	suite.Nil(responseLogin)
 	suite.EqualError(err, ErrInvalidCredentials.Error())
 
-	responseSignUp, err := suite.client.RegisterSignup("installation-id", addressFixture)
+	responseSignUp, err := suite.client.RegisterSignup(installationId, addressFixture)
 	suite.Nil(responseSignUp)
 	suite.EqualError(err, ErrInvalidCredentials.Error())
 
