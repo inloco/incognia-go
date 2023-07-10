@@ -154,11 +154,21 @@ This method registers a new login for the given installation and account, return
 
 ```go
 assessment, err := client.RegisterLogin(&incognia.Login{
-InstallationID:                 "installation-id",
+    InstallationID:             "installation-id",
     AccountID:                  "account-id",
     ExternalID:                 "external-id",
     PolicyID:                   "policy-id",
     PaymentMethodIdentifier:    "payment-method-identifier",
+})
+```
+
+This method registers a new **web** login for the given account and session-token, returning a `TransactionAssessment`, containing the risk assessment and supporting evidence.
+
+```go
+assessment, err := client.RegisterLogin(&incognia.Login{
+    SessionToken:               "session-token",
+    AccountID:                  "account-id",
+    ...
 })
 ```
 

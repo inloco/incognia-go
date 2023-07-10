@@ -121,11 +121,12 @@ type PaymentMethod struct {
 type postTransactionRequestBody struct {
 	ExternalID              string                `json:"external_id,omitempty"`
 	PolicyID                string                `json:"policy_id,omitempty"`
-	InstallationID          string                `json:"installation_id"`
+	InstallationID          *string               `json:"installation_id,omitempty"`
 	PaymentMethodIdentifier string                `json:"payment_method_identifier,omitempty"`
 	Type                    transactionType       `json:"type"`
 	AccountID               string                `json:"account_id"`
 	Addresses               []*TransactionAddress `json:"addresses,omitempty"`
 	PaymentValue            *PaymentValue         `json:"payment_value,omitempty"`
 	PaymentMethods          []*PaymentMethod      `json:"payment_methods,omitempty"`
+	SessionToken            *string               `json:"session_token,omitempty"`
 }
