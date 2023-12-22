@@ -48,6 +48,7 @@ type IncogniaClientConfig struct {
 	TokenProvider     TokenProvider
 	Timeout           time.Duration
 	TokenRouteTimeout time.Duration
+	HTTPClient        *http.Client
 	// Deprecated: Region is no longer used to determine endpoints
 	Region Region
 }
@@ -101,8 +102,11 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 	if timeout == 0 {
 		timeout = defaultNetClientTimeout
 	}
-	netClient := &http.Client{
-		Timeout: timeout,
+	netClient := config.HTTPClient
+	if netClient == nil {
+		netClient = &http.Client{
+			Timeout: timeout,
+		}
 	}
 
 	tokenRouteTimeout := config.TokenRouteTimeout
