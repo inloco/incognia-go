@@ -1,4 +1,5 @@
 # Incognia API Go Client
+
 ![test workflow](https://github.com/inloco/incognia-go/actions/workflows/continuous.yml/badge.svg)
 
 Go lightweight client library for [Incognia APIs](https://dash.incognia.com/api-reference).
@@ -16,12 +17,13 @@ go get repo.incognia.com/go/incognia
 First, you need to obtain an instance of the API client using `New`. It receives a configuration
 object of `IncogniaClientConfig` that contains the following parameters:
 
-| Parameter | Description | Required | Default |
-| --- | --- | --- | --- |
-| `ClientID` | Your client ID | **Yes** | - |
-| `ClientSecret` | Your client secret | **Yes** | - |
-| `Region` | Incognia's service region, either `BR` or `US` | **No** | `US` |
-| `Timeout` | Request timeout | **No** | 10 seconds |
+| Parameter             | Description                                    | Required | Default       |
+| --------------------- | ---------------------------------------------- | -------- | ------------- |
+| `ClientID`            | Your client ID                                 | **Yes**  | -             |
+| `ClientSecret`        | Your client secret                             | **Yes**  | -             |
+| `Timeout`             | Request timeout                                | **No**   | 10 seconds    |
+| `HTTPClient`          | Custom HTTP client                             | **No**   | `http.Client` |
+| `Region` (deprecated) | Incognia's service region, either `BR` or `US` | **No**   | `US`          |
 
 For instance, if you need a client for the US region:
 
@@ -44,6 +46,31 @@ client, err := incognia.New(&incognia.IncogniaClientConfig{
     ClientSecret: "your-client-secret",
     Region:       incognia.BR,
     Timeout:      time.Second * 2,
+})
+if err != nil {
+    log.Fatal("could not initialize Incognia client")
+}
+```
+
+to customize the HTTP round tripper:
+
+```go
+transport := http.DefaultTransport.(*http.Transport).Clone()
+transport.MaxIdleConns = 1000
+transport.MaxIdleConnsPerHost = 100
+transport.MaxConnsPerHost = 200
+
+httpClient := &http.Client{
+    Timeout:   time.Second * 2,
+    Transport: transport,
+}
+
+client, err := incognia.New(&incognia.IncogniaClientConfig{
+    ClientID:     "your-client-id",
+    ClientSecret: "your-client-secret",
+    Region:       incognia.BR,
+    Timeout:      time.Second * 2,
+    HTTPClient:   httpClient,
 })
 if err != nil {
     log.Fatal("could not initialize Incognia client")
@@ -179,6 +206,7 @@ Turning off the risk assessment evaluation allows you to register a new transact
 To register a login or a payment without evaluating its risk assessment, you should use the `Eval *bool` attribute as follows:
 
 Login example:
+
 ```go
 shouldEval := false
 
@@ -192,6 +220,7 @@ assessment, err := client.RegisterLogin(&incognia.Login{
 ```
 
 Payment example:
+
 ```go
 shouldEval := false
 
@@ -270,6 +299,7 @@ fmt.Println(deviceModel)
 ```
 
 You can also access specific evidences using their full path. For example, to get risk_window_remaining evidence from the following response:
+
 ```json
 {
     ...
