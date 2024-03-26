@@ -17,6 +17,7 @@ const (
 var (
 	ErrMissingPayment                      = errors.New("missing payment parameters")
 	ErrMissingLogin                        = errors.New("missing login parameters")
+	ErrMissingSignup                       = errors.New("missing signup parameters")
 	ErrMissingInstallationID               = errors.New("missing installation id")
 	ErrMissingInstallationIDOrSessionToken = errors.New("missing installation id or session token")
 	ErrMissingAccountID                    = errors.New("missing account id")
@@ -90,8 +91,10 @@ type Address struct {
 }
 
 type Signup struct {
-	AccountID string
-	PolicyID  string
+	InstallationID string
+	Address        *Address
+	AccountID      string
+	PolicyID       string
 }
 
 func New(config *IncogniaClientConfig) (*Client, error) {
@@ -174,10 +177,13 @@ func (c *Client) RegisterSignup(installationID string, address *Address) (ret *S
 		}
 	}()
 
-	return c.registerSignup(installationID, address, nil)
+	return c.registerSignup(&Signup{
+		InstallationID: installationID,
+		Address:        address,
+	})
 }
 
-func (c *Client) RegisterSignupWithParams(installationID string, address *Address, params *Signup) (ret *SignupAssessment, err error) {
+func (c *Client) RegisterSignupWithParams(params *Signup) (ret *SignupAssessment, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
@@ -185,25 +191,26 @@ func (c *Client) RegisterSignupWithParams(installationID string, address *Addres
 		}
 	}()
 
-	return c.registerSignup(installationID, address, params)
+	return c.registerSignup(params)
 }
 
-func (c *Client) registerSignup(installationID string, address *Address, params *Signup) (ret *SignupAssessment, err error) {
-	if installationID == "" {
+func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err error) {
+	if params == nil {
+		return nil, ErrMissingSignup
+	}
+	if params.InstallationID == "" {
 		return nil, ErrMissingInstallationID
 	}
 
 	requestBody := postAssessmentRequestBody{
-		InstallationID: installationID,
+		InstallationID: params.InstallationID,
+		AccountID:      params.AccountID,
+		PolicyID:       params.PolicyID,
 	}
-	if address != nil {
-		requestBody.AddressLine = address.AddressLine
-		requestBody.StructuredAddress = address.StructuredAddress
-		requestBody.Coordinates = address.Coordinates
-	}
-	if params != nil {
-		requestBody.AccountID = params.AccountID
-		requestBody.PolicyID = params.PolicyID
+	if params.Address != nil {
+		requestBody.AddressLine = params.Address.AddressLine
+		requestBody.StructuredAddress = params.Address.StructuredAddress
+		requestBody.Coordinates = params.Address.Coordinates
 	}
 
 	requestBodyBytes, err := json.Marshal(requestBody)
