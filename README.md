@@ -136,7 +136,7 @@ assessment, err := client.RegisterSignupWithParams(&incognia.Signup{
             Lat: -23.561414,
             Lng: -46.6558819,
         },
-    }
+    },
     AccountID: "account-id",//optional, use empty string if you don't have an account id
     PolicyID:  "policy-id",//optional, use empty string if you don't have a policy id
 })
