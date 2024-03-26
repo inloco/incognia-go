@@ -74,6 +74,30 @@ var (
 			Lng: -46.6558819,
 		},
 	}
+
+	postSignupRequestBodyWithAllParamsFixture = &postAssessmentRequestBody{
+		InstallationID: installationId,
+		AddressLine:    "address line",
+		StructuredAddress: &StructuredAddress{
+			Locale:       "locale",
+			CountryName:  "country-name",
+			CountryCode:  "country-code",
+			State:        "state",
+			City:         "city",
+			Borough:      "borough",
+			Neighborhood: "neighborhood",
+			Street:       "street",
+			Number:       "number",
+			Complements:  "complements",
+			PostalCode:   "postalcode",
+		},
+		Coordinates: &Coordinates{
+			Lat: -23.561414,
+			Lng: -46.6558819,
+		},
+		AccountID: "account-id",
+		PolicyID:  "policy-id",
+	}
 	postSignupRequestBodyRequiredFieldsFixture = &postAssessmentRequestBody{
 		InstallationID: installationId,
 	}
@@ -434,6 +458,18 @@ func (suite *IncogniaTestSuite) TestGetSignupAssessmentErrors() {
 		suite.Nil(response)
 		suite.Contains(err.Error(), strconv.Itoa(status))
 	}
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
+	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyWithAllParamsFixture, signupAssessmentFixture)
+	defer signupServer.Close()
+
+	response, err := suite.client.RegisterSignupWithParams(postSignupRequestBodyWithAllParamsFixture.InstallationID, addressFixture, &Signup{
+		AccountID: postSignupRequestBodyWithAllParamsFixture.AccountID,
+		PolicyID:  postSignupRequestBodyWithAllParamsFixture.PolicyID,
+	})
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignup() {

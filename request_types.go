@@ -24,6 +24,8 @@ type postAssessmentRequestBody struct {
 	AddressLine       string             `json:"address_line,omitempty"`
 	StructuredAddress *StructuredAddress `json:"structured_address,omitempty"`
 	Coordinates       *Coordinates       `json:"address_coordinates,omitempty"`
+	AccountID         string             `json:"account_id,omitempty"`
+	PolicyID          string             `json:"policy_id,omitempty"`
 }
 
 type FeedbackType string

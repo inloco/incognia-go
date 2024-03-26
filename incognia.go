@@ -89,6 +89,11 @@ type Address struct {
 	AddressLine       string
 }
 
+type Signup struct {
+	AccountID string
+	PolicyID  string
+}
+
 func New(config *IncogniaClientConfig) (*Client, error) {
 	if config == nil {
 		return nil, ErrConfigIsNil
@@ -169,10 +174,21 @@ func (c *Client) RegisterSignup(installationID string, address *Address) (ret *S
 		}
 	}()
 
-	return c.registerSignup(installationID, address)
+	return c.registerSignup(installationID, address, nil)
 }
 
-func (c *Client) registerSignup(installationID string, address *Address) (ret *SignupAssessment, err error) {
+func (c *Client) RegisterSignupWithParams(installationID string, address *Address, params *Signup) (ret *SignupAssessment, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+			ret = nil
+		}
+	}()
+
+	return c.registerSignup(installationID, address, params)
+}
+
+func (c *Client) registerSignup(installationID string, address *Address, params *Signup) (ret *SignupAssessment, err error) {
 	if installationID == "" {
 		return nil, ErrMissingInstallationID
 	}
@@ -184,6 +200,10 @@ func (c *Client) registerSignup(installationID string, address *Address) (ret *S
 		requestBody.AddressLine = address.AddressLine
 		requestBody.StructuredAddress = address.StructuredAddress
 		requestBody.Coordinates = address.Coordinates
+	}
+	if params != nil {
+		requestBody.AccountID = params.AccountID
+		requestBody.PolicyID = params.PolicyID
 	}
 
 	requestBodyBytes, err := json.Marshal(requestBody)
