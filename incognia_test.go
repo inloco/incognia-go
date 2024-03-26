@@ -464,9 +464,11 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
 	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyWithAllParamsFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
-	response, err := suite.client.RegisterSignupWithParams(postSignupRequestBodyWithAllParamsFixture.InstallationID, addressFixture, &Signup{
-		AccountID: postSignupRequestBodyWithAllParamsFixture.AccountID,
-		PolicyID:  postSignupRequestBodyWithAllParamsFixture.PolicyID,
+	response, err := suite.client.RegisterSignupWithParams(&Signup{
+		InstallationID: postSignupRequestBodyWithAllParamsFixture.InstallationID,
+		Address:        addressFixture,
+		AccountID:      postSignupRequestBodyWithAllParamsFixture.AccountID,
+		PolicyID:       postSignupRequestBodyWithAllParamsFixture.PolicyID,
 	})
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
