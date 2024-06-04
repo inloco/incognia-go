@@ -199,13 +199,59 @@ var (
 			},
 		},
 	}
+	postPaymentWebRequestBodyFixture = &postTransactionRequestBody{
+		SessionToken: &sessionToken,
+		AccountID:    "account-id",
+		ExternalID:   "external-id",
+		PolicyID:     "policy-id",
+		Type:         paymentType,
+		Addresses: []*TransactionAddress{
+			{
+				Type: Billing,
+				StructuredAddress: &StructuredAddress{
+					Locale:       "locale",
+					CountryName:  "country-name",
+					CountryCode:  "country-code",
+					State:        "state",
+					City:         "city",
+					Borough:      "borough",
+					Neighborhood: "neighborhood",
+					Street:       "street",
+					Number:       "number",
+					Complements:  "complements",
+					PostalCode:   "postalcode",
+				},
+				AddressLine: "address line",
+				Coordinates: &Coordinates{
+					Lat: -23.561414,
+					Lng: -46.6558819,
+				},
+			},
+		},
+		PaymentValue: &PaymentValue{
+			Amount:   55.02,
+			Currency: "BRL",
+		},
+		PaymentMethods: []*PaymentMethod{
+			{
+				Type:       CreditCard,
+				Identifier: "credit-card-hash-123",
+				CreditCard: &CardInfo{
+					Bin:            "29282",
+					LastFourDigits: "2222",
+					ExpiryYear:     "2020",
+					ExpiryMonth:    "10",
+				},
+			},
+		},
+	}
 	postPaymentRequestBodyRequiredFieldsFixture = &postTransactionRequestBody{
 		InstallationID: &installationId,
 		AccountID:      "account-id",
 		Type:           paymentType,
 	}
 	paymentFixture = &Payment{
-		InstallationID: installationId,
+		InstallationID: &installationId,
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 		PolicyID:       "policy-id",
@@ -249,19 +295,64 @@ var (
 			},
 		},
 	}
+	paymentWebFixture = &Payment{
+		SessionToken: &sessionToken,
+		AccountID:    "account-id",
+		ExternalID:   "external-id",
+		PolicyID:     "policy-id",
+		Addresses: []*TransactionAddress{
+			{
+				Type: Billing,
+				StructuredAddress: &StructuredAddress{
+					Locale:       "locale",
+					CountryName:  "country-name",
+					CountryCode:  "country-code",
+					State:        "state",
+					City:         "city",
+					Borough:      "borough",
+					Neighborhood: "neighborhood",
+					Street:       "street",
+					Number:       "number",
+					Complements:  "complements",
+					PostalCode:   "postalcode",
+				},
+				AddressLine: "address line",
+				Coordinates: &Coordinates{
+					Lat: -23.561414,
+					Lng: -46.6558819,
+				},
+			},
+		},
+		Value: &PaymentValue{
+			Amount:   55.02,
+			Currency: "BRL",
+		},
+		Methods: []*PaymentMethod{
+			{
+				Type:       CreditCard,
+				Identifier: "credit-card-hash-123",
+				CreditCard: &CardInfo{
+					Bin:            "29282",
+					LastFourDigits: "2222",
+					ExpiryYear:     "2020",
+					ExpiryMonth:    "10",
+				},
+			},
+		},
+	}
 	paymentFixtureRequiredFields = &Payment{
-		InstallationID: installationId,
+		InstallationID: &installationId,
 		AccountID:      "account-id",
 	}
 	simplePaymentFixtureWithShouldEval = &Payment{
-		InstallationID: installationId,
+		InstallationID: &installationId,
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 		PolicyID:       "policy-id",
 		Eval:           &shouldEval,
 	}
 	simplePaymentFixtureWithShouldNotEval = &Payment{
-		InstallationID: installationId,
+		InstallationID: &installationId,
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 		PolicyID:       "policy-id",
@@ -617,6 +708,16 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
 	suite.Equal(transactionAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWeb() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(paymentWebFixture)
+
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentNilOptional() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyRequiredFieldsFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
@@ -651,12 +752,12 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentNilPayment() {
 
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyInstallationId() {
 	response, err := suite.client.RegisterPayment(&Payment{AccountID: "some-account-id"})
-	suite.EqualError(err, ErrMissingInstallationID.Error())
+	suite.EqualError(err, ErrMissingInstallationIDOrSessionToken.Error())
 	suite.Nil(response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyAccountId() {
-	response, err := suite.client.RegisterPayment(&Payment{InstallationID: "some-installation-id"})
+	response, err := suite.client.RegisterPayment(&Payment{InstallationID: &installationId})
 	suite.EqualError(err, ErrMissingAccountID.Error())
 	suite.Nil(response)
 }
