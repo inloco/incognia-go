@@ -205,6 +205,19 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
 })
 ```
 
+This method registers a new **web** payment for the given installation and account, returning a `TransactionAssessment`, containing the risk assessment and supporting evidence.
+
+```go
+assessment, err := client.RegisterPayment(&incognia.Payment{
+    SessionToken:   "session-token",
+    AccountID:      "account-id",
+    ExternalID:     "external-id",
+    PolicyID:       "policy-id",
+    ...
+})
+```
+
+
 ### Registering Login
 
 This method registers a new login for the given installation and account, returning a `TransactionAssessment`, containing the risk assessment and supporting evidence.

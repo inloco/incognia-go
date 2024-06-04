@@ -55,7 +55,8 @@ type IncogniaClientConfig struct {
 }
 
 type Payment struct {
-	InstallationID string
+	InstallationID *string
+	SessionToken   *string
 	AccountID      string
 	ExternalID     string
 	PolicyID       string
@@ -297,8 +298,8 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		return nil, ErrMissingPayment
 	}
 
-	if payment.InstallationID == "" {
-		return nil, ErrMissingInstallationID
+	if payment.InstallationID == nil && payment.SessionToken == nil {
+		return nil, ErrMissingInstallationIDOrSessionToken
 	}
 
 	if payment.AccountID == "" {
@@ -306,7 +307,8 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 	}
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{
-		InstallationID: &payment.InstallationID,
+		InstallationID: payment.InstallationID,
+		SessionToken:   payment.SessionToken,
 		Type:           paymentType,
 		AccountID:      payment.AccountID,
 		PolicyID:       payment.PolicyID,
