@@ -118,8 +118,7 @@ var (
 		ExternalID:     "some-external-id",
 	}
 	postFeedbackRequestBodyRequiredFieldsFixture = &postFeedbackRequestBody{
-		Event:      SignupAccepted,
-		OccurredAt: &now,
+		Event: SignupAccepted,
 	}
 	feedbackIdentifiersFixture = &FeedbackIdentifiers{
 		InstallationID: "some-installation-id",
@@ -637,7 +636,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackNilOptional() {
 	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyRequiredFieldsFixture)
 	defer feedbackServer.Close()
 
-	err := suite.client.RegisterFeedback(postFeedbackRequestBodyRequiredFieldsFixture.Event, postFeedbackRequestBodyRequiredFieldsFixture.OccurredAt, nil)
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyRequiredFieldsFixture.Event, nil, nil)
 	suite.NoError(err)
 }
 
@@ -669,14 +668,6 @@ func (suite *IncogniaTestSuite) TestErrorRegisterFeedbackInvalidFeedbackType() {
 
 	err := suite.client.RegisterFeedback("invalid-type", postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.EqualError(err, ErrInvalidFeedbackType.Error())
-}
-
-func (suite *IncogniaTestSuite) TestErrorRegisterFeedbackNilTimestamp() {
-	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
-	defer feedbackServer.Close()
-
-	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, nil, feedbackIdentifiersFixture)
-	suite.EqualError(err, ErrMissingTimestamp.Error())
 }
 
 func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
