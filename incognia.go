@@ -234,27 +234,27 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 	return &signupAssessment, nil
 }
 
-func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
+func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, occurredAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
 		}
 	}()
 
-	return c.registerFeedback(feedbackEvent, timestamp, feedbackIdentifiers)
+	return c.registerFeedback(feedbackEvent, occurredAt, feedbackIdentifiers)
 }
 
-func (c *Client) registerFeedback(feedbackEvent FeedbackType, timestamp *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
+func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
 	if !isValidFeedbackType(feedbackEvent) {
 		return ErrInvalidFeedbackType
 	}
-	if timestamp == nil {
+	if occurredAt == nil {
 		return ErrMissingTimestamp
 	}
 
 	requestBody := postFeedbackRequestBody{
-		Event:     feedbackEvent,
-		Timestamp: timestamp.UnixNano() / 1000000,
+		Event:      feedbackEvent,
+		OccurredAt: occurredAt,
 	}
 	if feedbackIdentifiers != nil {
 		requestBody.InstallationID = feedbackIdentifiers.InstallationID

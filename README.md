@@ -284,15 +284,11 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
 This method registers a feedback event for the given identifiers (represented in `FeedbackIdentifiers`) related to a signup, login or payment.
 
 ```go
-timestamp := time.Now()
-feedbackEvent := incognia.SignupAccepted
-err := client.RegisterFeedback(feedbackEvent, &timestamp, &incognia.FeedbackIdentifiers{
-		InstallationID: "some-installation-id",
-		LoginID:        "some-login-id",
-		PaymentID:      "some-payment-id",
-		SignupID:       "some-signup-id",
-		AccountID:      "some-account-id",
-		ExternalID:     "some-external-id",
+occurred_at := time.Parse(time.RFC3339, "2024-07-22T15:20:00Z")
+feedbackEvent := incognia.AccountTakeover
+err := client.RegisterFeedback(feedbackEvent, &occurred_at, &incognia.FeedbackIdentifiers{
+    InstallationID: "some-installation-id",
+    AccountID:      "some-account-id",
 })
 ```
 
