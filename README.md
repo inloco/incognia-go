@@ -377,12 +377,6 @@ Incognia is a location identity platform for mobile apps that enables:
 - Frictionless authentication
 - Real-time transaction verification
 
-## Create a Free Incognia Account
-
-1. Go to [Incognia](https://www.incognia.com/) and click on "Get Started"
-2. Fill the contact form
-3. Once we contact you, you will be ready to integrate [Incognia SDK](https://docs.incognia.com/sdk/getting-started) and use [Incognia APIs](https://dash.incognia.com/api-reference)
-
 ## License
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
