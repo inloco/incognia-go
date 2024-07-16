@@ -60,7 +60,10 @@ const (
 type postFeedbackRequestBody struct {
 	Event          FeedbackType `json:"event"`
 	OccurredAt     *time.Time   `json:"occurred_at,omitempty"`
+	ExpiresAt      *time.Time   `json:"expires_at,omitempty"`
 	InstallationID string       `json:"installation_id,omitempty"`
+	SessionToken   string       `json:"session_token,omitempty"`
+	RequestToken   string       `json:"request_token,omitempty"`
 	LoginID        string       `json:"login_id,omitempty"`
 	PaymentID      string       `json:"payment_id,omitempty"`
 	SignupID       string       `json:"signup_id,omitempty"`
