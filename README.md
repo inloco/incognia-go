@@ -23,9 +23,8 @@ object of `IncogniaClientConfig` that contains the following parameters:
 | `ClientSecret`        | Your client secret                             | **Yes**  | -             |
 | `Timeout`             | Request timeout                                | **No**   | 10 seconds    |
 | `HTTPClient`          | Custom HTTP client                             | **No**   | `http.Client` |
-| `Region` (deprecated) | Incognia's service region, either `BR` or `US` | **No**   | `US`          |
 
-For instance, if you need a client for the US region:
+For instance, if you need the default client:
 
 ```go
 client, err := incognia.New(&incognia.IncogniaClientConfig{
@@ -37,14 +36,12 @@ if err != nil {
 }
 ```
 
-or if you need a client for the BR region that uses a specific timeout:
+or if you need a client that uses a specific timeout:
 
 ```go
-// to use the BR region
 client, err := incognia.New(&incognia.IncogniaClientConfig{
     ClientID:     "your-client-id",
     ClientSecret: "your-client-secret",
-    Region:       incognia.BR,
     Timeout:      time.Second * 2,
 })
 if err != nil {
@@ -52,7 +49,7 @@ if err != nil {
 }
 ```
 
-to customize the HTTP round tripper:
+or if you need a custom HTTP client:
 
 ```go
 transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -68,7 +65,6 @@ httpClient := &http.Client{
 client, err := incognia.New(&incognia.IncogniaClientConfig{
     ClientID:     "your-client-id",
     ClientSecret: "your-client-secret",
-    Region:       incognia.BR,
     Timeout:      time.Second * 2,
     HTTPClient:   httpClient,
 })
