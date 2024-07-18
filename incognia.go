@@ -257,10 +257,6 @@ func (c *Client) RegisterFeedbackWithExpiration(feedbackEvent FeedbackType, occu
 }
 
 func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.Time, expiresAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
-	if !isValidFeedbackType(feedbackEvent) {
-		return ErrInvalidFeedbackType
-	}
-
 	requestBody := postFeedbackRequestBody{
 		Event:      feedbackEvent,
 		OccurredAt: occurredAt,
@@ -459,35 +455,4 @@ func (c *Client) authorizeRequest(request *http.Request) error {
 	token.SetAuthHeader(request)
 
 	return nil
-}
-
-func isValidFeedbackType(feedbackType FeedbackType) bool {
-	switch feedbackType {
-	case
-		PaymentAccepted,
-		PaymentDeclined,
-		PaymentDeclinedByRiskAnalysis,
-		PaymentDeclinedByAcquirer,
-		PaymentDeclinedByBusiness,
-		PaymentDeclinedByManualReview,
-		PaymentAcceptedByThirdParty,
-		LoginAccepted,
-		LoginDeclined,
-		SignupAccepted,
-		SignupDeclined,
-		ChallengePassed,
-		ChallengeFailed,
-		PasswordChangedSuccessfully,
-		PasswordChangeFailed,
-		Verified,
-		NotVerified,
-		Chargeback,
-		PromotionAbuse,
-		AccountTakeover,
-		MposFraud,
-		ChargebackNotification:
-		return true
-	default:
-		return false
-	}
 }
