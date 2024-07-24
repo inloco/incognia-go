@@ -1,5 +1,7 @@
 package incognia
 
+import "time"
+
 type Coordinates struct {
 	Lat float64 `json:"lat"`
 	Lng float64 `json:"lng"`
@@ -57,7 +59,7 @@ const (
 
 type postFeedbackRequestBody struct {
 	Event          FeedbackType `json:"event"`
-	Timestamp      int64        `json:"timestamp"`
+	OccurredAt     *time.Time   `json:"occurred_at,omitempty"`
 	InstallationID string       `json:"installation_id,omitempty"`
 	LoginID        string       `json:"login_id,omitempty"`
 	PaymentID      string       `json:"payment_id,omitempty"`

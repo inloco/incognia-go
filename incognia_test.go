@@ -21,6 +21,7 @@ const (
 )
 
 var (
+	now                                          = time.Now()
 	installationId                               = "installation-id"
 	sessionToken                                 = "session-token"
 	shouldEval               bool                = true
@@ -108,7 +109,7 @@ var (
 	}
 	postFeedbackRequestBodyFixture = &postFeedbackRequestBody{
 		Event:          SignupAccepted,
-		Timestamp:      time.Now().UnixNano() / 1000000,
+		OccurredAt:     &now,
 		InstallationID: "some-installation-id",
 		LoginID:        "some-login-id",
 		PaymentID:      "some-payment-id",
@@ -117,8 +118,8 @@ var (
 		ExternalID:     "some-external-id",
 	}
 	postFeedbackRequestBodyRequiredFieldsFixture = &postFeedbackRequestBody{
-		Event:     SignupAccepted,
-		Timestamp: time.Now().UnixNano() / 1000000,
+		Event:      SignupAccepted,
+		OccurredAt: &now,
 	}
 	feedbackIdentifiersFixture = &FeedbackIdentifiers{
 		InstallationID: "some-installation-id",
@@ -457,8 +458,7 @@ func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderErrorTokenNotFound
 	_, err = client.RegisterPayment(paymentFixture)
 	suite.EqualError(err, ErrTokenNotFound.Error())
 
-	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
-	err = client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	err = client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.EqualError(err, ErrTokenNotFound.Error())
 }
 
@@ -492,8 +492,7 @@ func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderSuccess() {
 
 	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
-	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
-	err = client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	err = client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.NoError(err)
 }
 
@@ -630,8 +629,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedback() {
 	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
-	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
-	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.NoError(err)
 }
 
@@ -639,8 +637,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackNilOptional() {
 	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyRequiredFieldsFixture)
 	defer feedbackServer.Close()
 
-	timestamp := time.Unix(0, postFeedbackRequestBodyRequiredFieldsFixture.Timestamp*int64(1000000))
-	err := suite.client.RegisterFeedback(postFeedbackRequestBodyRequiredFieldsFixture.Event, &timestamp, nil)
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyRequiredFieldsFixture.Event, postFeedbackRequestBodyRequiredFieldsFixture.OccurredAt, nil)
 	suite.NoError(err)
 }
 
@@ -648,14 +645,13 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackAfterTokenExpiration(
 	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
-	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
-	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.NoError(err)
 
 	token, _ := suite.client.tokenProvider.GetToken()
 	token.(*accessToken).ExpiresIn = 0
 
-	err = suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	err = suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.NoError(err)
 }
 
@@ -663,8 +659,7 @@ func (suite *IncogniaTestSuite) TestForbiddenRegisterFeedback() {
 	feedbackServer := suite.mockFeedbackEndpoint("some-other-token", postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
-	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
-	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.EqualError(err, "403 Forbidden")
 }
 
@@ -672,8 +667,7 @@ func (suite *IncogniaTestSuite) TestErrorRegisterFeedbackInvalidFeedbackType() {
 	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
 
-	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
-	err := suite.client.RegisterFeedback("invalid-type", &timestamp, feedbackIdentifiersFixture)
+	err := suite.client.RegisterFeedback("invalid-type", postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.EqualError(err, ErrInvalidFeedbackType.Error())
 }
 
@@ -686,14 +680,12 @@ func (suite *IncogniaTestSuite) TestErrorRegisterFeedbackNilTimestamp() {
 }
 
 func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
-	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
-
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
 		statusServer := mockStatusServer(status)
 		suite.client.endpoints.Feedback = statusServer.URL
 
-		err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+		err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 		suite.Contains(err.Error(), strconv.Itoa(status))
 	}
 }
@@ -897,8 +889,7 @@ func (suite *IncogniaTestSuite) TestUnauthorizedTokenGeneration() {
 	suite.Nil(responseSignUp)
 	suite.EqualError(err, ErrInvalidCredentials.Error())
 
-	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
-	err = suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	err = suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.EqualError(err, ErrInvalidCredentials.Error())
 }
 
@@ -921,8 +912,7 @@ func (suite *IncogniaTestSuite) TestPanic() {
 	suite.client.tokenProvider = &PanickingTokenProvider{panicString: panicString}
 
 	suite.client.RegisterLogin(loginFixture)
-	timestamp := time.Unix(0, postFeedbackRequestBodyFixture.Timestamp*int64(1000000))
-	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, &timestamp, feedbackIdentifiersFixture)
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.Equal(err.Error(), panicString)
 	_, err = suite.client.RegisterSignup("some-installationId", addressFixture)
 	suite.Equal(err.Error(), panicString)
@@ -948,7 +938,7 @@ func (suite *IncogniaTestSuite) mockFeedbackEndpoint(expectedToken string, expec
 		var requestBody postFeedbackRequestBody
 		json.NewDecoder(r.Body).Decode(&requestBody)
 
-		if reflect.DeepEqual(&requestBody, expectedBody) {
+		if postFeedbackRequestBodyEqual(&requestBody, expectedBody) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
@@ -1107,4 +1097,19 @@ func mockTokenEndpoint(expectedToken string, expiresIn string) *httptest.Server 
 	}))
 
 	return tokenServer
+}
+
+func postFeedbackRequestBodyEqual(a, b *postFeedbackRequestBody) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	aOccurredAt := a.OccurredAt
+	bOccurredAt := b.OccurredAt
+	aCopy := *a
+	aCopy.OccurredAt = nil
+	bCopy := *b
+	bCopy.OccurredAt = nil
+	return reflect.DeepEqual(aCopy, bCopy) &&
+		(aOccurredAt == nil && bOccurredAt == nil) ||
+		(aOccurredAt != nil && bOccurredAt != nil && aOccurredAt.Equal(*bOccurredAt))
 }
