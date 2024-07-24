@@ -22,8 +22,6 @@ var (
 	ErrMissingInstallationIDOrSessionToken = errors.New("missing installation id or session token")
 	ErrMissingAccountID                    = errors.New("missing account id")
 	ErrMissingSignupID                     = errors.New("missing signup id")
-	ErrMissingTimestamp                    = errors.New("missing timestamp")
-	ErrInvalidFeedbackType                 = errors.New("invalid feedback type")
 	ErrMissingClientIDOrClientSecret       = errors.New("client id and client secret are required")
 	ErrConfigIsNil                         = errors.New("incognia client config is required")
 )
