@@ -23,9 +23,8 @@ object of `IncogniaClientConfig` that contains the following parameters:
 | `ClientSecret`        | Your client secret                             | **Yes**  | -             |
 | `Timeout`             | Request timeout                                | **No**   | 10 seconds    |
 | `HTTPClient`          | Custom HTTP client                             | **No**   | `http.Client` |
-| `Region` (deprecated) | Incognia's service region, either `BR` or `US` | **No**   | `US`          |
 
-For instance, if you need a client for the US region:
+For instance, if you need the default client:
 
 ```go
 client, err := incognia.New(&incognia.IncogniaClientConfig{
@@ -37,14 +36,12 @@ if err != nil {
 }
 ```
 
-or if you need a client for the BR region that uses a specific timeout:
+or if you need a client that uses a specific timeout:
 
 ```go
-// to use the BR region
 client, err := incognia.New(&incognia.IncogniaClientConfig{
     ClientID:     "your-client-id",
     ClientSecret: "your-client-secret",
-    Region:       incognia.BR,
     Timeout:      time.Second * 2,
 })
 if err != nil {
@@ -52,7 +49,7 @@ if err != nil {
 }
 ```
 
-to customize the HTTP round tripper:
+or if you need a custom HTTP client:
 
 ```go
 transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -68,7 +65,6 @@ httpClient := &http.Client{
 client, err := incognia.New(&incognia.IncogniaClientConfig{
     ClientID:     "your-client-id",
     ClientSecret: "your-client-secret",
-    Region:       incognia.BR,
     Timeout:      time.Second * 2,
     HTTPClient:   httpClient,
 })
@@ -341,13 +337,14 @@ if err != nil {
 fmt.Println(deviceModel)
 ```
 
-You can also access specific evidences using their full path. For example, to get risk_window_remaining evidence from the following response:
+You can also access specific evidences using their full path. For example, to get `location_permission_enabled` evidence from the following response:
 
 ```json
 {
-    ...
-    "account_integrity": {
-        "risk_window_remaining": 12812817373
+    "evidence": {
+        "location_services": {
+            "location_permission_enabled": true
+        }
     }
 }
 ```
@@ -355,15 +352,16 @@ You can also access specific evidences using their full path. For example, to ge
 call any type of `GetEvidence` method using the evidence's full path:
 
 ```go
-riskWindowRemaining, err := assessment.Evidence.GetEvidenceAsInt64("account_integrity.risk_window_remaining")
+var locationPermissionEnabled bool
+err := assessment.Evidence.GetEvidence("location_services.location_permission_enabled", &locationPermissionEnabled)
 if err != nil {
     return err
 }
 
-fmt.Println(riskWindowRemaining)
+fmt.Println(locationPermissionEnabled)
 ```
 
-You can find all available evidence [here](https://docs.incognia.com/apis/understanding-assessment-evidence#risk-assessment-evidence).
+You can find all available evidence [here](https://developer.incognia.com/docs/apis/v2/understanding-assessment-evidence).
 
 ## How to Contribute
 
@@ -376,12 +374,6 @@ Incognia is a location identity platform for mobile apps that enables:
 - Real-time address verification for onboarding
 - Frictionless authentication
 - Real-time transaction verification
-
-## Create a Free Incognia Account
-
-1. Go to [Incognia](https://www.incognia.com/) and click on "Get Started"
-2. Fill the contact form
-3. Once we contact you, you will be ready to integrate [Incognia SDK](https://docs.incognia.com/sdk/getting-started) and use [Incognia APIs](https://dash.incognia.com/api-reference)
 
 ## License
 
