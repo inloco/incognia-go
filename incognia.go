@@ -78,6 +78,8 @@ type Login struct {
 
 type FeedbackIdentifiers struct {
 	InstallationID string
+	SessionToken   string
+	RequestToken   string
 	LoginID        string
 	PaymentID      string
 	SignupID       string
@@ -241,10 +243,20 @@ func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, occurredAt *time.T
 		}
 	}()
 
-	return c.registerFeedback(feedbackEvent, occurredAt, feedbackIdentifiers)
+	return c.registerFeedback(feedbackEvent, occurredAt, nil, feedbackIdentifiers)
 }
 
-func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
+func (c *Client) RegisterFeedbackWithExpiration(feedbackEvent FeedbackType, occurredAt *time.Time, expiresAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+		}
+	}()
+
+	return c.registerFeedback(feedbackEvent, occurredAt, expiresAt, feedbackIdentifiers)
+}
+
+func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.Time, expiresAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
 	if !isValidFeedbackType(feedbackEvent) {
 		return ErrInvalidFeedbackType
 	}
@@ -252,9 +264,12 @@ func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.T
 	requestBody := postFeedbackRequestBody{
 		Event:      feedbackEvent,
 		OccurredAt: occurredAt,
+		ExpiresAt:  expiresAt,
 	}
 	if feedbackIdentifiers != nil {
 		requestBody.InstallationID = feedbackIdentifiers.InstallationID
+		requestBody.SessionToken = feedbackIdentifiers.SessionToken
+		requestBody.RequestToken = feedbackIdentifiers.RequestToken
 		requestBody.LoginID = feedbackIdentifiers.LoginID
 		requestBody.PaymentID = feedbackIdentifiers.PaymentID
 		requestBody.SignupID = feedbackIdentifiers.SignupID

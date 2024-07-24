@@ -22,6 +22,7 @@ const (
 
 var (
 	now                                          = time.Now()
+	nowMinusSeconds                              = now.Add(-1 * time.Second)
 	installationId                               = "installation-id"
 	sessionToken                                 = "session-token"
 	shouldEval               bool                = true
@@ -111,6 +112,21 @@ var (
 		Event:          SignupAccepted,
 		OccurredAt:     &now,
 		InstallationID: "some-installation-id",
+		SessionToken:   "some-session-token",
+		RequestToken:   "some-request-token",
+		LoginID:        "some-login-id",
+		PaymentID:      "some-payment-id",
+		SignupID:       "some-signup-id",
+		AccountID:      "some-account-id",
+		ExternalID:     "some-external-id",
+	}
+	postFeedbackRequestWithExpirationBodyFixture = &postFeedbackRequestBody{
+		Event:          SignupAccepted,
+		OccurredAt:     &now,
+		ExpiresAt:      &nowMinusSeconds,
+		InstallationID: "some-installation-id",
+		SessionToken:   "some-session-token",
+		RequestToken:   "some-request-token",
 		LoginID:        "some-login-id",
 		PaymentID:      "some-payment-id",
 		SignupID:       "some-signup-id",
@@ -122,6 +138,8 @@ var (
 	}
 	feedbackIdentifiersFixture = &FeedbackIdentifiers{
 		InstallationID: "some-installation-id",
+		SessionToken:   "some-session-token",
+		RequestToken:   "some-request-token",
 		LoginID:        "some-login-id",
 		PaymentID:      "some-payment-id",
 		SignupID:       "some-signup-id",
@@ -677,6 +695,63 @@ func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
 		suite.client.endpoints.Feedback = statusServer.URL
 
 		err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
+		suite.Contains(err.Error(), strconv.Itoa(status))
+	}
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackWithExpiration() {
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestWithExpirationBodyFixture)
+	defer feedbackServer.Close()
+
+	err := suite.client.RegisterFeedbackWithExpiration(postFeedbackRequestWithExpirationBodyFixture.Event, postFeedbackRequestWithExpirationBodyFixture.OccurredAt, postFeedbackRequestWithExpirationBodyFixture.ExpiresAt, feedbackIdentifiersFixture)
+	suite.NoError(err)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackWithExpirationNilOptional() {
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyRequiredFieldsFixture)
+	defer feedbackServer.Close()
+
+	err := suite.client.RegisterFeedbackWithExpiration(postFeedbackRequestBodyRequiredFieldsFixture.Event, nil, nil, nil)
+	suite.NoError(err)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterFeedbackWithExpirationAfterTokenExpiration() {
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestWithExpirationBodyFixture)
+	defer feedbackServer.Close()
+
+	err := suite.client.RegisterFeedbackWithExpiration(postFeedbackRequestWithExpirationBodyFixture.Event, postFeedbackRequestWithExpirationBodyFixture.OccurredAt, postFeedbackRequestWithExpirationBodyFixture.ExpiresAt, feedbackIdentifiersFixture)
+	suite.NoError(err)
+
+	token, _ := suite.client.tokenProvider.GetToken()
+	token.(*accessToken).ExpiresIn = 0
+
+	err = suite.client.RegisterFeedbackWithExpiration(postFeedbackRequestWithExpirationBodyFixture.Event, postFeedbackRequestWithExpirationBodyFixture.OccurredAt, postFeedbackRequestWithExpirationBodyFixture.ExpiresAt, feedbackIdentifiersFixture)
+	suite.NoError(err)
+}
+
+func (suite *IncogniaTestSuite) TestForbiddenRegisterFeedbackWithExpiration() {
+	feedbackServer := suite.mockFeedbackEndpoint("some-other-token", postFeedbackRequestWithExpirationBodyFixture)
+	defer feedbackServer.Close()
+
+	err := suite.client.RegisterFeedbackWithExpiration(postFeedbackRequestWithExpirationBodyFixture.Event, postFeedbackRequestWithExpirationBodyFixture.OccurredAt, postFeedbackRequestWithExpirationBodyFixture.ExpiresAt, feedbackIdentifiersFixture)
+	suite.EqualError(err, "403 Forbidden")
+}
+
+func (suite *IncogniaTestSuite) TestErrorRegisterFeedbackWithExpirationInvalidFeedbackType() {
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestWithExpirationBodyFixture)
+	defer feedbackServer.Close()
+
+	err := suite.client.RegisterFeedbackWithExpiration("invalid-type", postFeedbackRequestWithExpirationBodyFixture.OccurredAt, postFeedbackRequestWithExpirationBodyFixture.ExpiresAt, feedbackIdentifiersFixture)
+	suite.EqualError(err, ErrInvalidFeedbackType.Error())
+}
+
+func (suite *IncogniaTestSuite) TestErrorsRegisterFeedbackWithExpiration() {
+	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
+	for _, status := range errors {
+		statusServer := mockStatusServer(status)
+		suite.client.endpoints.Feedback = statusServer.URL
+
+		err := suite.client.RegisterFeedbackWithExpiration(postFeedbackRequestWithExpirationBodyFixture.Event, postFeedbackRequestWithExpirationBodyFixture.OccurredAt, postFeedbackRequestWithExpirationBodyFixture.ExpiresAt, feedbackIdentifiersFixture)
 		suite.Contains(err.Error(), strconv.Itoa(status))
 	}
 }
