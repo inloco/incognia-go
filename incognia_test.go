@@ -466,10 +466,7 @@ func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderErrorTokenNotFound
 	tokenProvider := NewManualRefreshTokenProvider(NewTokenClient(&TokenClientConfig{ClientID: clientID, ClientSecret: clientSecret}))
 	client, _ := New(&IncogniaClientConfig{ClientID: clientID, ClientSecret: clientSecret, TokenProvider: tokenProvider})
 
-	_, err := client.GetSignupAssessment("any-signup-id")
-	suite.EqualError(err, ErrTokenNotFound.Error())
-
-	_, err = client.RegisterLogin(loginFixture)
+	_, err := client.RegisterLogin(loginFixture)
 	suite.EqualError(err, ErrTokenNotFound.Error())
 
 	_, err = client.RegisterPayment(paymentFixture)
@@ -490,16 +487,10 @@ func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderSuccess() {
 	tokenProvider.Refresh()
 
 	suite.client = client
-	signupID := "signup-id"
-
-	signupServer := suite.mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
-	defer signupServer.Close()
-	_, err := client.GetSignupAssessment(signupID)
-	suite.NoError(err)
 
 	loginServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer loginServer.Close()
-	_, err = client.RegisterLogin(loginFixture)
+	_, err := client.RegisterLogin(loginFixture)
 	suite.NoError(err)
 
 	paymentServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
@@ -511,60 +502,6 @@ func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderSuccess() {
 	defer feedbackServer.Close()
 	err = client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.NoError(err)
-}
-
-func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessment() {
-	signupID := "signup-id"
-	signupServer := suite.mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
-	defer signupServer.Close()
-
-	response, err := suite.client.GetSignupAssessment(signupID)
-	suite.NoError(err)
-	suite.Equal(signupAssessmentFixture, response)
-}
-
-func (suite *IncogniaTestSuite) TestSuccessGetSignupAssessmentAfterTokenExpiration() {
-	signupID := "signup-id"
-	signupServer := suite.mockGetSignupsEndpoint(token, signupID, signupAssessmentFixture)
-	defer signupServer.Close()
-
-	response, err := suite.client.GetSignupAssessment(signupID)
-	suite.NoError(err)
-	suite.Equal(signupAssessmentFixture, response)
-
-	token, _ := suite.client.tokenProvider.GetToken()
-	token.(*accessToken).ExpiresIn = 0
-
-	response, err = suite.client.GetSignupAssessment(signupID)
-	suite.NoError(err)
-	suite.Equal(signupAssessmentFixture, response)
-}
-func (suite *IncogniaTestSuite) TestGetSignupAssessmentEmptySignupId() {
-	response, err := suite.client.GetSignupAssessment("")
-	suite.EqualError(err, ErrMissingSignupID.Error())
-	suite.Nil(response)
-}
-
-func (suite *IncogniaTestSuite) TestForbiddenGetSignupAssessment() {
-	signupID := "signup-id"
-	signupServer := suite.mockGetSignupsEndpoint("some-other-token", signupID, signupAssessmentFixture)
-	defer signupServer.Close()
-
-	response, err := suite.client.GetSignupAssessment(signupID)
-	suite.Nil(response)
-	suite.EqualError(err, "403 Forbidden")
-}
-
-func (suite *IncogniaTestSuite) TestGetSignupAssessmentErrors() {
-	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
-	for _, status := range errors {
-		statusServer := mockStatusServer(status)
-		suite.client.endpoints.Signups = statusServer.URL
-
-		response, err := suite.client.GetSignupAssessment("any-signup-id")
-		suite.Nil(response)
-		suite.Contains(err.Error(), strconv.Itoa(status))
-	}
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
@@ -966,8 +903,6 @@ func (suite *IncogniaTestSuite) TestPanic() {
 	suite.Equal(err.Error(), panicString)
 	_, err = suite.client.RegisterSignup("some-installationId", addressFixture)
 	suite.Equal(err.Error(), panicString)
-	_, err = suite.client.GetSignupAssessment("some-signup-id")
-	suite.Equal(err.Error(), panicString)
 	_, err = suite.client.RegisterPayment(paymentFixture)
 	suite.Equal(err.Error(), panicString)
 }
@@ -1081,34 +1016,6 @@ func (suite *IncogniaTestSuite) mockPostSignupsEndpoint(expectedToken string, ex
 	suite.client.endpoints.Signups = signupsServer.URL
 
 	return signupsServer
-}
-
-func (suite *IncogniaTestSuite) mockGetSignupsEndpoint(expectedToken, expectedSignupID string, expectedResponse *SignupAssessment) *httptest.Server {
-	getSignupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("content-type", "application/json")
-
-		if !isRequestAuthorized(r, expectedToken) {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-
-		defer r.Body.Close()
-
-		splitUrl := strings.Split(r.URL.RequestURI(), "/")
-		requestSignupID := splitUrl[len(splitUrl)-1]
-
-		if requestSignupID == expectedSignupID {
-			res, _ := json.Marshal(expectedResponse)
-			w.Write(res)
-			return
-		}
-
-		w.WriteHeader(http.StatusNotFound)
-	}))
-
-	suite.client.endpoints.Signups = getSignupsServer.URL
-
-	return getSignupsServer
 }
 
 func isRequestAuthorized(request *http.Request, expectedToken string) bool {

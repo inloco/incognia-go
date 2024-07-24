@@ -138,15 +138,6 @@ assessment, err := client.RegisterSignupWithParams(&incognia.Signup{
 })
 ```
 
-### Getting a Signup
-
-This method allows you to query the latest assessment for a given signup event, returning a `SignupAssessment`, containing the risk assessment and supporting evidence:
-
-```go
-signupID := "c9ac2803-c868-4b7a-8323-8a6b96298ebe"
-assessment, err := client.GetSignupAssessment(signupID)
-```
-
 ### Registering Payment
 
 This method registers a new payment for the given installation and account, returning a `TransactionAssessment`, containing the risk assessment and supporting evidence.
