@@ -248,9 +248,6 @@ func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.T
 	if !isValidFeedbackType(feedbackEvent) {
 		return ErrInvalidFeedbackType
 	}
-	if occurredAt == nil {
-		return ErrMissingTimestamp
-	}
 
 	requestBody := postFeedbackRequestBody{
 		Event:      feedbackEvent,
