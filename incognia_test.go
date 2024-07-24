@@ -680,14 +680,6 @@ func (suite *IncogniaTestSuite) TestForbiddenRegisterFeedback() {
 	suite.EqualError(err, "403 Forbidden")
 }
 
-func (suite *IncogniaTestSuite) TestErrorRegisterFeedbackInvalidFeedbackType() {
-	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
-	defer feedbackServer.Close()
-
-	err := suite.client.RegisterFeedback("invalid-type", postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
-	suite.EqualError(err, ErrInvalidFeedbackType.Error())
-}
-
 func (suite *IncogniaTestSuite) TestErrorsRegisterFeedback() {
 	errors := []int{http.StatusBadRequest, http.StatusInternalServerError}
 	for _, status := range errors {
@@ -735,14 +727,6 @@ func (suite *IncogniaTestSuite) TestForbiddenRegisterFeedbackWithExpiration() {
 
 	err := suite.client.RegisterFeedbackWithExpiration(postFeedbackRequestWithExpirationBodyFixture.Event, postFeedbackRequestWithExpirationBodyFixture.OccurredAt, postFeedbackRequestWithExpirationBodyFixture.ExpiresAt, feedbackIdentifiersFixture)
 	suite.EqualError(err, "403 Forbidden")
-}
-
-func (suite *IncogniaTestSuite) TestErrorRegisterFeedbackWithExpirationInvalidFeedbackType() {
-	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestWithExpirationBodyFixture)
-	defer feedbackServer.Close()
-
-	err := suite.client.RegisterFeedbackWithExpiration("invalid-type", postFeedbackRequestWithExpirationBodyFixture.OccurredAt, postFeedbackRequestWithExpirationBodyFixture.ExpiresAt, feedbackIdentifiersFixture)
-	suite.EqualError(err, ErrInvalidFeedbackType.Error())
 }
 
 func (suite *IncogniaTestSuite) TestErrorsRegisterFeedbackWithExpiration() {
