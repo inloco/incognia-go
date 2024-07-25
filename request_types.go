@@ -22,7 +22,9 @@ type StructuredAddress struct {
 }
 
 type postAssessmentRequestBody struct {
-	InstallationID    string             `json:"installation_id"`
+	InstallationID    string             `json:"installation_id,omitempty"`
+	RequestToken      string             `json:"request_token,omitempty"`
+	SessionToken      string             `json:"session_token,omitempty"`
 	AddressLine       string             `json:"address_line,omitempty"`
 	StructuredAddress *StructuredAddress `json:"structured_address,omitempty"`
 	Coordinates       *Coordinates       `json:"address_coordinates,omitempty"`
@@ -136,4 +138,5 @@ type postTransactionRequestBody struct {
 	PaymentValue            *PaymentValue         `json:"payment_value,omitempty"`
 	PaymentMethods          []*PaymentMethod      `json:"payment_methods,omitempty"`
 	SessionToken            *string               `json:"session_token,omitempty"`
+	RequestToken            string                `json:"request_token,omitempty"`
 }
