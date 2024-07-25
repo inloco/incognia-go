@@ -205,7 +205,7 @@ This method registers a new **web** payment for the given installation and accou
 
 ```go
 assessment, err := client.RegisterPayment(&incognia.Payment{
-    SessionToken:   "session-token",
+    RequestToken:   "request-token",
     AccountID:      "account-id",
     ExternalID:     "external-id",
     PolicyID:       "policy-id",
@@ -228,11 +228,11 @@ assessment, err := client.RegisterLogin(&incognia.Login{
 })
 ```
 
-This method registers a new **web** login for the given account and session-token, returning a `TransactionAssessment`, containing the risk assessment and supporting evidence.
+This method registers a new **web** login for the given account and request-token, returning a `TransactionAssessment`, containing the risk assessment and supporting evidence.
 
 ```go
 assessment, err := client.RegisterLogin(&incognia.Login{
-    SessionToken:               "session-token",
+    RequestToken:               "request-token",
     AccountID:                  "account-id",
     ...
 })
@@ -284,9 +284,9 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
 This method registers a feedback event for the given identifiers (represented in `FeedbackIdentifiers`) related to a signup, login or payment.
 
 ```go
-occurred_at := time.Parse(time.RFC3339, "2024-07-22T15:20:00Z")
+occurredAt, err := time.Parse(time.RFC3339, "2024-07-22T15:20:00Z")
 feedbackEvent := incognia.AccountTakeover
-err := client.RegisterFeedback(feedbackEvent, &occurred_at, &incognia.FeedbackIdentifiers{
+err := client.RegisterFeedback(feedbackEvent, &occurredAt, &incognia.FeedbackIdentifiers{
     InstallationID: "some-installation-id",
     AccountID:      "some-account-id",
 })

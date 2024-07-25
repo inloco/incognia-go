@@ -24,7 +24,7 @@ var (
 	now                                          = time.Now()
 	nowMinusSeconds                              = now.Add(-1 * time.Second)
 	installationId                               = "installation-id"
-	sessionToken                                 = "session-token"
+	requestToken                                 = "request-token"
 	shouldEval               bool                = true
 	shouldNotEval            bool                = false
 	emptyQueryString         map[string][]string = nil
@@ -79,6 +79,7 @@ var (
 
 	postSignupRequestBodyWithAllParamsFixture = &postAssessmentRequestBody{
 		InstallationID: installationId,
+		RequestToken:   requestToken,
 		AddressLine:    "address line",
 		StructuredAddress: &StructuredAddress{
 			Locale:       "locale",
@@ -218,7 +219,7 @@ var (
 		},
 	}
 	postPaymentWebRequestBodyFixture = &postTransactionRequestBody{
-		SessionToken: &sessionToken,
+		RequestToken: requestToken,
 		AccountID:    "account-id",
 		ExternalID:   "external-id",
 		PolicyID:     "policy-id",
@@ -314,7 +315,7 @@ var (
 		},
 	}
 	paymentWebFixture = &Payment{
-		SessionToken: &sessionToken,
+		RequestToken: requestToken,
 		AccountID:    "account-id",
 		ExternalID:   "external-id",
 		PolicyID:     "policy-id",
@@ -410,7 +411,7 @@ var (
 		ExternalID:              "external-id",
 		PolicyID:                "policy-id",
 		PaymentMethodIdentifier: "payment-method-identifier",
-		SessionToken:            &sessionToken,
+		RequestToken:            requestToken,
 	}
 	postLoginRequestBodyFixture = &postTransactionRequestBody{
 		InstallationID:          &installationId,
@@ -426,7 +427,7 @@ var (
 		PolicyID:                "policy-id",
 		PaymentMethodIdentifier: "payment-method-identifier",
 		Type:                    loginType,
-		SessionToken:            &sessionToken,
+		RequestToken:            requestToken,
 	}
 )
 
@@ -573,6 +574,8 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
 
 	response, err := suite.client.RegisterSignupWithParams(&Signup{
 		InstallationID: postSignupRequestBodyWithAllParamsFixture.InstallationID,
+		RequestToken:   postSignupRequestBodyWithAllParamsFixture.RequestToken,
+		SessionToken:   postSignupRequestBodyWithAllParamsFixture.SessionToken,
 		Address:        addressFixture,
 		AccountID:      postSignupRequestBodyWithAllParamsFixture.AccountID,
 		PolicyID:       postSignupRequestBodyWithAllParamsFixture.PolicyID,
@@ -617,7 +620,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() 
 
 func (suite *IncogniaTestSuite) TestRegisterSignupEmptyInstallationId() {
 	response, err := suite.client.RegisterSignup("", &Address{})
-	suite.EqualError(err, ErrMissingInstallationID.Error())
+	suite.EqualError(err, ErrMissingIdentifier.Error())
 	suite.Nil(response)
 }
 
@@ -794,7 +797,7 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentNilPayment() {
 
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyInstallationId() {
 	response, err := suite.client.RegisterPayment(&Payment{AccountID: "some-account-id"})
-	suite.EqualError(err, ErrMissingInstallationIDOrSessionToken.Error())
+	suite.EqualError(err, ErrMissingIdentifier.Error())
 	suite.Nil(response)
 }
 
@@ -903,7 +906,7 @@ func (suite *IncogniaTestSuite) TestRegisterLoginNilLogin() {
 
 func (suite *IncogniaTestSuite) TestRegisterLoginNullInstallationIdAndSessionToken() {
 	response, err := suite.client.RegisterLogin(&Login{AccountID: "some-account-id"})
-	suite.EqualError(err, ErrMissingInstallationIDOrSessionToken.Error())
+	suite.EqualError(err, ErrMissingIdentifier.Error())
 	suite.Nil(response)
 }
 
