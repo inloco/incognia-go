@@ -20,6 +20,7 @@ var (
 	ErrMissingSignup                       = errors.New("missing signup parameters")
 	ErrMissingInstallationID               = errors.New("missing installation id")
 	ErrMissingInstallationIDOrSessionToken = errors.New("missing installation id or session token")
+	ErrMissingIdentifier                   = errors.New("missing installation id, request token or session token")
 	ErrMissingAccountID                    = errors.New("missing account id")
 	ErrMissingSignupID                     = errors.New("missing signup id")
 	ErrMissingTimestamp                    = errors.New("missing timestamp")
@@ -57,6 +58,7 @@ type IncogniaClientConfig struct {
 type Payment struct {
 	InstallationID *string
 	SessionToken   *string
+	RequestToken   string
 	AccountID      string
 	ExternalID     string
 	PolicyID       string
@@ -69,6 +71,7 @@ type Payment struct {
 type Login struct {
 	InstallationID          *string
 	SessionToken            *string
+	RequestToken            string
 	AccountID               string
 	ExternalID              string
 	PolicyID                string
@@ -95,6 +98,8 @@ type Address struct {
 
 type Signup struct {
 	InstallationID string
+	RequestToken   string
+	SessionToken   string
 	Address        *Address
 	AccountID      string
 	PolicyID       string
@@ -201,12 +206,14 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 	if params == nil {
 		return nil, ErrMissingSignup
 	}
-	if params.InstallationID == "" {
-		return nil, ErrMissingInstallationID
+	if params.InstallationID == "" && params.RequestToken == "" && params.SessionToken == "" {
+		return nil, ErrMissingIdentifier
 	}
 
 	requestBody := postAssessmentRequestBody{
 		InstallationID: params.InstallationID,
+		RequestToken:   params.RequestToken,
+		SessionToken:   params.SessionToken,
 		AccountID:      params.AccountID,
 		PolicyID:       params.PolicyID,
 	}
@@ -306,8 +313,8 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		return nil, ErrMissingPayment
 	}
 
-	if payment.InstallationID == nil && payment.SessionToken == nil {
-		return nil, ErrMissingInstallationIDOrSessionToken
+	if payment.InstallationID == nil && payment.SessionToken == nil && payment.RequestToken == "" {
+		return nil, ErrMissingIdentifier
 	}
 
 	if payment.AccountID == "" {
@@ -316,6 +323,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{
 		InstallationID: payment.InstallationID,
+		RequestToken:   payment.RequestToken,
 		SessionToken:   payment.SessionToken,
 		Type:           paymentType,
 		AccountID:      payment.AccountID,
@@ -366,8 +374,8 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		return nil, ErrMissingLogin
 	}
 
-	if login.InstallationID == nil && login.SessionToken == nil {
-		return nil, ErrMissingInstallationIDOrSessionToken
+	if login.InstallationID == nil && login.SessionToken == nil && login.RequestToken == "" {
+		return nil, ErrMissingIdentifier
 	}
 
 	if login.AccountID == "" {
@@ -382,6 +390,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		ExternalID:              login.ExternalID,
 		PaymentMethodIdentifier: login.PaymentMethodIdentifier,
 		SessionToken:            login.SessionToken,
+		RequestToken:            login.RequestToken,
 	})
 	if err != nil {
 		return nil, err
