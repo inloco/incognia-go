@@ -98,8 +98,9 @@ var (
 			Lat: -23.561414,
 			Lng: -46.6558819,
 		},
-		AccountID: "account-id",
-		PolicyID:  "policy-id",
+		AccountID:  "account-id",
+		PolicyID:   "policy-id",
+		ExternalID: "external-id",
 	}
 	postSignupRequestBodyRequiredFieldsFixture = &postAssessmentRequestBody{
 		InstallationID: installationId,
