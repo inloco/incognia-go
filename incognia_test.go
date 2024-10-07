@@ -98,8 +98,9 @@ var (
 			Lat: -23.561414,
 			Lng: -46.6558819,
 		},
-		AccountID: "account-id",
-		PolicyID:  "policy-id",
+		AccountID:  "account-id",
+		PolicyID:   "policy-id",
+		ExternalID: "external-id",
 	}
 	postSignupRequestBodyRequiredFieldsFixture = &postAssessmentRequestBody{
 		InstallationID: installationId,
@@ -579,6 +580,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
 		Address:        addressFixture,
 		AccountID:      postSignupRequestBodyWithAllParamsFixture.AccountID,
 		PolicyID:       postSignupRequestBodyWithAllParamsFixture.PolicyID,
+		ExternalID:     postSignupRequestBodyWithAllParamsFixture.ExternalID,
 	})
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
