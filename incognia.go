@@ -103,6 +103,7 @@ type Signup struct {
 	Address        *Address
 	AccountID      string
 	PolicyID       string
+	ExternalID     string
 }
 
 func New(config *IncogniaClientConfig) (*Client, error) {
@@ -216,6 +217,7 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 		SessionToken:   params.SessionToken,
 		AccountID:      params.AccountID,
 		PolicyID:       params.PolicyID,
+		ExternalID:     params.ExternalID,
 	}
 	if params.Address != nil {
 		requestBody.AddressLine = params.Address.AddressLine

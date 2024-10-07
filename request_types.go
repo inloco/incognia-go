@@ -30,6 +30,7 @@ type postAssessmentRequestBody struct {
 	Coordinates       *Coordinates       `json:"address_coordinates,omitempty"`
 	AccountID         string             `json:"account_id,omitempty"`
 	PolicyID          string             `json:"policy_id,omitempty"`
+	ExternalID        string             `json:"external_id,omitempty"`
 }
 
 type FeedbackType string

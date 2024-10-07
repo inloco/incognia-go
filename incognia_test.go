@@ -579,6 +579,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
 		Address:        addressFixture,
 		AccountID:      postSignupRequestBodyWithAllParamsFixture.AccountID,
 		PolicyID:       postSignupRequestBodyWithAllParamsFixture.PolicyID,
+		ExternalID:     postSignupRequestBodyWithAllParamsFixture.ExternalID,
 	})
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
