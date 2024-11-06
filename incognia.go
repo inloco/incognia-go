@@ -27,13 +27,6 @@ var (
 	ErrConfigIsNil                         = errors.New("incognia client config is required")
 )
 
-type Region int64
-
-const (
-	US Region = iota
-	BR
-)
-
 type Client struct {
 	clientID      string
 	clientSecret  string
@@ -49,8 +42,6 @@ type IncogniaClientConfig struct {
 	Timeout           time.Duration
 	TokenRouteTimeout time.Duration
 	HTTPClient        *http.Client
-	// Deprecated: Region is no longer used to determine endpoints
-	Region Region
 }
 
 type Payment struct {
