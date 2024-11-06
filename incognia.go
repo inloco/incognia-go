@@ -147,37 +147,6 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 	return &Client{clientID: config.ClientID, clientSecret: config.ClientSecret, tokenProvider: tokenProvider, netClient: netClient, endpoints: &endpoints}, nil
 }
 
-func (c *Client) GetSignupAssessment(signupID string) (ret *SignupAssessment, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("%v", r)
-			ret = nil
-		}
-	}()
-
-	return c.getSignupAssessment(signupID)
-}
-
-func (c *Client) getSignupAssessment(signupID string) (ret *SignupAssessment, err error) {
-	if signupID == "" {
-		return nil, ErrMissingSignupID
-	}
-
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", c.endpoints.Signups, signupID), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var signupAssessment SignupAssessment
-
-	err = c.doRequest(req, &signupAssessment)
-	if err != nil {
-		return nil, err
-	}
-
-	return &signupAssessment, nil
-}
-
 func (c *Client) RegisterSignup(installationID string, address *Address) (ret *SignupAssessment, err error) {
 	defer func() {
 		if r := recover(); r != nil {
