@@ -21,10 +21,14 @@ const (
 )
 
 var (
-	now                                          = time.Now()
-	nowMinusSeconds                              = now.Add(-1 * time.Second)
-	installationId                               = "installation-id"
-	requestToken                                 = "request-token"
+	now             = time.Now()
+	nowMinusSeconds = now.Add(-1 * time.Second)
+	installationId  = "installation-id"
+	requestToken    = "request-token"
+	customProperty  = map[string]interface{}{
+		"merchant_id": "MERCHANT_ID_HERE",
+		"driver_id":   "DRIVER_ID_HERE",
+	}
 	shouldEval               bool                = true
 	shouldNotEval            bool                = false
 	emptyQueryString         map[string][]string = nil
@@ -174,11 +178,12 @@ var (
 		},
 	}
 	postPaymentRequestBodyFixture = &postTransactionRequestBody{
-		InstallationID: &installationId,
-		AccountID:      "account-id",
-		ExternalID:     "external-id",
-		PolicyID:       "policy-id",
-		Type:           paymentType,
+		InstallationID:   &installationId,
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		Type:             paymentType,
+		CustomProperties: customProperty,
 		Addresses: []*TransactionAddress{
 			{
 				Type: Billing,
@@ -271,10 +276,11 @@ var (
 		Type:           paymentType,
 	}
 	paymentFixture = &Payment{
-		InstallationID: &installationId,
-		AccountID:      "account-id",
-		ExternalID:     "external-id",
-		PolicyID:       "policy-id",
+		InstallationID:   &installationId,
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		CustomProperties: customProperty,
 		Addresses: []*TransactionAddress{
 			{
 				Type: Billing,
@@ -390,6 +396,7 @@ var (
 		AccountID:               "account-id",
 		ExternalID:              "external-id",
 		PolicyID:                "policy-id",
+		CustomProperties:        customProperty,
 		PaymentMethodIdentifier: "payment-method-identifier",
 	}
 	loginFixtureWithShouldEval = &Login{
@@ -399,6 +406,7 @@ var (
 		PolicyID:                "policy-id",
 		PaymentMethodIdentifier: "payment-method-identifier",
 		Eval:                    &shouldEval,
+		CustomProperties:        customProperty,
 	}
 	loginFixtureWithShouldNotEval = &Login{
 		InstallationID: &installationId,
@@ -421,6 +429,7 @@ var (
 		PolicyID:                "policy-id",
 		PaymentMethodIdentifier: "payment-method-identifier",
 		Type:                    loginType,
+		CustomProperties:        customProperty,
 	}
 	postLoginWebRequestBodyFixture = &postTransactionRequestBody{
 		AccountID:               "account-id",

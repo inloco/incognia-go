@@ -45,16 +45,17 @@ type IncogniaClientConfig struct {
 }
 
 type Payment struct {
-	InstallationID *string
-	SessionToken   *string
-	RequestToken   string
-	AccountID      string
-	ExternalID     string
-	PolicyID       string
-	Addresses      []*TransactionAddress
-	Value          *PaymentValue
-	Methods        []*PaymentMethod
-	Eval           *bool
+	InstallationID   *string
+	SessionToken     *string
+	RequestToken     string
+	AccountID        string
+	ExternalID       string
+	PolicyID         string
+	Addresses        []*TransactionAddress
+	Value            *PaymentValue
+	Methods          []*PaymentMethod
+	Eval             *bool
+	CustomProperties map[string]interface{}
 }
 
 type Login struct {
@@ -66,6 +67,7 @@ type Login struct {
 	PolicyID                string
 	PaymentMethodIdentifier string
 	Eval                    *bool
+	CustomProperties        map[string]interface{}
 }
 
 type FeedbackIdentifiers struct {
@@ -282,16 +284,17 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 	}
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{
-		InstallationID: payment.InstallationID,
-		RequestToken:   payment.RequestToken,
-		SessionToken:   payment.SessionToken,
-		Type:           paymentType,
-		AccountID:      payment.AccountID,
-		PolicyID:       payment.PolicyID,
-		ExternalID:     payment.ExternalID,
-		Addresses:      payment.Addresses,
-		PaymentValue:   payment.Value,
-		PaymentMethods: payment.Methods,
+		InstallationID:   payment.InstallationID,
+		RequestToken:     payment.RequestToken,
+		SessionToken:     payment.SessionToken,
+		Type:             paymentType,
+		AccountID:        payment.AccountID,
+		PolicyID:         payment.PolicyID,
+		ExternalID:       payment.ExternalID,
+		Addresses:        payment.Addresses,
+		PaymentValue:     payment.Value,
+		PaymentMethods:   payment.Methods,
+		CustomProperties: payment.CustomProperties,
 	})
 	if err != nil {
 		return nil, err
@@ -351,6 +354,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		PaymentMethodIdentifier: login.PaymentMethodIdentifier,
 		SessionToken:            login.SessionToken,
 		RequestToken:            login.RequestToken,
+		CustomProperties:        login.CustomProperties,
 	})
 	if err != nil {
 		return nil, err

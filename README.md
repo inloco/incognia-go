@@ -148,6 +148,7 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
     AccountID:      "account-id",
     ExternalID:     "external-id",
     PolicyID:       "policy-id",
+    CustomProperties: myMap
     Addresses: []*incognia.TransactionAddress{
         {
             Type: incognia.Billing,
