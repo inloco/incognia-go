@@ -148,7 +148,7 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
     AccountID:      "account-id",
     ExternalID:     "external-id",
     PolicyID:       "policy-id",
-    CustomProperties: myMap
+    CustomProperties: myCustomPropertiesMap
     Addresses: []*incognia.TransactionAddress{
         {
             Type: incognia.Billing,
@@ -217,7 +217,7 @@ assessment, err := client.RegisterLogin(&incognia.Login{
     ExternalID:                 "external-id",
     PolicyID:                   "policy-id",
     PaymentMethodIdentifier:    "payment-method-identifier",
-    CustomProperties: myMap,
+    CustomProperties: myCustomPropertiesMap,
 })
 ```
 
