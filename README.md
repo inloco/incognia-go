@@ -217,6 +217,7 @@ assessment, err := client.RegisterLogin(&incognia.Login{
     ExternalID:                 "external-id",
     PolicyID:                   "policy-id",
     PaymentMethodIdentifier:    "payment-method-identifier",
+    CustomProperties: myMap,
 })
 ```
 
