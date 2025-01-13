@@ -26,8 +26,8 @@ var (
 	installationId  = "installation-id"
 	requestToken    = "request-token"
 	customProperty  = map[string]interface{}{
-		"merchant_id": "MERCHANT_ID_HERE",
-		"driver_id":   "DRIVER_ID_HERE",
+		"custom_1": "custom_value_1",
+		"custom_2": "custom_value_2",
 	}
 	shouldEval               bool                = true
 	shouldNotEval            bool                = false
