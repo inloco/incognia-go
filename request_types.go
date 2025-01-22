@@ -106,6 +106,14 @@ type PaymentValue struct {
 	Currency string  `json:"currency"`
 }
 
+type CouponType struct {
+	Type        string  `json:"type"`
+	Value       float64 `json:"value"`
+	MaxDiscount float64 `json:"max_discount"`
+	Id          string  `json:"id"`
+	Name        string  `json:"name"`
+}
+
 type paymentMethodType string
 
 const (
@@ -136,6 +144,7 @@ type PaymentMethod struct {
 type postTransactionRequestBody struct {
 	ExternalID              string                 `json:"external_id,omitempty"`
 	PolicyID                string                 `json:"policy_id,omitempty"`
+	Coupon                  *CouponType            `json:"coupon,omitempty"`
 	InstallationID          *string                `json:"installation_id,omitempty"`
 	PaymentMethodIdentifier string                 `json:"payment_method_identifier,omitempty"`
 	Type                    transactionType        `json:"type"`

@@ -148,6 +148,13 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
     AccountID:      "account-id",
     ExternalID:     "external-id",
     PolicyID:       "policy-id",
+    Coupon:         &incognia.CouponType{
+        Type:        "coupon-type", //it should be percent_off or fixed_value
+        Value:       55.02,
+        MaxDiscount: 30,
+        Id:          "identifier",
+        Name:        "coupon-name",
+    },
     CustomProperties: myCustomPropertiesMap
     Addresses: []*incognia.TransactionAddress{
         {

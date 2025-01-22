@@ -178,11 +178,18 @@ var (
 		},
 	}
 	postPaymentRequestBodyFixture = &postTransactionRequestBody{
-		InstallationID:   &installationId,
-		AccountID:        "account-id",
-		ExternalID:       "external-id",
-		PolicyID:         "policy-id",
-		Type:             paymentType,
+		InstallationID: &installationId,
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
+		Type:           paymentType,
+		Coupon: &CouponType{
+			Type:        "coupon_type",
+			Value:       55.02,
+			MaxDiscount: 30,
+			Id:          "identifier",
+			Name:        "CouponName",
+		},
 		CustomProperties: customProperty,
 		Addresses: []*TransactionAddress{
 			{
@@ -229,7 +236,14 @@ var (
 		AccountID:    "account-id",
 		ExternalID:   "external-id",
 		PolicyID:     "policy-id",
-		Type:         paymentType,
+		Coupon: &CouponType{
+			Type:        "coupon_type",
+			Value:       55.02,
+			MaxDiscount: 30,
+			Id:          "identifier",
+			Name:        "CouponName",
+		},
+		Type: paymentType,
 		Addresses: []*TransactionAddress{
 			{
 				Type: Billing,
@@ -276,10 +290,17 @@ var (
 		Type:           paymentType,
 	}
 	paymentFixture = &Payment{
-		InstallationID:   &installationId,
-		AccountID:        "account-id",
-		ExternalID:       "external-id",
-		PolicyID:         "policy-id",
+		InstallationID: &installationId,
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
+		Coupon: &CouponType{
+			Type:        "coupon_type",
+			Value:       55.02,
+			MaxDiscount: 30,
+			Id:          "identifier",
+			Name:        "CouponName",
+		},
 		CustomProperties: customProperty,
 		Addresses: []*TransactionAddress{
 			{
@@ -326,6 +347,13 @@ var (
 		AccountID:    "account-id",
 		ExternalID:   "external-id",
 		PolicyID:     "policy-id",
+		Coupon: &CouponType{
+			Type:        "coupon_type",
+			Value:       55.02,
+			MaxDiscount: 30,
+			Id:          "identifier",
+			Name:        "CouponName",
+		},
 		Addresses: []*TransactionAddress{
 			{
 				Type: Billing,
