@@ -62,6 +62,7 @@ type Payment struct {
 	AccountID        string
 	ExternalID       string
 	PolicyID         string
+	Coupon           *CouponType
 	Addresses        []*TransactionAddress
 	Value            *PaymentValue
 	Methods          []*PaymentMethod
@@ -332,6 +333,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		Type:             paymentType,
 		AccountID:        payment.AccountID,
 		PolicyID:         payment.PolicyID,
+		Coupon:           payment.Coupon,
 		ExternalID:       payment.ExternalID,
 		Addresses:        payment.Addresses,
 		PaymentValue:     payment.Value,
