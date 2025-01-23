@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"runtime"
+	"runtime/debug"
 	"time"
 )
 
@@ -384,7 +386,25 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 }
 
 func (c *Client) doRequest(request *http.Request, response interface{}) error {
+	libVersion := "unknown"
+	if buildInfo, ok := debug.ReadBuildInfo(); ok {
+		for _, dep := range buildInfo.Deps {
+			if dep.Path == "repo.incognia.com/go/incognia" {
+				libVersion = dep.Version
+			}
+		}
+	}
+
+	userAgent := fmt.Sprintf(
+		"incognia-api-go/%s (%s %s) Go/%s",
+		libVersion,
+		runtime.GOOS,
+		runtime.GOARCH,
+		runtime.Version(),
+	)
+
 	request.Header.Add("Content-Type", "application/json")
+	request.Header.Add("User-agent", userAgent)
 
 	err := c.authorizeRequest(request)
 	if err != nil {
