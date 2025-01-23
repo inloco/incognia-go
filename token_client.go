@@ -24,6 +24,7 @@ type TokenClient struct {
 	ClientSecret  string
 	netClient     *http.Client
 	tokenEndpoint string
+	UserAgent     string
 }
 
 type TokenClientConfig struct {
@@ -38,20 +39,6 @@ func NewTokenClient(config *TokenClientConfig) *TokenClient {
 	timeout := config.Timeout
 	if timeout == 0 {
 		timeout = tokenNetClientTimeout
-	}
-
-	return &TokenClient{
-		ClientID:      config.ClientID,
-		ClientSecret:  config.ClientSecret,
-		netClient:     &http.Client{Timeout: timeout},
-		tokenEndpoint: incogniaEndpoints.Token,
-	}
-}
-
-func (tm TokenClient) requestToken() (Token, error) {
-	req, err := http.NewRequest("POST", tm.tokenEndpoint, nil)
-	if err != nil {
-		return nil, err
 	}
 
 	libVersion := "unknown"
@@ -71,9 +58,24 @@ func (tm TokenClient) requestToken() (Token, error) {
 		runtime.Version(),
 	)
 
+	return &TokenClient{
+		ClientID:      config.ClientID,
+		ClientSecret:  config.ClientSecret,
+		netClient:     &http.Client{Timeout: timeout},
+		tokenEndpoint: incogniaEndpoints.Token,
+		UserAgent:     userAgent,
+	}
+}
+
+func (tm TokenClient) requestToken() (Token, error) {
+	req, err := http.NewRequest("POST", tm.tokenEndpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	req.SetBasicAuth(tm.ClientID, tm.ClientSecret)
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
-	req.Header.Add("User-agent", userAgent)
+	req.Header.Add("User-Agent", tm.UserAgent)
 
 	res, err := tm.netClient.Do(req)
 	if err != nil {

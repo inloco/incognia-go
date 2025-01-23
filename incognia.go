@@ -35,6 +35,7 @@ type Client struct {
 	tokenProvider TokenProvider
 	netClient     *http.Client
 	endpoints     *endpoints
+	UserAgent     string
 }
 
 type IncogniaClientConfig struct {
@@ -131,6 +132,23 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		Timeout:      tokenRouteTimeout,
 	})
 
+	libVersion := "unknown"
+	if buildInfo, ok := debug.ReadBuildInfo(); ok {
+		for _, dep := range buildInfo.Deps {
+			if dep.Path == "repo.incognia.com/go/incognia" {
+				libVersion = dep.Version
+			}
+		}
+	}
+
+	userAgent := fmt.Sprintf(
+		"incognia-api-go/%s (%s %s) Go/%s",
+		libVersion,
+		runtime.GOOS,
+		runtime.GOARCH,
+		runtime.Version(),
+	)
+
 	tokenProvider := config.TokenProvider
 	if tokenProvider == nil {
 		tokenProvider = NewAutoRefreshTokenProvider(tokenClient)
@@ -138,7 +156,7 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 
 	endpoints := getEndpoints()
 
-	return &Client{clientID: config.ClientID, clientSecret: config.ClientSecret, tokenProvider: tokenProvider, netClient: netClient, endpoints: &endpoints}, nil
+	return &Client{clientID: config.ClientID, clientSecret: config.ClientSecret, tokenProvider: tokenProvider, netClient: netClient, endpoints: &endpoints, UserAgent: userAgent}, nil
 }
 
 func (c *Client) RegisterSignup(installationID string, address *Address) (ret *SignupAssessment, err error) {
@@ -386,25 +404,8 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 }
 
 func (c *Client) doRequest(request *http.Request, response interface{}) error {
-	libVersion := "unknown"
-	if buildInfo, ok := debug.ReadBuildInfo(); ok {
-		for _, dep := range buildInfo.Deps {
-			if dep.Path == "repo.incognia.com/go/incognia" {
-				libVersion = dep.Version
-			}
-		}
-	}
-
-	userAgent := fmt.Sprintf(
-		"incognia-api-go/%s (%s %s) Go/%s",
-		libVersion,
-		runtime.GOOS,
-		runtime.GOARCH,
-		runtime.Version(),
-	)
-
 	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("User-agent", userAgent)
+	request.Header.Add("User-Agent", c.UserAgent)
 
 	err := c.authorizeRequest(request)
 	if err != nil {
