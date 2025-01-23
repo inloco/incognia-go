@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -21,6 +22,7 @@ const (
 )
 
 var (
+	userAgentRegex  = regexp.MustCompile(`^incognia-api-go(/(v[0-9]+\.[0-9]+\.[0-9]+|unknown))? \([a-z]+ [a-z0-9]+\) Go/go[0-9]+\.[0-9]+\.[0-9]+$`)
 	now             = time.Now()
 	nowMinusSeconds = now.Add(-1 * time.Second)
 	installationId  = "installation-id"
@@ -1022,6 +1024,9 @@ func (suite *IncogniaTestSuite) mockFeedbackEndpoint(expectedToken string, expec
 	feedbackServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 
+		userAgent := r.Header.Get("User-Agent")
+		suite.True(userAgentRegex.MatchString(userAgent), "User-Agent header does not match the expected format")
+
 		if !isRequestAuthorized(r, expectedToken) {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -1056,6 +1061,9 @@ func (suite *IncogniaTestSuite) mockTokenEndpointUnauthorized() *httptest.Server
 	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
+
+		userAgent := r.Header.Get("User-Agent")
+		suite.True(userAgentRegex.MatchString(userAgent), "User-Agent header does not match the expected format")
 	}))
 
 	return tokenServer
@@ -1064,6 +1072,9 @@ func (suite *IncogniaTestSuite) mockTokenEndpointUnauthorized() *httptest.Server
 func (suite *IncogniaTestSuite) mockPostTransactionsEndpoint(expectedToken string, expectedBody *postTransactionRequestBody, expectedResponse *TransactionAssessment, expectedQueryString map[string][]string) *httptest.Server {
 	transactionsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
+
+		userAgent := r.Header.Get("User-Agent")
+		suite.True(userAgentRegex.MatchString(userAgent), "User-Agent header does not match the expected format")
 
 		if !isRequestAuthorized(r, expectedToken) {
 			w.WriteHeader(http.StatusForbidden)
@@ -1102,6 +1113,9 @@ func (suite *IncogniaTestSuite) mockPostTransactionsEndpoint(expectedToken strin
 func (suite *IncogniaTestSuite) mockPostSignupsEndpoint(expectedToken string, expectedBody *postAssessmentRequestBody, expectedResponse *SignupAssessment) *httptest.Server {
 	signupsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
+
+		userAgent := r.Header.Get("User-Agent")
+		suite.True(userAgentRegex.MatchString(userAgent), "User-Agent header does not match the expected format")
 
 		if !isRequestAuthorized(r, expectedToken) {
 			w.WriteHeader(http.StatusForbidden)
