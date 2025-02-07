@@ -25,6 +25,8 @@ type postAssessmentRequestBody struct {
 	InstallationID    string                 `json:"installation_id,omitempty"`
 	RequestToken      string                 `json:"request_token,omitempty"`
 	SessionToken      string                 `json:"session_token,omitempty"`
+	AppVersion        string                 `json:"app_version,omitempty"`
+	DeviceOs          string                 `json:"device_os,omitempty"`
 	AddressLine       string                 `json:"address_line,omitempty"`
 	StructuredAddress *StructuredAddress     `json:"structured_address,omitempty"`
 	Coordinates       *Coordinates           `json:"address_coordinates,omitempty"`
@@ -140,6 +142,8 @@ type PaymentMethod struct {
 type postTransactionRequestBody struct {
 	ExternalID              string                 `json:"external_id,omitempty"`
 	PolicyID                string                 `json:"policy_id,omitempty"`
+	AppVersion              string                 `json:"app_version,omitempty"`
+	DeviceOs                string                 `json:"device_os,omitempty"`
 	Coupon                  *CouponType            `json:"coupon,omitempty"`
 	InstallationID          *string                `json:"installation_id,omitempty"`
 	PaymentMethodIdentifier string                 `json:"payment_method_identifier,omitempty"`

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"runtime"
 	"runtime/debug"
+	"strings"
 	"time"
 )
 
@@ -62,6 +63,8 @@ type Payment struct {
 	InstallationID   *string
 	SessionToken     *string
 	RequestToken     string
+	AppVersion       string
+	DeviceOs         string
 	AccountID        string
 	ExternalID       string
 	PolicyID         string
@@ -82,6 +85,8 @@ type Login struct {
 	PolicyID                string
 	PaymentMethodIdentifier string
 	Eval                    *bool
+	AppVersion              string
+	DeviceOs                string
 	CustomProperties        map[string]interface{}
 }
 
@@ -106,6 +111,8 @@ type Signup struct {
 	InstallationID string
 	RequestToken   string
 	SessionToken   string
+	AppVersion     string
+	DeviceOs       string
 	Address        *Address
 	AccountID      string
 	PolicyID       string
@@ -241,6 +248,8 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 		AccountID:      params.AccountID,
 		PolicyID:       params.PolicyID,
 		ExternalID:     params.ExternalID,
+		AppVersion:     params.AppVersion,
+		DeviceOs:       strings.ToLower(params.DeviceOs),
 	}
 	if params.Address != nil {
 		requestBody.AddressLine = params.Address.AddressLine
@@ -358,6 +367,8 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		Addresses:        payment.Addresses,
 		PaymentValue:     payment.Value,
 		PaymentMethods:   payment.Methods,
+		AppVersion:       payment.AppVersion,
+		DeviceOs:         strings.ToLower(payment.DeviceOs),
 		CustomProperties: payment.CustomProperties,
 	})
 	if err != nil {
@@ -418,6 +429,8 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		PaymentMethodIdentifier: login.PaymentMethodIdentifier,
 		SessionToken:            login.SessionToken,
 		RequestToken:            login.RequestToken,
+		AppVersion:              login.AppVersion,
+		DeviceOs:                strings.ToLower(login.DeviceOs),
 		CustomProperties:        login.CustomProperties,
 	})
 	if err != nil {
