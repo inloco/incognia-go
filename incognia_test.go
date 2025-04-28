@@ -245,9 +245,9 @@ var (
 		DeviceOs:       "android",
 		AppVersion:     "1.2.3",
 		Location: &Location{
-			Latitude:     &float_var,
-			Longitude:    &float_var,
-			Collected_at: "2025-04-27T05:03:45-12:00",
+			Latitude:    &float_var,
+			Longitude:   &float_var,
+			CollectedAt: "2025-04-27T05:03:45-12:00",
 		},
 		PolicyID: "policy-id",
 		Type:     paymentType,
@@ -358,14 +358,14 @@ var (
 		Type:           paymentType,
 	}
 	locationWithMissingLatFixture = &Location{
-		Latitude:     nil,
-		Longitude:    &float_var,
-		Collected_at: "",
+		Latitude:    nil,
+		Longitude:   &float_var,
+		CollectedAt: "",
 	}
 	locationWithInvalidTimestampFixture = &Location{
-		Latitude:     &float_var,
-		Longitude:    &float_var,
-		Collected_at: "Mon Jan 2 15:04:05 MST 2006",
+		Latitude:    &float_var,
+		Longitude:   &float_var,
+		CollectedAt: "Mon Jan 2 15:04:05 MST 2006",
 	}
 	paymentFixture = &Payment{
 		InstallationID: &installationId,
@@ -430,9 +430,9 @@ var (
 		DeviceOs:       "android",
 		AppVersion:     "1.2.3",
 		Location: &Location{
-			Latitude:     &float_var,
-			Longitude:    &float_var,
-			Collected_at: "2025-04-27T05:03:45-12:00",
+			Latitude:    &float_var,
+			Longitude:   &float_var,
+			CollectedAt: "2025-04-27T05:03:45-12:00",
 		},
 		Coupon: &CouponType{
 			Type:        "coupon_type",
@@ -589,9 +589,9 @@ var (
 		CustomProperties:        customProperty,
 		PaymentMethodIdentifier: "payment-method-identifier",
 		Location: &Location{
-			Latitude:     &float_var,
-			Longitude:    &float_var,
-			Collected_at: "2025-04-27T05:03:45-12:00",
+			Latitude:    &float_var,
+			Longitude:   &float_var,
+			CollectedAt: "2025-04-27T05:03:45-12:00",
 		},
 	}
 	LoginFixtureWithInvalidLocation = &Login{
@@ -654,9 +654,9 @@ var (
 		Type:                    loginType,
 		CustomProperties:        customProperty,
 		Location: &Location{
-			Latitude:     &float_var,
-			Longitude:    &float_var,
-			Collected_at: "2025-04-27T05:03:45-12:00",
+			Latitude:    &float_var,
+			Longitude:   &float_var,
+			CollectedAt: "2025-04-27T05:03:45-12:00",
 		},
 	}
 	postLoginRequestBodyFixture = &postTransactionRequestBody{
