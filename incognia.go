@@ -115,10 +115,20 @@ type Signup struct {
 func isRFC3339(timestamp string) bool {
 	layout := time.RFC3339
 	_, err := time.Parse(layout, timestamp)
-	if err != nil {
-		fmt.Printf("err: %s", err)
-	}
 	return err == nil
+}
+
+func validateLocation(location *Location) error {
+	if location == nil {
+		return nil
+	}
+	if location.Latitude == nil || location.Longitude == nil {
+		return ErrMissingLocationLatLong
+	}
+	if location.CollectedAt != "" && !isRFC3339(location.CollectedAt) {
+		return ErrInvalidTimestamp
+	}
+	return nil
 }
 
 func New(config *IncogniaClientConfig) (*Client, error) {
@@ -314,6 +324,7 @@ func (c *Client) RegisterPayment(payment *Payment) (ret *TransactionAssessment, 
 }
 
 func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, err error) {
+
 	if payment == nil {
 		return nil, ErrMissingPayment
 	}
@@ -326,13 +337,9 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		return nil, ErrMissingAccountID
 	}
 
-	if payment.Location != nil {
-		if payment.Location.Latitude == nil || payment.Location.Longitude == nil {
-			return nil, ErrMissingLocationLatLong
-		}
-		if payment.Location.Collected_at != "" && !isRFC3339(payment.Location.Collected_at) {
-			return nil, ErrInvalidTimestamp
-		}
+	var locationError = validateLocation(payment.Location)
+	if locationError != nil {
+		return nil, locationError
 	}
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{
@@ -389,6 +396,7 @@ func (c *Client) RegisterLogin(login *Login) (ret *TransactionAssessment, err er
 }
 
 func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
+
 	if login == nil {
 		return nil, ErrMissingLogin
 	}
@@ -401,13 +409,9 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		return nil, ErrMissingAccountID
 	}
 
-	if login.Location != nil {
-		if login.Location.Latitude == nil || login.Location.Longitude == nil {
-			return nil, ErrMissingLocationLatLong
-		}
-		if login.Location.Collected_at != "" && !isRFC3339(login.Location.Collected_at) {
-			return nil, ErrInvalidTimestamp
-		}
+	var locationError = validateLocation(login.Location)
+	if locationError != nil {
+		return nil, locationError
 	}
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{
