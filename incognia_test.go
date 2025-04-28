@@ -31,6 +31,7 @@ var (
 		"custom_1": "custom_value_1",
 		"custom_2": "custom_value_2",
 	}
+	float_var                float64             = 12.345
 	shouldEval               bool                = true
 	shouldNotEval            bool                = false
 	emptyQueryString         map[string][]string = nil
@@ -237,6 +238,67 @@ var (
 			},
 		},
 	}
+	postPaymentRequestBodyWithLocationFixture = &postTransactionRequestBody{
+		InstallationID: &installationId,
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		DeviceOs:       "android",
+		AppVersion:     "1.2.3",
+		Location: &Location{
+			Latitude:     &float_var,
+			Longitude:    &float_var,
+			Collected_at: "2025-04-27T05:03:45-12:00",
+		},
+		PolicyID: "policy-id",
+		Type:     paymentType,
+		Coupon: &CouponType{
+			Type:        "coupon_type",
+			Value:       55.02,
+			MaxDiscount: 30,
+			Id:          "identifier",
+			Name:        "CouponName",
+		},
+		CustomProperties: customProperty,
+		Addresses: []*TransactionAddress{
+			{
+				Type: Billing,
+				StructuredAddress: &StructuredAddress{
+					Locale:       "locale",
+					CountryName:  "country-name",
+					CountryCode:  "country-code",
+					State:        "state",
+					City:         "city",
+					Borough:      "borough",
+					Neighborhood: "neighborhood",
+					Street:       "street",
+					Number:       "number",
+					Complements:  "complements",
+					PostalCode:   "postalcode",
+				},
+				AddressLine: "address line",
+				Coordinates: &Coordinates{
+					Lat: -23.561414,
+					Lng: -46.6558819,
+				},
+			},
+		},
+		PaymentValue: &PaymentValue{
+			Amount:   55.02,
+			Currency: "BRL",
+		},
+		PaymentMethods: []*PaymentMethod{
+			{
+				Type:       CreditCard,
+				Identifier: "credit-card-hash-123",
+				CreditCard: &CardInfo{
+					Bin:            "29282",
+					LastFourDigits: "2222",
+					ExpiryYear:     "2020",
+					ExpiryMonth:    "10",
+				},
+			},
+		},
+	}
 	postPaymentWebRequestBodyFixture = &postTransactionRequestBody{
 		RequestToken: requestToken,
 		AccountID:    "account-id",
@@ -295,6 +357,16 @@ var (
 		AccountID:      "account-id",
 		Type:           paymentType,
 	}
+	locationWithMissingLatFixture = &Location{
+		Latitude:     nil,
+		Longitude:    &float_var,
+		Collected_at: "",
+	}
+	locationWithInvalidTimestampFixture = &Location{
+		Latitude:     &float_var,
+		Longitude:    &float_var,
+		Collected_at: "Mon Jan 2 15:04:05 MST 2006",
+	}
 	paymentFixture = &Payment{
 		InstallationID: &installationId,
 		AccountID:      "account-id",
@@ -302,6 +374,66 @@ var (
 		PolicyID:       "policy-id",
 		DeviceOs:       "android",
 		AppVersion:     "1.2.3",
+		Coupon: &CouponType{
+			Type:        "coupon_type",
+			Value:       55.02,
+			MaxDiscount: 30,
+			Id:          "identifier",
+			Name:        "CouponName",
+		},
+		CustomProperties: customProperty,
+		Addresses: []*TransactionAddress{
+			{
+				Type: Billing,
+				StructuredAddress: &StructuredAddress{
+					Locale:       "locale",
+					CountryName:  "country-name",
+					CountryCode:  "country-code",
+					State:        "state",
+					City:         "city",
+					Borough:      "borough",
+					Neighborhood: "neighborhood",
+					Street:       "street",
+					Number:       "number",
+					Complements:  "complements",
+					PostalCode:   "postalcode",
+				},
+				AddressLine: "address line",
+				Coordinates: &Coordinates{
+					Lat: -23.561414,
+					Lng: -46.6558819,
+				},
+			},
+		},
+		Value: &PaymentValue{
+			Amount:   55.02,
+			Currency: "BRL",
+		},
+		Methods: []*PaymentMethod{
+			{
+				Type:       CreditCard,
+				Identifier: "credit-card-hash-123",
+				CreditCard: &CardInfo{
+					Bin:            "29282",
+					LastFourDigits: "2222",
+					ExpiryYear:     "2020",
+					ExpiryMonth:    "10",
+				},
+			},
+		},
+	}
+	paymentWithLocationFixture = &Payment{
+		InstallationID: &installationId,
+		AccountID:      "account-id",
+		ExternalID:     "external-id",
+		PolicyID:       "policy-id",
+		DeviceOs:       "android",
+		AppVersion:     "1.2.3",
+		Location: &Location{
+			Latitude:     &float_var,
+			Longitude:    &float_var,
+			Collected_at: "2025-04-27T05:03:45-12:00",
+		},
 		Coupon: &CouponType{
 			Type:        "coupon_type",
 			Value:       55.02,
@@ -406,6 +538,16 @@ var (
 		InstallationID: &installationId,
 		AccountID:      "account-id",
 	}
+	simplePaymentFixtureWithInvalidLocation = &Payment{
+		InstallationID: &installationId,
+		AccountID:      "account-id",
+		Location:       locationWithMissingLatFixture,
+	}
+	simplePaymentFixtureWithInvalidTimestamp = &Payment{
+		InstallationID: &installationId,
+		AccountID:      "account-id",
+		Location:       locationWithInvalidTimestampFixture,
+	}
 	simplePaymentFixtureWithShouldEval = &Payment{
 		InstallationID: &installationId,
 		AccountID:      "account-id",
@@ -437,6 +579,45 @@ var (
 		CustomProperties:        customProperty,
 		PaymentMethodIdentifier: "payment-method-identifier",
 	}
+	loginWithLocationFixture = &Login{
+		InstallationID:          &installationId,
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		PolicyID:                "policy-id",
+		DeviceOs:                "Android",
+		AppVersion:              "1.2.3",
+		CustomProperties:        customProperty,
+		PaymentMethodIdentifier: "payment-method-identifier",
+		Location: &Location{
+			Latitude:     &float_var,
+			Longitude:    &float_var,
+			Collected_at: "2025-04-27T05:03:45-12:00",
+		},
+	}
+	LoginFixtureWithInvalidLocation = &Login{
+		InstallationID:          &installationId,
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		PolicyID:                "policy-id",
+		DeviceOs:                "Android",
+		AppVersion:              "1.2.3",
+		PaymentMethodIdentifier: "payment-method-identifier",
+		Eval:                    &shouldEval,
+		CustomProperties:        customProperty,
+		Location:                locationWithMissingLatFixture,
+	}
+	LoginFixtureWithInvalidTimestamp = &Login{
+		InstallationID:          &installationId,
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		PolicyID:                "policy-id",
+		DeviceOs:                "Android",
+		AppVersion:              "1.2.3",
+		PaymentMethodIdentifier: "payment-method-identifier",
+		Eval:                    &shouldEval,
+		CustomProperties:        customProperty,
+		Location:                locationWithInvalidTimestampFixture,
+	}
 	loginFixtureWithShouldEval = &Login{
 		InstallationID:          &installationId,
 		AccountID:               "account-id",
@@ -461,6 +642,22 @@ var (
 		PolicyID:                "policy-id",
 		PaymentMethodIdentifier: "payment-method-identifier",
 		RequestToken:            requestToken,
+	}
+	postLoginRequestBodyWithLocationFixture = &postTransactionRequestBody{
+		InstallationID:          &installationId,
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		DeviceOs:                "android",
+		AppVersion:              "1.2.3",
+		PolicyID:                "policy-id",
+		PaymentMethodIdentifier: "payment-method-identifier",
+		Type:                    loginType,
+		CustomProperties:        customProperty,
+		Location: &Location{
+			Latitude:     &float_var,
+			Longitude:    &float_var,
+			Collected_at: "2025-04-27T05:03:45-12:00",
+		},
 	}
 	postLoginRequestBodyFixture = &postTransactionRequestBody{
 		InstallationID:          &installationId,
@@ -745,6 +942,16 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
 	suite.Equal(transactionAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithLocation() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(paymentWithLocationFixture)
+
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWeb() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
@@ -796,6 +1003,20 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyInstallationId() {
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyAccountId() {
 	response, err := suite.client.RegisterPayment(&Payment{InstallationID: &installationId})
 	suite.EqualError(err, ErrMissingAccountID.Error())
+	suite.Nil(response)
+}
+
+func (suite *IncogniaTestSuite) TestRegisterPaymentInvalidLocation() {
+	response, err := suite.client.RegisterPayment(simplePaymentFixtureWithInvalidLocation)
+
+	suite.EqualError(err, ErrMissingLocationLatLong.Error())
+	suite.Nil(response)
+}
+
+func (suite *IncogniaTestSuite) TestRegisterPaymentInvalidTimestamp() {
+	response, err := suite.client.RegisterPayment(simplePaymentFixtureWithInvalidTimestamp)
+
+	suite.EqualError(err, ErrInvalidTimestamp.Error())
 	suite.Nil(response)
 }
 
@@ -890,6 +1111,16 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
 	suite.Equal(transactionAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithLocation() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterLogin(loginWithLocationFixture)
+
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestRegisterLoginNilLogin() {
 	response, err := suite.client.RegisterLogin(nil)
 	suite.EqualError(err, ErrMissingLogin.Error())
@@ -915,6 +1146,20 @@ func (suite *IncogniaTestSuite) TestForbiddenRegisterLogin() {
 	response, err := suite.client.RegisterLogin(loginFixture)
 	suite.Nil(response)
 	suite.EqualError(err, "403 Forbidden")
+}
+
+func (suite *IncogniaTestSuite) TestRegisterLoginInvalidLocation() {
+	response, err := suite.client.RegisterLogin(LoginFixtureWithInvalidLocation)
+
+	suite.EqualError(err, ErrMissingLocationLatLong.Error())
+	suite.Nil(response)
+}
+
+func (suite *IncogniaTestSuite) TestRegisterLoginInvalidTimestamp() {
+	response, err := suite.client.RegisterLogin(LoginFixtureWithInvalidTimestamp)
+
+	suite.EqualError(err, ErrInvalidTimestamp.Error())
+	suite.Nil(response)
 }
 
 func (suite *IncogniaTestSuite) TestUnauthorizedTokenGeneration() {

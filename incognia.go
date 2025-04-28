@@ -28,6 +28,8 @@ var (
 	ErrMissingSignupID                     = errors.New("missing signup id")
 	ErrMissingClientIDOrClientSecret       = errors.New("client id and client secret are required")
 	ErrConfigIsNil                         = errors.New("incognia client config is required")
+	ErrMissingLocationLatLong              = errors.New("location field missing latitude and/or longitude")
+	ErrInvalidTimestamp                    = errors.New("location 'collected_at' attribute not in rfc3339 format")
 )
 
 type Client struct {
@@ -57,6 +59,7 @@ type Payment struct {
 	AccountID        string
 	ExternalID       string
 	PolicyID         string
+	Location         *Location
 	Coupon           *CouponType
 	Addresses        []*TransactionAddress
 	Value            *PaymentValue
@@ -72,6 +75,7 @@ type Login struct {
 	AccountID               string
 	ExternalID              string
 	PolicyID                string
+	Location                *Location
 	PaymentMethodIdentifier string
 	Eval                    *bool
 	AppVersion              string
@@ -106,6 +110,15 @@ type Signup struct {
 	AccountID      string
 	PolicyID       string
 	ExternalID     string
+}
+
+func isRFC3339(timestamp string) bool {
+	layout := time.RFC3339
+	_, err := time.Parse(layout, timestamp)
+	if err != nil {
+		fmt.Printf("err: %s", err)
+	}
+	return err == nil
 }
 
 func New(config *IncogniaClientConfig) (*Client, error) {
@@ -313,6 +326,15 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		return nil, ErrMissingAccountID
 	}
 
+	if payment.Location != nil {
+		if payment.Location.Latitude == nil || payment.Location.Longitude == nil {
+			return nil, ErrMissingLocationLatLong
+		}
+		if payment.Location.Collected_at != "" && !isRFC3339(payment.Location.Collected_at) {
+			return nil, ErrInvalidTimestamp
+		}
+	}
+
 	requestBody, err := json.Marshal(postTransactionRequestBody{
 		InstallationID:   payment.InstallationID,
 		RequestToken:     payment.RequestToken,
@@ -320,6 +342,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		Type:             paymentType,
 		AccountID:        payment.AccountID,
 		PolicyID:         payment.PolicyID,
+		Location:         payment.Location,
 		Coupon:           payment.Coupon,
 		ExternalID:       payment.ExternalID,
 		Addresses:        payment.Addresses,
@@ -378,11 +401,21 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		return nil, ErrMissingAccountID
 	}
 
+	if login.Location != nil {
+		if login.Location.Latitude == nil || login.Location.Longitude == nil {
+			return nil, ErrMissingLocationLatLong
+		}
+		if login.Location.Collected_at != "" && !isRFC3339(login.Location.Collected_at) {
+			return nil, ErrInvalidTimestamp
+		}
+	}
+
 	requestBody, err := json.Marshal(postTransactionRequestBody{
 		InstallationID:          login.InstallationID,
 		Type:                    loginType,
 		AccountID:               login.AccountID,
 		PolicyID:                login.PolicyID,
+		Location:                login.Location,
 		ExternalID:              login.ExternalID,
 		PaymentMethodIdentifier: login.PaymentMethodIdentifier,
 		SessionToken:            login.SessionToken,
