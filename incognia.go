@@ -29,7 +29,6 @@ var (
 	ErrMissingClientIDOrClientSecret       = errors.New("client id and client secret are required")
 	ErrConfigIsNil                         = errors.New("incognia client config is required")
 	ErrMissingLocationLatLong              = errors.New("location field missing latitude and/or longitude")
-	ErrInvalidTimestamp                    = errors.New("location 'collected_at' attribute not in rfc3339 format")
 )
 
 type Client struct {
@@ -112,21 +111,12 @@ type Signup struct {
 	ExternalID     string
 }
 
-func isRFC3339(timestamp string) bool {
-	layout := time.RFC3339
-	_, err := time.Parse(layout, timestamp)
-	return err == nil
-}
-
 func validateLocation(location *Location) error {
 	if location == nil {
 		return nil
 	}
 	if location.Latitude == nil || location.Longitude == nil {
 		return ErrMissingLocationLatLong
-	}
-	if location.CollectedAt != "" && !isRFC3339(location.CollectedAt) {
-		return ErrInvalidTimestamp
 	}
 	return nil
 }

@@ -22,9 +22,9 @@ type StructuredAddress struct {
 }
 
 type Location struct {
-	Latitude    *float64 `json:"latitude"`
-	Longitude   *float64 `json:"longitude"`
-	CollectedAt string   `json:"collected_at,omitempty"`
+	Latitude    *float64   `json:"latitude"`
+	Longitude   *float64   `json:"longitude"`
+	CollectedAt *time.Time `json:"collected_at,omitempty"`
 }
 
 type postAssessmentRequestBody struct {
