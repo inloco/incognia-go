@@ -37,7 +37,7 @@ var (
 	emptyQueryString         map[string][]string = nil
 	queryStringWithFalseEval                     = map[string][]string{"eval": []string{"false"}}
 	queryStringWithTrueEval                      = map[string][]string{"eval": []string{"true"}}
-	locationFixtureFull = &Location{
+	locationFixtureFull                          = &Location{
 		Latitude:    &floatVar,
 		Longitude:   &floatVar,
 		CollectedAt: &now,
@@ -57,7 +57,7 @@ var (
 		Longitude:   &floatVar,
 		CollectedAt: nil,
 	}
-	signupAssessmentFixture                      = &SignupAssessment{
+	signupAssessmentFixture = &SignupAssessment{
 		ID:             "some-id",
 		DeviceID:       "some-device-id",
 		RequestID:      "some-request-id",
@@ -885,9 +885,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithLocationAndTimesta
 	paymentFixtureWithLocation.Location = locationFixtureFull
 	postPaymentRequestBodyWithLocationFixture.Location = locationFixtureFull
 
-    *postPaymentRequestBodyWithLocationFixture.Location.CollectedAt = postPaymentRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
+	*postPaymentRequestBodyWithLocationFixture.Location.CollectedAt = postPaymentRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
 	*paymentFixtureWithLocation.Location.CollectedAt = paymentFixtureWithLocation.Location.CollectedAt.Round(0)
-	
+
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
@@ -900,7 +900,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithLocationAndTimesta
 func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithLocationWithoutTimestamp() {
 	paymentFixtureWithLocation.Location = locationFixtureMissingCollectedAt
 	postPaymentRequestBodyWithLocationFixture.Location = locationFixtureMissingCollectedAt
-	
+
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
@@ -914,9 +914,9 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentWithLocationMissingLat() {
 	paymentFixtureWithLocation.Location = locationFixtureMissingLat
 	postPaymentRequestBodyWithLocationFixture.Location = locationFixtureMissingLat
 
-    *postPaymentRequestBodyWithLocationFixture.Location.CollectedAt = postPaymentRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
+	*postPaymentRequestBodyWithLocationFixture.Location.CollectedAt = postPaymentRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
 	*paymentFixtureWithLocation.Location.CollectedAt = paymentFixtureWithLocation.Location.CollectedAt.Round(0)
-	
+
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
@@ -930,9 +930,9 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentWithLocationMissingLong() {
 	paymentFixtureWithLocation.Location = locationFixtureMissingLong
 	postPaymentRequestBodyWithLocationFixture.Location = locationFixtureMissingLong
 
-    *postPaymentRequestBodyWithLocationFixture.Location.CollectedAt = postPaymentRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
+	*postPaymentRequestBodyWithLocationFixture.Location.CollectedAt = postPaymentRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
 	*paymentFixtureWithLocation.Location.CollectedAt = paymentFixtureWithLocation.Location.CollectedAt.Round(0)
-	
+
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
@@ -1058,9 +1058,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithLocationAndTimestamp
 	loginFixtureWithLocation.Location = locationFixtureFull
 	postLoginRequestBodyWithLocationFixture.Location = locationFixtureFull
 
-    *postLoginRequestBodyWithLocationFixture.Location.CollectedAt = postLoginRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
+	*postLoginRequestBodyWithLocationFixture.Location.CollectedAt = postLoginRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
 	*loginFixtureWithLocation.Location.CollectedAt = loginFixtureWithLocation.Location.CollectedAt.Round(0)
-	
+
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
@@ -1073,7 +1073,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithLocationAndTimestamp
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithLocationWithoutTimestamp() {
 	loginFixtureWithLocation.Location = locationFixtureMissingCollectedAt
 	postLoginRequestBodyWithLocationFixture.Location = locationFixtureMissingCollectedAt
-	
+
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
@@ -1087,9 +1087,9 @@ func (suite *IncogniaTestSuite) TestRegisterLoginWithLocationMissingLat() {
 	loginFixtureWithLocation.Location = locationFixtureMissingLat
 	postLoginRequestBodyWithLocationFixture.Location = locationFixtureMissingLat
 
-    *postLoginRequestBodyWithLocationFixture.Location.CollectedAt = postLoginRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
+	*postLoginRequestBodyWithLocationFixture.Location.CollectedAt = postLoginRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
 	*loginFixtureWithLocation.Location.CollectedAt = loginFixtureWithLocation.Location.CollectedAt.Round(0)
-	
+
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
