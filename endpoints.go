@@ -1,7 +1,7 @@
 package incognia
 
 const (
-	tokenEndpoint        = "/v1/token"
+	tokenEndpoint        = "/v2/token"
 	signupsEndpoint      = "/v2/onboarding/signups"
 	transactionsEndpoint = "/v2/authentication/transactions"
 	feedbackEndpoint     = "/v2/feedbacks"
