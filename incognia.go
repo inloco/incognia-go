@@ -30,6 +30,7 @@ var (
 	ErrInvalidFeedbackType                 = errors.New("invalid feedback type")
 	ErrMissingClientIDOrClientSecret       = errors.New("client id and client secret are required")
 	ErrConfigIsNil                         = errors.New("incognia client config is required")
+	ErrMissingLocationLatLong              = errors.New("location field missing latitude and/or longitude")
 )
 
 type Region int64
@@ -68,6 +69,7 @@ type Payment struct {
 	AccountID        string
 	ExternalID       string
 	PolicyID         string
+	Location         *Location
 	Coupon           *CouponType
 	Addresses        []*TransactionAddress
 	Value            *PaymentValue
@@ -83,6 +85,7 @@ type Login struct {
 	AccountID               string
 	ExternalID              string
 	PolicyID                string
+	Location                *Location
 	PaymentMethodIdentifier string
 	Eval                    *bool
 	AppVersion              string
@@ -117,6 +120,16 @@ type Signup struct {
 	AccountID      string
 	PolicyID       string
 	ExternalID     string
+}
+
+func validateLocation(location *Location) error {
+	if location == nil {
+		return nil
+	}
+	if location.Latitude == nil || location.Longitude == nil {
+		return ErrMissingLocationLatLong
+	}
+	return nil
 }
 
 func New(config *IncogniaClientConfig) (*Client, error) {
@@ -343,6 +356,7 @@ func (c *Client) RegisterPayment(payment *Payment) (ret *TransactionAssessment, 
 }
 
 func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, err error) {
+
 	if payment == nil {
 		return nil, ErrMissingPayment
 	}
@@ -355,6 +369,11 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		return nil, ErrMissingAccountID
 	}
 
+	var locationError = validateLocation(payment.Location)
+	if locationError != nil {
+		return nil, locationError
+	}
+
 	requestBody, err := json.Marshal(postTransactionRequestBody{
 		InstallationID:   payment.InstallationID,
 		RequestToken:     payment.RequestToken,
@@ -362,6 +381,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		Type:             paymentType,
 		AccountID:        payment.AccountID,
 		PolicyID:         payment.PolicyID,
+		Location:         payment.Location,
 		Coupon:           payment.Coupon,
 		ExternalID:       payment.ExternalID,
 		Addresses:        payment.Addresses,
@@ -408,6 +428,7 @@ func (c *Client) RegisterLogin(login *Login) (ret *TransactionAssessment, err er
 }
 
 func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
+
 	if login == nil {
 		return nil, ErrMissingLogin
 	}
@@ -420,11 +441,17 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		return nil, ErrMissingAccountID
 	}
 
+	var locationError = validateLocation(login.Location)
+	if locationError != nil {
+		return nil, locationError
+	}
+
 	requestBody, err := json.Marshal(postTransactionRequestBody{
 		InstallationID:          login.InstallationID,
 		Type:                    loginType,
 		AccountID:               login.AccountID,
 		PolicyID:                login.PolicyID,
+		Location:                login.Location,
 		ExternalID:              login.ExternalID,
 		PaymentMethodIdentifier: login.PaymentMethodIdentifier,
 		SessionToken:            login.SessionToken,

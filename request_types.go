@@ -21,6 +21,12 @@ type StructuredAddress struct {
 	PostalCode   string `json:"postal_code"`
 }
 
+type Location struct {
+	Latitude    *float64   `json:"latitude"`
+	Longitude   *float64   `json:"longitude"`
+	CollectedAt *time.Time `json:"collected_at,omitempty"`
+}
+
 type postAssessmentRequestBody struct {
 	InstallationID    string                 `json:"installation_id,omitempty"`
 	RequestToken      string                 `json:"request_token,omitempty"`
@@ -143,6 +149,7 @@ type postTransactionRequestBody struct {
 	ExternalID              string                 `json:"external_id,omitempty"`
 	PolicyID                string                 `json:"policy_id,omitempty"`
 	AppVersion              string                 `json:"app_version,omitempty"`
+	Location                *Location              `json:"location,omitempty"`
 	DeviceOs                string                 `json:"device_os,omitempty"`
 	Coupon                  *CouponType            `json:"coupon,omitempty"`
 	InstallationID          *string                `json:"installation_id,omitempty"`
