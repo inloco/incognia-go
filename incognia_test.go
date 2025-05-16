@@ -22,13 +22,14 @@ const (
 )
 
 var (
-	userAgentRegex  = regexp.MustCompile(`^incognia-api-go(/(v[0-9]+\.[0-9]+\.[0-9]+|unknown))? \([a-z]+ [a-z0-9]+\) Go/go[0-9]+\.[0-9]+\.[0-9]+$`)
-	now             = time.Now()
-	floatVar        = -7.5432
-	nowMinusSeconds = now.Add(-1 * time.Second)
-	installationId  = "installation-id"
-	requestToken    = "request-token"
-	customProperty  = map[string]interface{}{
+	userAgentRegex   = regexp.MustCompile(`^incognia-api-go(/(v[0-9]+\.[0-9]+\.[0-9]+|unknown))? \([a-z]+ [a-z0-9]+\) Go/go[0-9]+\.[0-9]+\.[0-9]+$`)
+	now              = time.Now()
+	floatVar         = -7.5432
+	FixedCollectedAt = time.Date(2025, time.March, 22, 12, 12, 12, 0, time.UTC)
+	nowMinusSeconds  = now.Add(-1 * time.Second)
+	installationId   = "installation-id"
+	requestToken     = "request-token"
+	customProperty   = map[string]interface{}{
 		"custom_1": "custom_value_1",
 		"custom_2": "custom_value_2",
 	}
@@ -40,17 +41,17 @@ var (
 	locationFixtureFull                          = &Location{
 		Latitude:    &floatVar,
 		Longitude:   &floatVar,
-		CollectedAt: &now,
+		CollectedAt: &FixedCollectedAt,
 	}
 	locationFixtureMissingLat = &Location{
 		Latitude:    nil,
 		Longitude:   &floatVar,
-		CollectedAt: &now,
+		CollectedAt: &FixedCollectedAt,
 	}
 	locationFixtureMissingLong = &Location{
 		Latitude:    &floatVar,
 		Longitude:   nil,
-		CollectedAt: &now,
+		CollectedAt: &FixedCollectedAt,
 	}
 	locationFixtureMissingCollectedAt = &Location{
 		Latitude:    &floatVar,
