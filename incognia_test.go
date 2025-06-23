@@ -24,7 +24,9 @@ const (
 var (
 	userAgentRegex   = regexp.MustCompile(`^incognia-api-go(/(v[0-9]+\.[0-9]+\.[0-9]+|unknown))? \([a-z]+ [a-z0-9]+\) Go/go[0-9]+\.[0-9]+\.[0-9]+$`)
 	now              = time.Now()
+	timeVar          = time.Date(2025, time.January, 2, 15, 4, 5, 0, time.UTC)
 	floatVar         = -7.5432
+	floatVar2        = 34.567
 	FixedCollectedAt = time.Date(2025, time.March, 22, 12, 12, 12, 0, time.UTC)
 	nowMinusSeconds  = now.Add(-1 * time.Second)
 	installationId   = "installation-id"
@@ -131,6 +133,18 @@ var (
 		AccountID:  "account-id",
 		PolicyID:   "policy-id",
 		ExternalID: "external-id",
+		AdditionalLocations: []*AdditionalLocation{
+			&AdditionalLocation{
+				Lat:         &floatVar,
+				Lng:         &floatVar,
+				CollectedAt: &now,
+			},
+			&AdditionalLocation{
+				Lat:         &floatVar2,
+				Lng:         &floatVar2,
+				CollectedAt: &timeVar,
+			},
+		},
 	}
 	postSignupRequestBodyRequiredFieldsFixture = &postAssessmentRequestBody{
 		InstallationID: installationId,
@@ -602,19 +616,23 @@ func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderSuccess() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
+	*postSignupRequestBodyWithAllParamsFixture.AdditionalLocations[0].CollectedAt =
+		postSignupRequestBodyWithAllParamsFixture.AdditionalLocations[0].CollectedAt.Round(0)
+
 	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyWithAllParamsFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
 	response, err := suite.client.RegisterSignupWithParams(&Signup{
-		InstallationID: postSignupRequestBodyWithAllParamsFixture.InstallationID,
-		RequestToken:   postSignupRequestBodyWithAllParamsFixture.RequestToken,
-		SessionToken:   postSignupRequestBodyWithAllParamsFixture.SessionToken,
-		DeviceOs:       postSignupRequestBodyWithAllParamsFixture.DeviceOs,
-		AppVersion:     postSignupRequestBodyWithAllParamsFixture.AppVersion,
-		Address:        addressFixture,
-		AccountID:      postSignupRequestBodyWithAllParamsFixture.AccountID,
-		PolicyID:       postSignupRequestBodyWithAllParamsFixture.PolicyID,
-		ExternalID:     postSignupRequestBodyWithAllParamsFixture.ExternalID,
+		InstallationID:      postSignupRequestBodyWithAllParamsFixture.InstallationID,
+		RequestToken:        postSignupRequestBodyWithAllParamsFixture.RequestToken,
+		SessionToken:        postSignupRequestBodyWithAllParamsFixture.SessionToken,
+		DeviceOs:            postSignupRequestBodyWithAllParamsFixture.DeviceOs,
+		AppVersion:          postSignupRequestBodyWithAllParamsFixture.AppVersion,
+		Address:             addressFixture,
+		AccountID:           postSignupRequestBodyWithAllParamsFixture.AccountID,
+		PolicyID:            postSignupRequestBodyWithAllParamsFixture.PolicyID,
+		ExternalID:          postSignupRequestBodyWithAllParamsFixture.ExternalID,
+		AdditionalLocations: postSignupRequestBodyWithAllParamsFixture.AdditionalLocations,
 	})
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
