@@ -100,15 +100,16 @@ type Address struct {
 }
 
 type Signup struct {
-	InstallationID string
-	RequestToken   string
-	SessionToken   string
-	AppVersion     string
-	DeviceOs       string
-	Address        *Address
-	AccountID      string
-	PolicyID       string
-	ExternalID     string
+	InstallationID   string
+	RequestToken     string
+	SessionToken     string
+	AppVersion       string
+	DeviceOs         string
+	Address          *Address
+	AccountID        string
+	PolicyID         string
+	ExternalID       string
+	CustomProperties map[string]interface{}
 }
 
 func validateLocation(location *Location) error {
@@ -204,6 +205,31 @@ func (c *Client) RegisterSignupWithParams(params *Signup) (ret *SignupAssessment
 	return c.registerSignup(params)
 }
 
+func (c *Client) RegisterWebSignup(requestToken string, policyID string) (ret *SignupAssessment, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+			ret = nil
+		}
+	}()
+
+	return c.registerSignup(&Signup{
+		RequestToken: requestToken,
+		PolicyID:     policyID,
+	})
+}
+
+func (c *Client) RegisterWebSignupWithParams(params *Signup) (ret *SignupAssessment, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+			ret = nil
+		}
+	}()
+
+	return c.registerSignup(params)
+}
+
 func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err error) {
 	if params == nil {
 		return nil, ErrMissingSignup
@@ -213,14 +239,15 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 	}
 
 	requestBody := postAssessmentRequestBody{
-		InstallationID: params.InstallationID,
-		RequestToken:   params.RequestToken,
-		SessionToken:   params.SessionToken,
-		AccountID:      params.AccountID,
-		PolicyID:       params.PolicyID,
-		ExternalID:     params.ExternalID,
-		AppVersion:     params.AppVersion,
-		DeviceOs:       strings.ToLower(params.DeviceOs),
+		InstallationID:   params.InstallationID,
+		RequestToken:     params.RequestToken,
+		SessionToken:     params.SessionToken,
+		AccountID:        params.AccountID,
+		PolicyID:         params.PolicyID,
+		ExternalID:       params.ExternalID,
+		AppVersion:       params.AppVersion,
+		DeviceOs:         strings.ToLower(params.DeviceOs),
+		CustomProperties: params.CustomProperties,
 	}
 	if params.Address != nil {
 		requestBody.AddressLine = params.Address.AddressLine

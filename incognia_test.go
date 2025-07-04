@@ -38,7 +38,17 @@ var (
 	emptyQueryString         map[string][]string = nil
 	queryStringWithFalseEval                     = map[string][]string{"eval": []string{"false"}}
 	queryStringWithTrueEval                      = map[string][]string{"eval": []string{"true"}}
-	locationFixtureFull                          = &Location{
+	customPropertiesFixture                      = map[string]interface{}{
+		"user_id":       "a9f7e3b2-24cd-4d3e-b6e1-98d1234c5678",
+		"is_verified":   true,
+		"last_latitude": -23.55052,
+		"preferences": map[string]interface{}{
+			"notifications_enabled": true,
+			"language":              "en-US",
+		},
+		"metadata": nil,
+	}
+	locationFixtureFull = &Location{
 		Latitude:    &floatVar,
 		Longitude:   &floatVar,
 		CollectedAt: &FixedCollectedAt,
@@ -131,6 +141,19 @@ var (
 		AccountID:  "account-id",
 		PolicyID:   "policy-id",
 		ExternalID: "external-id",
+	}
+	postWebSignupRequestBodyWithAllParamsFixture = &postAssessmentRequestBody{
+		RequestToken:     requestToken,
+		AccountID:        "account-id",
+		PolicyID:         "policy-id",
+		CustomProperties: customPropertiesFixture,
+	}
+	postWebSignupRequestBodyFixture = &postAssessmentRequestBody{
+		RequestToken: requestToken,
+		PolicyID:     "policy-id",
+	}
+	postWebSignupRequestBodyRequiredFieldsFixture = &postAssessmentRequestBody{
+		RequestToken: requestToken,
 	}
 	postSignupRequestBodyRequiredFieldsFixture = &postAssessmentRequestBody{
 		InstallationID: installationId,
@@ -620,6 +643,20 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
 	suite.Equal(signupAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupWithParams() {
+	signupServer := suite.mockPostSignupsEndpoint(token, postWebSignupRequestBodyWithAllParamsFixture, signupAssessmentFixture)
+	defer signupServer.Close()
+
+	response, err := suite.client.RegisterWebSignupWithParams(&Signup{
+		RequestToken:     postWebSignupRequestBodyWithAllParamsFixture.RequestToken,
+		AccountID:        postWebSignupRequestBodyWithAllParamsFixture.AccountID,
+		PolicyID:         postWebSignupRequestBodyWithAllParamsFixture.PolicyID,
+		CustomProperties: postWebSignupRequestBodyWithAllParamsFixture.CustomProperties,
+	})
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignup() {
 	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer signupServer.Close()
@@ -634,6 +671,15 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupNilOptional() {
 	defer signupServer.Close()
 
 	response, err := suite.client.RegisterSignup(postSignupRequestBodyRequiredFieldsFixture.InstallationID, nil)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupNilOptional() {
+	signupServer := suite.mockPostSignupsEndpoint(token, postWebSignupRequestBodyRequiredFieldsFixture, signupAssessmentFixture)
+	defer signupServer.Close()
+
+	response, err := suite.client.RegisterWebSignup(postWebSignupRequestBodyRequiredFieldsFixture.RequestToken, "")
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 }
@@ -654,8 +700,30 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() 
 	suite.Equal(signupAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupAfterTokenExpiration() {
+	signupServer := suite.mockPostSignupsEndpoint(token, postWebSignupRequestBodyFixture, signupAssessmentFixture)
+	defer signupServer.Close()
+
+	response, err := suite.client.RegisterWebSignup(postWebSignupRequestBodyFixture.RequestToken, postWebSignupRequestBodyFixture.PolicyID)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
+
+	token, _ := suite.client.tokenProvider.GetToken()
+	token.(*accessToken).ExpiresIn = 0
+
+	response, err = suite.client.RegisterWebSignup(postWebSignupRequestBodyFixture.RequestToken, postWebSignupRequestBodyFixture.PolicyID)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestRegisterSignupEmptyInstallationId() {
 	response, err := suite.client.RegisterSignup("", &Address{})
+	suite.EqualError(err, ErrMissingIdentifier.Error())
+	suite.Nil(response)
+}
+
+func (suite *IncogniaTestSuite) TestRegisterWebSignupEmptyRequestToken() {
+	response, err := suite.client.RegisterWebSignup("", "policy-id")
 	suite.EqualError(err, ErrMissingIdentifier.Error())
 	suite.Nil(response)
 }
