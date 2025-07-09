@@ -27,19 +27,26 @@ type Location struct {
 	CollectedAt *time.Time `json:"collected_at,omitempty"`
 }
 
+type AdditionalLocation struct {
+	Lat         *float64   `json:"lat"`
+	Lng         *float64   `json:"lng"`
+	CollectedAt *time.Time `json:"collected_at"`
+}
+
 type postAssessmentRequestBody struct {
-	InstallationID    string                 `json:"installation_id,omitempty"`
-	RequestToken      string                 `json:"request_token,omitempty"`
-	SessionToken      string                 `json:"session_token,omitempty"`
-	AppVersion        string                 `json:"app_version,omitempty"`
-	DeviceOs          string                 `json:"device_os,omitempty"`
-	AddressLine       string                 `json:"address_line,omitempty"`
-	StructuredAddress *StructuredAddress     `json:"structured_address,omitempty"`
-	Coordinates       *Coordinates           `json:"address_coordinates,omitempty"`
-	AccountID         string                 `json:"account_id,omitempty"`
-	PolicyID          string                 `json:"policy_id,omitempty"`
-	ExternalID        string                 `json:"external_id,omitempty"`
-	CustomProperties  map[string]interface{} `json:"custom_properties,omitempty"`
+	InstallationID      string                 `json:"installation_id,omitempty"`
+	RequestToken        string                 `json:"request_token,omitempty"`
+	SessionToken        string                 `json:"session_token,omitempty"`
+	AppVersion          string                 `json:"app_version,omitempty"`
+	DeviceOs            string                 `json:"device_os,omitempty"`
+	AddressLine         string                 `json:"address_line,omitempty"`
+	StructuredAddress   *StructuredAddress     `json:"structured_address,omitempty"`
+	Coordinates         *Coordinates           `json:"address_coordinates,omitempty"`
+	AccountID           string                 `json:"account_id,omitempty"`
+	PolicyID            string                 `json:"policy_id,omitempty"`
+	ExternalID          string                 `json:"external_id,omitempty"`
+	CustomProperties    map[string]interface{} `json:"custom_properties,omitempty"`
+	AdditionalLocations []*AdditionalLocation  `json:"additional_locations,omitempty"`
 }
 
 type FeedbackType string
