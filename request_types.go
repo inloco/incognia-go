@@ -125,14 +125,18 @@ type CouponType struct {
 type paymentMethodType string
 
 const (
+	AccountBalance paymentMethodType = "account_balance"
+	ApplePay       paymentMethodType = "apple_pay"
+	Bancolombia    paymentMethodType = "bancolombia"
+	BoletoBancario paymentMethodType = "boleto_bancario"
+	Cash           paymentMethodType = "cash"
 	CreditCard     paymentMethodType = "credit_card"
 	DebitCard      paymentMethodType = "debit_card"
 	GooglePay      paymentMethodType = "google_pay"
-	ApplePay       paymentMethodType = "apple_pay"
-	NuPay          paymentMethodType = "nu_pay"
-	Pix            paymentMethodType = "pix"
 	MealVoucher    paymentMethodType = "meal_voucher"
-	AccountBalance paymentMethodType = "account_balance"
+	NuPay          paymentMethodType = "nu_pay"
+	Paypal         paymentMethodType = "paypal"
+	Pix            paymentMethodType = "pix"
 )
 
 type CardInfo struct {
