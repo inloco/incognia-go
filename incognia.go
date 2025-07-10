@@ -111,6 +111,13 @@ type Signup struct {
 	ExternalID     string
 }
 
+type WebSignup struct {
+	RequestToken     string
+	PolicyID         string
+	AccountID        string
+	CustomProperties map[string]interface{}
+}
+
 func validateLocation(location *Location) error {
 	if location == nil {
 		return nil
@@ -204,6 +211,17 @@ func (c *Client) RegisterSignupWithParams(params *Signup) (ret *SignupAssessment
 	return c.registerSignup(params)
 }
 
+func (c *Client) RegisterWebSignup(params *WebSignup) (ret *SignupAssessment, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+			ret = nil
+		}
+	}()
+
+	return c.registerWebSignup(params)
+}
+
 func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err error) {
 	if params == nil {
 		return nil, ErrMissingSignup
@@ -226,6 +244,41 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 		requestBody.AddressLine = params.Address.AddressLine
 		requestBody.StructuredAddress = params.Address.StructuredAddress
 		requestBody.Coordinates = params.Address.Coordinates
+	}
+
+	requestBodyBytes, err := json.Marshal(requestBody)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", c.endpoints.Signups, bytes.NewBuffer(requestBodyBytes))
+	if err != nil {
+		return nil, err
+	}
+
+	var signupAssessment SignupAssessment
+
+	err = c.doRequest(req, &signupAssessment)
+	if err != nil {
+		return nil, err
+	}
+
+	return &signupAssessment, nil
+}
+
+func (c *Client) registerWebSignup(params *WebSignup) (ret *SignupAssessment, err error) {
+	if params == nil {
+		return nil, ErrMissingSignup
+	}
+	if params.RequestToken == "" {
+		return nil, ErrMissingIdentifier
+	}
+
+	requestBody := postAssessmentRequestBody{
+		RequestToken:     params.RequestToken,
+		PolicyID:         params.PolicyID,
+		AccountID:        params.AccountID,
+		CustomProperties: params.CustomProperties,
 	}
 
 	requestBodyBytes, err := json.Marshal(requestBody)
