@@ -514,12 +514,28 @@ var (
 		PolicyID:       "policy-id",
 		Eval:           &shouldNotEval,
 	}
-	loginWebFixture = &Login{
-		AccountID:               "account-id",
-		ExternalID:              "external-id",
-		PolicyID:                "policy-id",
-		PaymentMethodIdentifier: "payment-method-identifier",
-		RequestToken:            requestToken,
+	loginWebFixture = &WebLogin{
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		RequestToken:     requestToken,
+		CustomProperties: customProperty,
+	}
+	loginWebFixtureWithShouldEval = &WebLogin{
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		RequestToken:     requestToken,
+		Eval:             &shouldEval,
+		CustomProperties: customProperty,
+	}
+	loginWebFixtureWithShouldNotEval = &WebLogin{
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		RequestToken:     requestToken,
+		Eval:             &shouldNotEval,
+		CustomProperties: customProperty,
 	}
 	loginFixtureWithLocation = &Login{
 		InstallationID: &installationId,
@@ -538,12 +554,12 @@ var (
 		CustomProperties:        customProperty,
 	}
 	postLoginWebRequestBodyFixture = &postTransactionRequestBody{
-		AccountID:               "account-id",
-		ExternalID:              "external-id",
-		PolicyID:                "policy-id",
-		PaymentMethodIdentifier: "payment-method-identifier",
-		Type:                    loginType,
-		RequestToken:            requestToken,
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		Type:             loginType,
+		RequestToken:     requestToken,
+		CustomProperties: customProperty,
 	}
 	postLoginRequestBodyWithLocationFixture = &postTransactionRequestBody{
 		InstallationID: &installationId,
@@ -1031,6 +1047,15 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLogin() {
 	suite.Equal(transactionAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebLogin() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterWebLogin(loginWebFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithEval() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, queryStringWithTrueEval)
 	defer transactionServer.Close()
@@ -1039,6 +1064,8 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithEval() {
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
 }
+
+// aqui
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithFalseEval() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, queryStringWithFalseEval)
@@ -1049,11 +1076,13 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithFalseEval() {
 	suite.Equal(emptyTransactionAssessmentFixture, response)
 }
 
+// aqui
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWeb() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
-	response, err := suite.client.registerLogin(loginWebFixture)
+	response, err := suite.client.registerWebLogin(loginWebFixture)
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
 }

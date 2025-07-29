@@ -67,6 +67,15 @@ type Payment struct {
 	CustomProperties map[string]interface{}
 }
 
+type WebLogin struct {
+	RequestToken     string
+	AccountID        string
+	ExternalID       string
+	PolicyID         string
+	Eval             *bool
+	CustomProperties map[string]interface{}
+}
+
 type Login struct {
 	InstallationID          *string
 	SessionToken            *string
@@ -494,6 +503,64 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 	}
 
 	return &loginAssessment, nil
+}
+
+func (c *Client) RegisterWebLogin(webLogin *WebLogin) (ret *TransactionAssessment, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+			ret = nil
+		}
+	}()
+
+	return c.registerWebLogin(webLogin)
+}
+
+func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, error) {
+
+	if webLogin == nil {
+		return nil, ErrMissingLogin
+	}
+
+	if webLogin.RequestToken == "" {
+		return nil, ErrMissingIdentifier
+	}
+
+	if webLogin.AccountID == "" {
+		return nil, ErrMissingAccountID
+	}
+
+	requestBody, err := json.Marshal(postTransactionRequestBody{
+		Type:             loginType,
+		AccountID:        webLogin.AccountID,
+		PolicyID:         webLogin.PolicyID,
+		ExternalID:       webLogin.ExternalID,
+		RequestToken:     webLogin.RequestToken,
+		CustomProperties: webLogin.CustomProperties,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", c.endpoints.Transactions, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, err
+	}
+
+	if webLogin.Eval != nil {
+		q := req.URL.Query()
+		q.Add("eval", fmt.Sprintf("%t", *webLogin.Eval))
+		req.URL.RawQuery = q.Encode()
+	}
+
+	var webLoginAssessment TransactionAssessment
+
+	err = c.doRequest(req, &webLoginAssessment)
+	if err != nil {
+		return nil, err
+	}
+
+	return &webLoginAssessment, nil
 }
 
 func (c *Client) doRequest(request *http.Request, response interface{}) error {
