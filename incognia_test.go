@@ -721,26 +721,6 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() 
 	suite.Equal(signupAssessmentFixture, response)
 }
 
-// func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupAfterTokenExpiration() {
-// 	signupServer := suite.mockPostSignupsEndpoint(token, postWebSignupRequestBodyFixture, signupAssessmentFixture)
-// 	defer signupServer.Close()
-
-// 	response, err := suite.client.RegisterWebSignup(&WebSignup{
-// 		RequestToken: postWebSignupRequestBodyRequiredFieldsFixture.RequestToken,
-// 	})
-// 	suite.NoError(err)
-// 	suite.Equal(signupAssessmentFixture, response)
-
-// 	token, _ := suite.client.tokenProvider.GetToken()
-// 	token.(*accessToken).ExpiresIn = 0
-
-// 	response, err = suite.client.RegisterWebSignup(&WebSignup{
-// 		RequestToken: postWebSignupRequestBodyRequiredFieldsFixture.RequestToken,
-// 	})
-// 	suite.NoError(err)
-// 	suite.Equal(signupAssessmentFixture, response)
-// }
-
 func (suite *IncogniaTestSuite) TestRegisterSignupEmptyInstallationId() {
 	response, err := suite.client.RegisterSignup("", &Address{})
 	suite.EqualError(err, ErrMissingIdentifier.Error())
@@ -1065,7 +1045,14 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithEval() {
 	suite.Equal(transactionAssessmentFixture, response)
 }
 
-// aqui
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginWithEval() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, queryStringWithTrueEval)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterWebLogin(loginWebFixtureWithShouldEval)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithFalseEval() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, queryStringWithFalseEval)
@@ -1076,7 +1063,14 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithFalseEval() {
 	suite.Equal(emptyTransactionAssessmentFixture, response)
 }
 
-// aqui
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginWithFalseEval() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, queryStringWithFalseEval)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterWebLogin(loginWebFixtureWithShouldNotEval)
+	suite.NoError(err)
+	suite.Equal(emptyTransactionAssessmentFixture, response)
+}
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWeb() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
