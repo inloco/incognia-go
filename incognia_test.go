@@ -1097,6 +1097,22 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
 	suite.Equal(transactionAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginAfterTokenExpiration() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterWebLogin(loginWebFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+
+	token, _ := suite.client.tokenProvider.GetToken()
+	token.(*accessToken).ExpiresIn = 0
+
+	response, err = suite.client.RegisterWebLogin(loginWebFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestRegisterLoginNilLogin() {
 	response, err := suite.client.RegisterLogin(nil)
 	suite.EqualError(err, ErrMissingLogin.Error())
