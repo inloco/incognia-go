@@ -514,12 +514,28 @@ var (
 		PolicyID:       "policy-id",
 		Eval:           &shouldNotEval,
 	}
-	loginWebFixture = &Login{
-		AccountID:               "account-id",
-		ExternalID:              "external-id",
-		PolicyID:                "policy-id",
-		PaymentMethodIdentifier: "payment-method-identifier",
-		RequestToken:            requestToken,
+	loginWebFixture = &WebLogin{
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		RequestToken:     requestToken,
+		CustomProperties: customProperty,
+	}
+	loginWebFixtureWithShouldEval = &WebLogin{
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		RequestToken:     requestToken,
+		Eval:             &shouldEval,
+		CustomProperties: customProperty,
+	}
+	loginWebFixtureWithShouldNotEval = &WebLogin{
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		RequestToken:     requestToken,
+		Eval:             &shouldNotEval,
+		CustomProperties: customProperty,
 	}
 	loginFixtureWithLocation = &Login{
 		InstallationID: &installationId,
@@ -538,12 +554,12 @@ var (
 		CustomProperties:        customProperty,
 	}
 	postLoginWebRequestBodyFixture = &postTransactionRequestBody{
-		AccountID:               "account-id",
-		ExternalID:              "external-id",
-		PolicyID:                "policy-id",
-		PaymentMethodIdentifier: "payment-method-identifier",
-		Type:                    loginType,
-		RequestToken:            requestToken,
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		Type:             loginType,
+		RequestToken:     requestToken,
+		CustomProperties: customProperty,
 	}
 	postLoginRequestBodyWithLocationFixture = &postTransactionRequestBody{
 		InstallationID: &installationId,
@@ -704,26 +720,6 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() 
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
 }
-
-// func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupAfterTokenExpiration() {
-// 	signupServer := suite.mockPostSignupsEndpoint(token, postWebSignupRequestBodyFixture, signupAssessmentFixture)
-// 	defer signupServer.Close()
-
-// 	response, err := suite.client.RegisterWebSignup(&WebSignup{
-// 		RequestToken: postWebSignupRequestBodyRequiredFieldsFixture.RequestToken,
-// 	})
-// 	suite.NoError(err)
-// 	suite.Equal(signupAssessmentFixture, response)
-
-// 	token, _ := suite.client.tokenProvider.GetToken()
-// 	token.(*accessToken).ExpiresIn = 0
-
-// 	response, err = suite.client.RegisterWebSignup(&WebSignup{
-// 		RequestToken: postWebSignupRequestBodyRequiredFieldsFixture.RequestToken,
-// 	})
-// 	suite.NoError(err)
-// 	suite.Equal(signupAssessmentFixture, response)
-// }
 
 func (suite *IncogniaTestSuite) TestRegisterSignupEmptyInstallationId() {
 	response, err := suite.client.RegisterSignup("", &Address{})
@@ -1031,11 +1027,29 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLogin() {
 	suite.Equal(transactionAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebLogin() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterWebLogin(loginWebFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithEval() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyFixture, transactionAssessmentFixture, queryStringWithTrueEval)
 	defer transactionServer.Close()
 
 	response, err := suite.client.RegisterLogin(loginFixtureWithShouldEval)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginWithEval() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, queryStringWithTrueEval)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterWebLogin(loginWebFixtureWithShouldEval)
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
 }
@@ -1049,11 +1063,20 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithFalseEval() {
 	suite.Equal(emptyTransactionAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginWithFalseEval() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, queryStringWithFalseEval)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterWebLogin(loginWebFixtureWithShouldNotEval)
+	suite.NoError(err)
+	suite.Equal(emptyTransactionAssessmentFixture, response)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWeb() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
-	response, err := suite.client.registerLogin(loginWebFixture)
+	response, err := suite.client.registerWebLogin(loginWebFixture)
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
 }
@@ -1070,6 +1093,22 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
 	token.(*accessToken).ExpiresIn = 0
 
 	response, err = suite.client.RegisterLogin(loginFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginAfterTokenExpiration() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterWebLogin(loginWebFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+
+	token, _ := suite.client.tokenProvider.GetToken()
+	token.(*accessToken).ExpiresIn = 0
+
+	response, err = suite.client.RegisterWebLogin(loginWebFixture)
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
 }
