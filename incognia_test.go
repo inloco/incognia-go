@@ -244,6 +244,7 @@ var (
 			Id:          "identifier",
 			Name:        "CouponName",
 		},
+		StoreID:          "store-id",
 		CustomProperties: customProperty,
 		Addresses: []*TransactionAddress{
 			{
@@ -348,6 +349,7 @@ var (
 		AccountID:      "account-id",
 		ExternalID:     "external-id",
 		PolicyID:       "policy-id",
+		StoreID:        "store-id",
 		DeviceOs:       "android",
 		AppVersion:     "1.2.3",
 		Coupon: &CouponType{

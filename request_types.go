@@ -169,5 +169,6 @@ type postTransactionRequestBody struct {
 	PaymentMethods          []*PaymentMethod       `json:"payment_methods,omitempty"`
 	SessionToken            *string                `json:"session_token,omitempty"`
 	RequestToken            string                 `json:"request_token,omitempty"`
+	StoreID                 string                 `json:"store_id,omitempty"`
 	CustomProperties        map[string]interface{} `json:"custom_properties,omitempty"`
 }
