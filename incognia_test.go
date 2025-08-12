@@ -22,14 +22,16 @@ const (
 )
 
 var (
-	userAgentRegex   = regexp.MustCompile(`^incognia-api-go(/(v[0-9]+\.[0-9]+\.[0-9]+|unknown))? \([a-z]+ [a-z0-9]+\) Go/go[0-9]+\.[0-9]+\.[0-9]+$`)
-	now              = time.Now()
-	floatVar         = -7.5432
-	FixedCollectedAt = time.Date(2025, time.March, 22, 12, 12, 12, 0, time.UTC)
-	nowMinusSeconds  = now.Add(-1 * time.Second)
-	installationId   = "installation-id"
-	requestToken     = "request-token"
-	customProperty   = map[string]interface{}{
+	userAgentRegex    = regexp.MustCompile(`^incognia-api-go(/(v[0-9]+\.[0-9]+\.[0-9]+|unknown))? \([a-z]+ [a-z0-9]+\) Go/go[0-9]+\.[0-9]+\.[0-9]+$`)
+	now               = time.Now()
+	floatVar          = -7.5432
+	floatVar2         = 34.567
+	FixedCollectedAt  = time.Date(2025, time.March, 22, 12, 12, 12, 0, time.UTC)
+	FixedCollectedAt2 = time.Date(2025, time.January, 2, 15, 4, 5, 0, time.UTC)
+	nowMinusSeconds   = now.Add(-1 * time.Second)
+	installationId    = "installation-id"
+	requestToken      = "request-token"
+	customProperty    = map[string]interface{}{
 		"custom_1": "custom_value_1",
 		"custom_2": "custom_value_2",
 	}
@@ -141,6 +143,18 @@ var (
 		AccountID:  "account-id",
 		PolicyID:   "policy-id",
 		ExternalID: "external-id",
+		AdditionalLocations: []*AdditionalLocation{
+			&AdditionalLocation{
+				Lat:         &floatVar,
+				Lng:         &floatVar,
+				CollectedAt: &FixedCollectedAt,
+			},
+			&AdditionalLocation{
+				Lat:         &floatVar2,
+				Lng:         &floatVar2,
+				CollectedAt: &FixedCollectedAt2,
+			},
+		},
 	}
 	postWebSignupRequestBodyWithAllParamsFixture = &postAssessmentRequestBody{
 		RequestToken:     requestToken,
@@ -646,19 +660,21 @@ func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderSuccess() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
+
 	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyWithAllParamsFixture, signupAssessmentFixture)
 	defer signupServer.Close()
 
 	response, err := suite.client.RegisterSignupWithParams(&Signup{
-		InstallationID: postSignupRequestBodyWithAllParamsFixture.InstallationID,
-		RequestToken:   postSignupRequestBodyWithAllParamsFixture.RequestToken,
-		SessionToken:   postSignupRequestBodyWithAllParamsFixture.SessionToken,
-		DeviceOs:       postSignupRequestBodyWithAllParamsFixture.DeviceOs,
-		AppVersion:     postSignupRequestBodyWithAllParamsFixture.AppVersion,
-		Address:        addressFixture,
-		AccountID:      postSignupRequestBodyWithAllParamsFixture.AccountID,
-		PolicyID:       postSignupRequestBodyWithAllParamsFixture.PolicyID,
-		ExternalID:     postSignupRequestBodyWithAllParamsFixture.ExternalID,
+		InstallationID:      postSignupRequestBodyWithAllParamsFixture.InstallationID,
+		RequestToken:        postSignupRequestBodyWithAllParamsFixture.RequestToken,
+		SessionToken:        postSignupRequestBodyWithAllParamsFixture.SessionToken,
+		DeviceOs:            postSignupRequestBodyWithAllParamsFixture.DeviceOs,
+		AppVersion:          postSignupRequestBodyWithAllParamsFixture.AppVersion,
+		Address:             addressFixture,
+		AccountID:           postSignupRequestBodyWithAllParamsFixture.AccountID,
+		PolicyID:            postSignupRequestBodyWithAllParamsFixture.PolicyID,
+		ExternalID:          postSignupRequestBodyWithAllParamsFixture.ExternalID,
+		AdditionalLocations: postSignupRequestBodyWithAllParamsFixture.AdditionalLocations,
 	})
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
@@ -963,9 +979,6 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithLocationAndTimesta
 	paymentFixtureWithLocation.Location = locationFixtureFull
 	postPaymentRequestBodyWithLocationFixture.Location = locationFixtureFull
 
-	*postPaymentRequestBodyWithLocationFixture.Location.CollectedAt = postPaymentRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
-	*paymentFixtureWithLocation.Location.CollectedAt = paymentFixtureWithLocation.Location.CollectedAt.Round(0)
-
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
@@ -992,9 +1005,6 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentWithLocationMissingLat() {
 	paymentFixtureWithLocation.Location = locationFixtureMissingLat
 	postPaymentRequestBodyWithLocationFixture.Location = locationFixtureMissingLat
 
-	*postPaymentRequestBodyWithLocationFixture.Location.CollectedAt = postPaymentRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
-	*paymentFixtureWithLocation.Location.CollectedAt = paymentFixtureWithLocation.Location.CollectedAt.Round(0)
-
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
@@ -1007,9 +1017,6 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentWithLocationMissingLat() {
 func (suite *IncogniaTestSuite) TestRegisterPaymentWithLocationMissingLong() {
 	paymentFixtureWithLocation.Location = locationFixtureMissingLong
 	postPaymentRequestBodyWithLocationFixture.Location = locationFixtureMissingLong
-
-	*postPaymentRequestBodyWithLocationFixture.Location.CollectedAt = postPaymentRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
-	*paymentFixtureWithLocation.Location.CollectedAt = paymentFixtureWithLocation.Location.CollectedAt.Round(0)
 
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
@@ -1179,9 +1186,6 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithLocationAndTimestamp
 	loginFixtureWithLocation.Location = locationFixtureFull
 	postLoginRequestBodyWithLocationFixture.Location = locationFixtureFull
 
-	*postLoginRequestBodyWithLocationFixture.Location.CollectedAt = postLoginRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
-	*loginFixtureWithLocation.Location.CollectedAt = loginFixtureWithLocation.Location.CollectedAt.Round(0)
-
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
@@ -1207,9 +1211,6 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithLocationWithoutTimes
 func (suite *IncogniaTestSuite) TestRegisterLoginWithLocationMissingLat() {
 	loginFixtureWithLocation.Location = locationFixtureMissingLat
 	postLoginRequestBodyWithLocationFixture.Location = locationFixtureMissingLat
-
-	*postLoginRequestBodyWithLocationFixture.Location.CollectedAt = postLoginRequestBodyWithLocationFixture.Location.CollectedAt.Round(0)
-	*loginFixtureWithLocation.Location.CollectedAt = loginFixtureWithLocation.Location.CollectedAt.Round(0)
 
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyWithLocationFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
