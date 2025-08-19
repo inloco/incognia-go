@@ -141,12 +141,20 @@ var (
 		AccountID:  "account-id",
 		PolicyID:   "policy-id",
 		ExternalID: "external-id",
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	postWebSignupRequestBodyWithAllParamsFixture = &postAssessmentRequestBody{
 		RequestToken:     requestToken,
 		AccountID:        "account-id",
 		PolicyID:         "policy-id",
 		CustomProperties: customPropertiesFixture,
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	postWebSignupRequestBodyFixture = &postAssessmentRequestBody{
 		RequestToken: requestToken,
@@ -177,6 +185,10 @@ var (
 		SignupID:       "some-signup-id",
 		AccountID:      "some-account-id",
 		ExternalID:     "some-external-id",
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	postFeedbackRequestWithExpirationBodyFixture = &postFeedbackRequestBody{
 		Event:          SignupAccepted,
@@ -203,6 +215,10 @@ var (
 		SignupID:       "some-signup-id",
 		AccountID:      "some-account-id",
 		ExternalID:     "some-external-id",
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	emptyTransactionAssessmentFixture = &TransactionAssessment{}
 	transactionAssessmentFixture      = &TransactionAssessment{
@@ -285,6 +301,10 @@ var (
 				},
 			},
 		},
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	postPaymentWebRequestBodyFixture = &postTransactionRequestBody{
 		RequestToken: requestToken,
@@ -337,6 +357,10 @@ var (
 					ExpiryMonth:    "10",
 				},
 			},
+		},
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
 		},
 	}
 	postPaymentRequestBodyRequiredFieldsFixture = &postTransactionRequestBody{
@@ -399,6 +423,10 @@ var (
 				},
 			},
 		},
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	paymentWebFixture = &Payment{
 		RequestToken: requestToken,
@@ -451,6 +479,10 @@ var (
 				},
 			},
 		},
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	paymentFixtureRequiredFields = &Payment{
 		InstallationID: &installationId,
@@ -491,6 +523,10 @@ var (
 		AppVersion:              "1.2.3",
 		CustomProperties:        customProperty,
 		PaymentMethodIdentifier: "payment-method-identifier",
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	postPaymentRequestBodyWithLocationFixture = &postTransactionRequestBody{
 		InstallationID: &installationId,
@@ -508,6 +544,10 @@ var (
 		PaymentMethodIdentifier: "payment-method-identifier",
 		Eval:                    &shouldEval,
 		CustomProperties:        customProperty,
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	loginFixtureWithShouldNotEval = &Login{
 		InstallationID: &installationId,
@@ -522,6 +562,10 @@ var (
 		PolicyID:         "policy-id",
 		RequestToken:     requestToken,
 		CustomProperties: customProperty,
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	loginWebFixtureWithShouldEval = &WebLogin{
 		AccountID:        "account-id",
@@ -530,6 +574,10 @@ var (
 		RequestToken:     requestToken,
 		Eval:             &shouldEval,
 		CustomProperties: customProperty,
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	loginWebFixtureWithShouldNotEval = &WebLogin{
 		AccountID:        "account-id",
@@ -554,6 +602,10 @@ var (
 		PaymentMethodIdentifier: "payment-method-identifier",
 		Type:                    loginType,
 		CustomProperties:        customProperty,
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	postLoginWebRequestBodyFixture = &postTransactionRequestBody{
 		AccountID:        "account-id",
@@ -562,6 +614,10 @@ var (
 		Type:             loginType,
 		RequestToken:     requestToken,
 		CustomProperties: customProperty,
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
 	}
 	postLoginRequestBodyWithLocationFixture = &postTransactionRequestBody{
 		InstallationID: &installationId,
@@ -659,6 +715,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
 		AccountID:      postSignupRequestBodyWithAllParamsFixture.AccountID,
 		PolicyID:       postSignupRequestBodyWithAllParamsFixture.PolicyID,
 		ExternalID:     postSignupRequestBodyWithAllParamsFixture.ExternalID,
+		PersonID:       postSignupRequestBodyWithAllParamsFixture.PersonID,
 	})
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
@@ -673,6 +730,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupFull() {
 		AccountID:        postWebSignupRequestBodyWithAllParamsFixture.AccountID,
 		PolicyID:         postWebSignupRequestBodyWithAllParamsFixture.PolicyID,
 		CustomProperties: postWebSignupRequestBodyWithAllParamsFixture.CustomProperties,
+		PersonID:         postWebSignupRequestBodyWithAllParamsFixture.PersonID,
 	})
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
