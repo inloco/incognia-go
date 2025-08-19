@@ -40,6 +40,7 @@ type postAssessmentRequestBody struct {
 	PolicyID          string                 `json:"policy_id,omitempty"`
 	ExternalID        string                 `json:"external_id,omitempty"`
 	CustomProperties  map[string]interface{} `json:"custom_properties,omitempty"`
+	PersonID          *PersonID              `json:"person_id,omitempty"`
 }
 
 type FeedbackType string
@@ -85,6 +86,7 @@ type postFeedbackRequestBody struct {
 	SignupID       string       `json:"signup_id,omitempty"`
 	AccountID      string       `json:"account_id,omitempty"`
 	ExternalID     string       `json:"external_id,omitempty"`
+	PersonID       *PersonID    `json:"person_id,omitempty"`
 }
 
 type AddressType string
@@ -171,4 +173,10 @@ type postTransactionRequestBody struct {
 	RequestToken            string                 `json:"request_token,omitempty"`
 	StoreID                 string                 `json:"store_id,omitempty"`
 	CustomProperties        map[string]interface{} `json:"custom_properties,omitempty"`
+	PersonID                *PersonID              `json:"person_id,omitempty"`
+}
+
+type PersonID struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
 }

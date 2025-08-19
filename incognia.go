@@ -66,6 +66,7 @@ type Payment struct {
 	Methods          []*PaymentMethod
 	Eval             *bool
 	CustomProperties map[string]interface{}
+	PersonID         *PersonID
 }
 
 type WebLogin struct {
@@ -75,6 +76,7 @@ type WebLogin struct {
 	PolicyID         string
 	Eval             *bool
 	CustomProperties map[string]interface{}
+	PersonID         *PersonID
 }
 
 type Login struct {
@@ -90,6 +92,7 @@ type Login struct {
 	AppVersion              string
 	DeviceOs                string
 	CustomProperties        map[string]interface{}
+	PersonID                *PersonID
 }
 
 type FeedbackIdentifiers struct {
@@ -101,6 +104,7 @@ type FeedbackIdentifiers struct {
 	SignupID       string
 	AccountID      string
 	ExternalID     string
+	PersonID       *PersonID
 }
 
 type Address struct {
@@ -119,6 +123,7 @@ type Signup struct {
 	AccountID      string
 	PolicyID       string
 	ExternalID     string
+	PersonID       *PersonID
 }
 
 type WebSignup struct {
@@ -126,6 +131,7 @@ type WebSignup struct {
 	PolicyID         string
 	AccountID        string
 	CustomProperties map[string]interface{}
+	PersonID         *PersonID
 }
 
 func validateLocation(location *Location) error {
@@ -249,6 +255,7 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 		ExternalID:     params.ExternalID,
 		AppVersion:     params.AppVersion,
 		DeviceOs:       strings.ToLower(params.DeviceOs),
+		PersonID:       params.PersonID,
 	}
 	if params.Address != nil {
 		requestBody.AddressLine = params.Address.AddressLine
@@ -289,6 +296,7 @@ func (c *Client) registerWebSignup(params *WebSignup) (ret *SignupAssessment, er
 		PolicyID:         params.PolicyID,
 		AccountID:        params.AccountID,
 		CustomProperties: params.CustomProperties,
+		PersonID:         params.PersonID,
 	}
 
 	requestBodyBytes, err := json.Marshal(requestBody)
@@ -346,6 +354,7 @@ func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.T
 		requestBody.SignupID = feedbackIdentifiers.SignupID
 		requestBody.AccountID = feedbackIdentifiers.AccountID
 		requestBody.ExternalID = feedbackIdentifiers.ExternalID
+		requestBody.PersonID = feedbackIdentifiers.PersonID
 	}
 	requestBodyBytes, err := json.Marshal(requestBody)
 	if err != nil {
@@ -412,6 +421,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		AppVersion:       payment.AppVersion,
 		DeviceOs:         strings.ToLower(payment.DeviceOs),
 		CustomProperties: payment.CustomProperties,
+		PersonID:         payment.PersonID,
 	})
 	if err != nil {
 		return nil, err
@@ -481,6 +491,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		AppVersion:              login.AppVersion,
 		DeviceOs:                strings.ToLower(login.DeviceOs),
 		CustomProperties:        login.CustomProperties,
+		PersonID:                login.PersonID,
 	})
 	if err != nil {
 		return nil, err
@@ -539,6 +550,7 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 		ExternalID:       webLogin.ExternalID,
 		RequestToken:     webLogin.RequestToken,
 		CustomProperties: webLogin.CustomProperties,
+		PersonID:         webLogin.PersonID,
 	})
 	if err != nil {
 		return nil, err
