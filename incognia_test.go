@@ -48,6 +48,22 @@ var (
 		},
 		"metadata": nil,
 	}
+	pixKeyArrayFixture = []*PixKey{
+		{Type: "cpf", Value: "12345678901"},
+		{Type: "email", Value: "legit_person@gmail.com"},
+	}
+	bankAccountInfoFixture = &BankAccountInfo{
+		AccountType:       "savings",
+		AccountPurpose:    "rural",
+		HolderType:        "business",
+		HolderTaxID:       &PersonID{Type: "cpf", Value: "12345678901"},
+		Country:           "BR",
+		IspbCode:          "18236120",
+		BranchCode:        "0001",
+		AccountNumber:     "123456",
+		AccountCheckDigit: "0",
+		PixKeys:           pixKeyArrayFixture,
+	}
 	locationFixtureFull = &Location{
 		Latitude:    &floatVar,
 		Longitude:   &floatVar,
@@ -305,6 +321,8 @@ var (
 			Type:  "cpf",
 			Value: "12345678901",
 		},
+		DebtorAccount:   bankAccountInfoFixture,
+		CreditorAccount: bankAccountInfoFixture,
 	}
 	postPaymentWebRequestBodyFixture = &postTransactionRequestBody{
 		RequestToken: requestToken,
@@ -427,6 +445,8 @@ var (
 			Type:  "cpf",
 			Value: "12345678901",
 		},
+		DebtorAccount:   bankAccountInfoFixture,
+		CreditorAccount: bankAccountInfoFixture,
 	}
 	paymentWebFixture = &Payment{
 		RequestToken: requestToken,

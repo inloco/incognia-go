@@ -41,6 +41,8 @@ type postAssessmentRequestBody struct {
 	ExternalID        string                 `json:"external_id,omitempty"`
 	CustomProperties  map[string]interface{} `json:"custom_properties,omitempty"`
 	PersonID          *PersonID              `json:"person_id,omitempty"`
+	DebtorAccount     *BankAccountInfo       `json:"debtor_account,omitempty"`
+	CreditorAccount   *BankAccountInfo       `json:"creditor_account,omitempty"`
 }
 
 type FeedbackType string
@@ -174,9 +176,29 @@ type postTransactionRequestBody struct {
 	StoreID                 string                 `json:"store_id,omitempty"`
 	CustomProperties        map[string]interface{} `json:"custom_properties,omitempty"`
 	PersonID                *PersonID              `json:"person_id,omitempty"`
+	DebtorAccount           *BankAccountInfo       `json:"debtor_account,omitempty"`
+	CreditorAccount         *BankAccountInfo       `json:"creditor_account,omitempty"`
 }
 
 type PersonID struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
+}
+
+type PixKey struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type BankAccountInfo struct {
+	AccountType       string    `json:"account_type"`
+	AccountPurpose    string    `json:"account_purpose"`
+	HolderType        string    `json:"holder_type"`
+	HolderTaxID       *PersonID `json:"holder_tax_id"`
+	Country           string    `json:"country"`
+	IspbCode          string    `json:"ispb_code"`
+	BranchCode        string    `json:"branch_code"`
+	AccountNumber     string    `json:"account_number"`
+	AccountCheckDigit string    `json:"account_check_digit"`
+	PixKeys           []*PixKey `json:"pix_keys"`
 }
