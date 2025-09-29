@@ -67,6 +67,8 @@ type Payment struct {
 	Eval             *bool
 	CustomProperties map[string]interface{}
 	PersonID         *PersonID
+	DebtorAccount    *BankAccountInfo
+	CreditorAccount  *BankAccountInfo
 }
 
 type WebLogin struct {
@@ -422,6 +424,8 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		DeviceOs:         strings.ToLower(payment.DeviceOs),
 		CustomProperties: payment.CustomProperties,
 		PersonID:         payment.PersonID,
+		DebtorAccount:    payment.DebtorAccount,
+		CreditorAccount:  payment.CreditorAccount,
 	})
 	if err != nil {
 		return nil, err
