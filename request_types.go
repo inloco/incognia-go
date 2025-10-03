@@ -155,6 +155,7 @@ type PaymentMethod struct {
 	Type       paymentMethodType `json:"type"`
 	CreditCard *CardInfo         `json:"credit_card_info,omitempty"`
 	DebitCard  *CardInfo         `json:"debit_card_info,omitempty"`
+	Brand      string            `json:"brand,omitempty"`
 }
 
 type postTransactionRequestBody struct {
