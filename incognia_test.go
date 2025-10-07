@@ -132,11 +132,12 @@ var (
 	}
 
 	postSignupRequestBodyWithAllParamsFixture = &postAssessmentRequestBody{
-		InstallationID: installationId,
-		RequestToken:   requestToken,
-		AddressLine:    "address line",
-		DeviceOs:       "ios",
-		AppVersion:     "1.2.3",
+		InstallationID:   installationId,
+		RequestToken:     requestToken,
+		AddressLine:      "address line",
+		DeviceOs:         "ios",
+		AppVersion:       "1.2.3",
+		CustomProperties: customPropertiesFixture,
 		StructuredAddress: &StructuredAddress{
 			Locale:       "locale",
 			CountryName:  "country-name",
@@ -309,6 +310,7 @@ var (
 			{
 				Type:       CreditCard,
 				Identifier: "credit-card-hash-123",
+				Brand:      "visa",
 				CreditCard: &CardInfo{
 					Bin:            "29282",
 					LastFourDigits: "2222",
@@ -368,6 +370,7 @@ var (
 			{
 				Type:       CreditCard,
 				Identifier: "credit-card-hash-123",
+				Brand:      "visa",
 				CreditCard: &CardInfo{
 					Bin:            "29282",
 					LastFourDigits: "2222",
@@ -433,6 +436,7 @@ var (
 			{
 				Type:       CreditCard,
 				Identifier: "credit-card-hash-123",
+				Brand:      "visa",
 				CreditCard: &CardInfo{
 					Bin:            "29282",
 					LastFourDigits: "2222",
@@ -491,6 +495,7 @@ var (
 			{
 				Type:       CreditCard,
 				Identifier: "credit-card-hash-123",
+				Brand:      "visa",
 				CreditCard: &CardInfo{
 					Bin:            "29282",
 					LastFourDigits: "2222",
@@ -726,16 +731,17 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
 	defer signupServer.Close()
 
 	response, err := suite.client.RegisterSignupWithParams(&Signup{
-		InstallationID: postSignupRequestBodyWithAllParamsFixture.InstallationID,
-		RequestToken:   postSignupRequestBodyWithAllParamsFixture.RequestToken,
-		SessionToken:   postSignupRequestBodyWithAllParamsFixture.SessionToken,
-		DeviceOs:       postSignupRequestBodyWithAllParamsFixture.DeviceOs,
-		AppVersion:     postSignupRequestBodyWithAllParamsFixture.AppVersion,
-		Address:        addressFixture,
-		AccountID:      postSignupRequestBodyWithAllParamsFixture.AccountID,
-		PolicyID:       postSignupRequestBodyWithAllParamsFixture.PolicyID,
-		ExternalID:     postSignupRequestBodyWithAllParamsFixture.ExternalID,
-		PersonID:       postSignupRequestBodyWithAllParamsFixture.PersonID,
+		InstallationID:   postSignupRequestBodyWithAllParamsFixture.InstallationID,
+		RequestToken:     postSignupRequestBodyWithAllParamsFixture.RequestToken,
+		SessionToken:     postSignupRequestBodyWithAllParamsFixture.SessionToken,
+		DeviceOs:         postSignupRequestBodyWithAllParamsFixture.DeviceOs,
+		AppVersion:       postSignupRequestBodyWithAllParamsFixture.AppVersion,
+		Address:          addressFixture,
+		AccountID:        postSignupRequestBodyWithAllParamsFixture.AccountID,
+		PolicyID:         postSignupRequestBodyWithAllParamsFixture.PolicyID,
+		ExternalID:       postSignupRequestBodyWithAllParamsFixture.ExternalID,
+		CustomProperties: postSignupRequestBodyWithAllParamsFixture.CustomProperties,
+		PersonID:         postSignupRequestBodyWithAllParamsFixture.PersonID,
 	})
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)

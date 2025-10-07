@@ -116,16 +116,17 @@ type Address struct {
 }
 
 type Signup struct {
-	InstallationID string
-	RequestToken   string
-	SessionToken   string
-	AppVersion     string
-	DeviceOs       string
-	Address        *Address
-	AccountID      string
-	PolicyID       string
-	ExternalID     string
-	PersonID       *PersonID
+	InstallationID   string
+	RequestToken     string
+	SessionToken     string
+	AppVersion       string
+	DeviceOs         string
+	Address          *Address
+	AccountID        string
+	PolicyID         string
+	ExternalID       string
+	PersonID         *PersonID
+	CustomProperties map[string]interface{}
 }
 
 type WebSignup struct {
@@ -249,15 +250,16 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 	}
 
 	requestBody := postAssessmentRequestBody{
-		InstallationID: params.InstallationID,
-		RequestToken:   params.RequestToken,
-		SessionToken:   params.SessionToken,
-		AccountID:      params.AccountID,
-		PolicyID:       params.PolicyID,
-		ExternalID:     params.ExternalID,
-		AppVersion:     params.AppVersion,
-		DeviceOs:       strings.ToLower(params.DeviceOs),
-		PersonID:       params.PersonID,
+		InstallationID:   params.InstallationID,
+		RequestToken:     params.RequestToken,
+		SessionToken:     params.SessionToken,
+		AccountID:        params.AccountID,
+		PolicyID:         params.PolicyID,
+		ExternalID:       params.ExternalID,
+		AppVersion:       params.AppVersion,
+		DeviceOs:         strings.ToLower(params.DeviceOs),
+		PersonID:         params.PersonID,
+		CustomProperties: params.CustomProperties,
 	}
 	if params.Address != nil {
 		requestBody.AddressLine = params.Address.AddressLine
