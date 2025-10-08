@@ -31,11 +31,15 @@ var (
 	ErrMissingLocationLatLong              = errors.New("location field missing latitude and/or longitude")
 )
 
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type Client struct {
 	clientID      string
 	clientSecret  string
 	tokenProvider TokenProvider
-	netClient     *http.Client
+	netClient     httpClient
 	endpoints     *endpoints
 	UserAgent     string
 }
@@ -46,7 +50,7 @@ type IncogniaClientConfig struct {
 	TokenProvider     TokenProvider
 	Timeout           time.Duration
 	TokenRouteTimeout time.Duration
-	HTTPClient        *http.Client
+	HTTPClient        httpClient
 }
 
 type Payment struct {
