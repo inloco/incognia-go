@@ -179,6 +179,7 @@ type postTransactionRequestBody struct {
 	PersonID                *PersonID              `json:"person_id,omitempty"`
 	DebtorAccount           *BankAccountInfo       `json:"debtor_account,omitempty"`
 	CreditorAccount         *BankAccountInfo       `json:"creditor_account,omitempty"`
+	Countries               []string               `json:"countries,omitempty"`
 }
 
 type PersonID struct {

@@ -553,6 +553,21 @@ var (
 			Value: "12345678901",
 		},
 	}
+	loginWithCountriesFixture = &Login{
+		InstallationID:          &installationId,
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		PolicyID:                "policy-id",
+		DeviceOs:                "Android",
+		AppVersion:              "1.2.3",
+		CustomProperties:        customProperty,
+		PaymentMethodIdentifier: "payment-method-identifier",
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
+		Countries: []string{"BR", "US"},
+	}
 	postPaymentRequestBodyWithLocationFixture = &postTransactionRequestBody{
 		InstallationID: &installationId,
 		AccountID:      "account-id",
@@ -587,6 +602,18 @@ var (
 		PolicyID:         "policy-id",
 		RequestToken:     requestToken,
 		CustomProperties: customProperty,
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
+	}
+	loginWebWithCountriesFixture = &WebLogin{
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		RequestToken:     requestToken,
+		CustomProperties: customProperty,
+		Countries:        []string{"BR", "US"},
 		PersonID: &PersonID{
 			Type:  "cpf",
 			Value: "12345678901",
@@ -632,6 +659,22 @@ var (
 			Value: "12345678901",
 		},
 	}
+	postLoginRequestBodyWithCountriesFixture = &postTransactionRequestBody{
+		InstallationID:          &installationId,
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		DeviceOs:                "android",
+		AppVersion:              "1.2.3",
+		PolicyID:                "policy-id",
+		PaymentMethodIdentifier: "payment-method-identifier",
+		Type:                    loginType,
+		CustomProperties:        customProperty,
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
+		Countries: []string{"BR", "US"},
+	}
 	postLoginWebRequestBodyFixture = &postTransactionRequestBody{
 		AccountID:        "account-id",
 		ExternalID:       "external-id",
@@ -643,6 +686,19 @@ var (
 			Type:  "cpf",
 			Value: "12345678901",
 		},
+	}
+	postLoginWebRequestBodyWithCountriesFixture = &postTransactionRequestBody{
+		AccountID:        "account-id",
+		ExternalID:       "external-id",
+		PolicyID:         "policy-id",
+		Type:             loginType,
+		RequestToken:     requestToken,
+		CustomProperties: customProperty,
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
+		Countries: []string{"BR", "US"},
 	}
 	postLoginRequestBodyWithLocationFixture = &postTransactionRequestBody{
 		InstallationID: &installationId,
@@ -1157,6 +1213,14 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginWithFalseEval() {
 	suite.NoError(err)
 	suite.Equal(emptyTransactionAssessmentFixture, response)
 }
+func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithCountries() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyWithCountriesFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterLogin(loginWithCountriesFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWeb() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
@@ -1195,6 +1259,15 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginAfterTokenExpiration(
 	token.(*accessToken).ExpiresIn = 0
 
 	response, err = suite.client.RegisterWebLogin(loginWebFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWebWithCountries() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyWithCountriesFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.registerWebLogin(loginWebWithCountriesFixture)
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
 }
