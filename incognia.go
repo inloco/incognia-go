@@ -83,6 +83,7 @@ type WebLogin struct {
 	Eval             *bool
 	CustomProperties map[string]interface{}
 	PersonID         *PersonID
+	Countries        []string
 }
 
 type Login struct {
@@ -91,6 +92,7 @@ type Login struct {
 	RequestToken            string
 	AccountID               string
 	ExternalID              string
+	Countries               []string
 	PolicyID                string
 	Location                *Location
 	PaymentMethodIdentifier string
@@ -502,6 +504,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		DeviceOs:                strings.ToLower(login.DeviceOs),
 		CustomProperties:        login.CustomProperties,
 		PersonID:                login.PersonID,
+		Countries:               login.Countries,
 	})
 	if err != nil {
 		return nil, err
@@ -561,6 +564,7 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 		RequestToken:     webLogin.RequestToken,
 		CustomProperties: webLogin.CustomProperties,
 		PersonID:         webLogin.PersonID,
+		Countries:        webLogin.Countries,
 	})
 	if err != nil {
 		return nil, err
