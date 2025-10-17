@@ -18,17 +18,14 @@ const (
 )
 
 var (
-	ErrMissingPayment                      = errors.New("missing payment parameters")
-	ErrMissingLogin                        = errors.New("missing login parameters")
-	ErrMissingSignup                       = errors.New("missing signup parameters")
-	ErrMissingInstallationID               = errors.New("missing installation id")
-	ErrMissingInstallationIDOrSessionToken = errors.New("missing installation id or session token")
-	ErrMissingIdentifier                   = errors.New("missing installation id, request token or session token")
-	ErrMissingAccountID                    = errors.New("missing account id")
-	ErrMissingSignupID                     = errors.New("missing signup id")
-	ErrMissingClientIDOrClientSecret       = errors.New("client id and client secret are required")
-	ErrConfigIsNil                         = errors.New("incognia client config is required")
-	ErrMissingLocationLatLong              = errors.New("location field missing latitude and/or longitude")
+	ErrMissingPayment                = errors.New("missing payment parameters")
+	ErrMissingLogin                  = errors.New("missing login parameters")
+	ErrMissingSignup                 = errors.New("missing signup parameters")
+	ErrMissingAccountID              = errors.New("missing account id")
+	ErrMissingSignupID               = errors.New("missing signup id")
+	ErrMissingClientIDOrClientSecret = errors.New("client id and client secret are required")
+	ErrConfigIsNil                   = errors.New("incognia client config is required")
+	ErrMissingLocationLatLong        = errors.New("location field missing latitude and/or longitude")
 )
 
 type httpClient interface {
@@ -251,9 +248,6 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 	if params == nil {
 		return nil, ErrMissingSignup
 	}
-	if params.InstallationID == "" && params.RequestToken == "" && params.SessionToken == "" {
-		return nil, ErrMissingIdentifier
-	}
 
 	requestBody := postAssessmentRequestBody{
 		InstallationID:   params.InstallationID,
@@ -296,9 +290,6 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 func (c *Client) registerWebSignup(params *WebSignup) (ret *SignupAssessment, err error) {
 	if params == nil {
 		return nil, ErrMissingSignup
-	}
-	if params.RequestToken == "" {
-		return nil, ErrMissingIdentifier
 	}
 
 	requestBody := postAssessmentRequestBody{
@@ -401,10 +392,6 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		return nil, ErrMissingPayment
 	}
 
-	if payment.InstallationID == nil && payment.SessionToken == nil && payment.RequestToken == "" {
-		return nil, ErrMissingIdentifier
-	}
-
 	if payment.AccountID == "" {
 		return nil, ErrMissingAccountID
 	}
@@ -477,10 +464,6 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		return nil, ErrMissingLogin
 	}
 
-	if login.InstallationID == nil && login.SessionToken == nil && login.RequestToken == "" {
-		return nil, ErrMissingIdentifier
-	}
-
 	if login.AccountID == "" {
 		return nil, ErrMissingAccountID
 	}
@@ -546,10 +529,6 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 
 	if webLogin == nil {
 		return nil, ErrMissingLogin
-	}
-
-	if webLogin.RequestToken == "" {
-		return nil, ErrMissingIdentifier
 	}
 
 	if webLogin.AccountID == "" {

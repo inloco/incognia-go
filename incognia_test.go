@@ -130,6 +130,26 @@ var (
 			Lng: -46.6558819,
 		},
 	}
+	postSignupRequestBodyWithoutInstallationIdFixture = &postAssessmentRequestBody{
+		AddressLine: "address line",
+		StructuredAddress: &StructuredAddress{
+			Locale:       "locale",
+			CountryName:  "country-name",
+			CountryCode:  "country-code",
+			State:        "state",
+			City:         "city",
+			Borough:      "borough",
+			Neighborhood: "neighborhood",
+			Street:       "street",
+			Number:       "number",
+			Complements:  "complements",
+			PostalCode:   "postalcode",
+		},
+		Coordinates: &Coordinates{
+			Lat: -23.561414,
+			Lng: -46.6558819,
+		},
+	}
 
 	postSignupRequestBodyWithAllParamsFixture = &postAssessmentRequestBody{
 		InstallationID:   installationId,
@@ -326,6 +346,69 @@ var (
 		DebtorAccount:   bankAccountInfoFixture,
 		CreditorAccount: bankAccountInfoFixture,
 	}
+	postPaymentRequestBodyWithoutInstallationIdFixture = &postTransactionRequestBody{
+		AccountID:  "account-id",
+		ExternalID: "external-id",
+		DeviceOs:   "android",
+		AppVersion: "1.2.3",
+		PolicyID:   "policy-id",
+		Type:       paymentType,
+		Coupon: &CouponType{
+			Type:        "coupon_type",
+			Value:       55.02,
+			MaxDiscount: 30,
+			Id:          "identifier",
+			Name:        "CouponName",
+		},
+		StoreID:          "store-id",
+		CustomProperties: customProperty,
+		Addresses: []*TransactionAddress{
+			{
+				Type: Billing,
+				StructuredAddress: &StructuredAddress{
+					Locale:       "locale",
+					CountryName:  "country-name",
+					CountryCode:  "country-code",
+					State:        "state",
+					City:         "city",
+					Borough:      "borough",
+					Neighborhood: "neighborhood",
+					Street:       "street",
+					Number:       "number",
+					Complements:  "complements",
+					PostalCode:   "postalcode",
+				},
+				AddressLine: "address line",
+				Coordinates: &Coordinates{
+					Lat: -23.561414,
+					Lng: -46.6558819,
+				},
+			},
+		},
+		PaymentValue: &PaymentValue{
+			Amount:   55.02,
+			Currency: "BRL",
+		},
+		PaymentMethods: []*PaymentMethod{
+			{
+				Type:       CreditCard,
+				Identifier: "credit-card-hash-123",
+				Brand:      "visa",
+				CreditCard: &CardInfo{
+					Bin:            "29282",
+					LastFourDigits: "2222",
+					ExpiryYear:     "2020",
+					ExpiryMonth:    "10",
+				},
+			},
+		},
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
+		DebtorAccount:   bankAccountInfoFixture,
+		CreditorAccount: bankAccountInfoFixture,
+	}
 	postPaymentWebRequestBodyFixture = &postTransactionRequestBody{
 		RequestToken: requestToken,
 		AccountID:    "account-id",
@@ -397,6 +480,68 @@ var (
 		StoreID:        "store-id",
 		DeviceOs:       "android",
 		AppVersion:     "1.2.3",
+		Coupon: &CouponType{
+			Type:        "coupon_type",
+			Value:       55.02,
+			MaxDiscount: 30,
+			Id:          "identifier",
+			Name:        "CouponName",
+		},
+		CustomProperties: customProperty,
+		Addresses: []*TransactionAddress{
+			{
+				Type: Billing,
+				StructuredAddress: &StructuredAddress{
+					Locale:       "locale",
+					CountryName:  "country-name",
+					CountryCode:  "country-code",
+					State:        "state",
+					City:         "city",
+					Borough:      "borough",
+					Neighborhood: "neighborhood",
+					Street:       "street",
+					Number:       "number",
+					Complements:  "complements",
+					PostalCode:   "postalcode",
+				},
+				AddressLine: "address line",
+				Coordinates: &Coordinates{
+					Lat: -23.561414,
+					Lng: -46.6558819,
+				},
+			},
+		},
+		Value: &PaymentValue{
+			Amount:   55.02,
+			Currency: "BRL",
+		},
+		Methods: []*PaymentMethod{
+			{
+				Type:       CreditCard,
+				Identifier: "credit-card-hash-123",
+				Brand:      "visa",
+				CreditCard: &CardInfo{
+					Bin:            "29282",
+					LastFourDigits: "2222",
+					ExpiryYear:     "2020",
+					ExpiryMonth:    "10",
+				},
+			},
+		},
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
+		DebtorAccount:   bankAccountInfoFixture,
+		CreditorAccount: bankAccountInfoFixture,
+	}
+	paymentWithoutInstallationIDFixture = &Payment{
+		AccountID:  "account-id",
+		ExternalID: "external-id",
+		PolicyID:   "policy-id",
+		StoreID:    "store-id",
+		DeviceOs:   "android",
+		AppVersion: "1.2.3",
 		Coupon: &CouponType{
 			Type:        "coupon_type",
 			Value:       55.02,
@@ -553,6 +698,19 @@ var (
 			Value: "12345678901",
 		},
 	}
+	loginWithoutInstallationIdFixture = &Login{
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		PolicyID:                "policy-id",
+		DeviceOs:                "Android",
+		AppVersion:              "1.2.3",
+		CustomProperties:        customProperty,
+		PaymentMethodIdentifier: "payment-method-identifier",
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
+	}
 	loginWithCountriesFixture = &Login{
 		InstallationID:          &installationId,
 		AccountID:               "account-id",
@@ -646,6 +804,20 @@ var (
 	}
 	postLoginRequestBodyFixture = &postTransactionRequestBody{
 		InstallationID:          &installationId,
+		AccountID:               "account-id",
+		ExternalID:              "external-id",
+		DeviceOs:                "android",
+		AppVersion:              "1.2.3",
+		PolicyID:                "policy-id",
+		PaymentMethodIdentifier: "payment-method-identifier",
+		Type:                    loginType,
+		CustomProperties:        customProperty,
+		PersonID: &PersonID{
+			Type:  "cpf",
+			Value: "12345678901",
+		},
+	}
+	postLoginRequestBodyWithoutInstallationIdFixture = &postTransactionRequestBody{
 		AccountID:               "account-id",
 		ExternalID:              "external-id",
 		DeviceOs:                "android",
@@ -863,18 +1035,24 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() 
 	suite.Equal(signupAssessmentFixture, response)
 }
 
-func (suite *IncogniaTestSuite) TestRegisterSignupEmptyInstallationId() {
-	response, err := suite.client.RegisterSignup("", &Address{})
-	suite.EqualError(err, ErrMissingIdentifier.Error())
-	suite.Nil(response)
+func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithoutInstallationId() {
+	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyWithoutInstallationIdFixture, signupAssessmentFixture)
+	defer signupServer.Close()
+
+	response, err := suite.client.RegisterSignup("", addressFixture)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
 }
 
-func (suite *IncogniaTestSuite) TestRegisterWebSignupEmptyRequestToken() {
+func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupWithoutInstallationId() {
+	signupServer := suite.mockPostSignupsEndpoint(token, postWebSignupRequestBodyMissingRequestTokenFixture, signupAssessmentFixture)
+	defer signupServer.Close()
+
 	response, err := suite.client.RegisterWebSignup(&WebSignup{
 		PolicyID: postWebSignupRequestBodyMissingRequestTokenFixture.PolicyID,
 	})
-	suite.EqualError(err, ErrMissingIdentifier.Error())
-	suite.Nil(response)
+	suite.NoError(err)
+	suite.Equal(signupAssessmentFixture, response)
 }
 
 func (suite *IncogniaTestSuite) TestForbiddenRegisterSignup() {
@@ -1048,10 +1226,14 @@ func (suite *IncogniaTestSuite) TestRegisterPaymentNilPayment() {
 	suite.Nil(response)
 }
 
-func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyInstallationId() {
-	response, err := suite.client.RegisterPayment(&Payment{AccountID: "some-account-id"})
-	suite.EqualError(err, ErrMissingIdentifier.Error())
-	suite.Nil(response)
+func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentEmptyInstallationId() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyWithoutInstallationIdFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(paymentWithoutInstallationIDFixture)
+
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyAccountId() {
@@ -1278,10 +1460,13 @@ func (suite *IncogniaTestSuite) TestRegisterLoginNilLogin() {
 	suite.Nil(response)
 }
 
-func (suite *IncogniaTestSuite) TestRegisterLoginNullInstallationIdAndSessionToken() {
-	response, err := suite.client.RegisterLogin(&Login{AccountID: "some-account-id"})
-	suite.EqualError(err, ErrMissingIdentifier.Error())
-	suite.Nil(response)
+func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithoutInstallationIdAndSessionToken() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyWithoutInstallationIdFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterLogin(loginWithoutInstallationIdFixture)
+	suite.NoError(err)
+	suite.Equal(transactionAssessmentFixture, response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterLoginEmptyAccountId() {
