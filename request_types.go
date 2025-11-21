@@ -135,6 +135,7 @@ const (
 	BoletoBancario paymentMethodType = "boleto_bancario"
 	Cash           paymentMethodType = "cash"
 	CreditCard     paymentMethodType = "credit_card"
+	CreditCardPos  paymentMethodType = "credit_card_pos"
 	DebitCard      paymentMethodType = "debit_card"
 	GooglePay      paymentMethodType = "google_pay"
 	MealVoucher    paymentMethodType = "meal_voucher"
