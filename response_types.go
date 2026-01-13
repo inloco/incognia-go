@@ -46,6 +46,7 @@ const (
 
 var (
 	ErrEvidenceNotFound = errors.New("evidence not found")
+	ErrSignalNotFound   = errors.New("signal not found")
 )
 
 type Evidence map[string]interface{}
@@ -57,14 +58,13 @@ type Reason struct {
 	Source string
 }
 
-// jsonMap is an internal helper type to share "get by path" logic between Evidence and Signals.
 type jsonMap map[string]interface{}
 
-func (a Evidence) GetEvidence(evidenceName string, evidenceOut interface{}) error {
+func (a Evidence) GetEvidence(evidenceName string, outValue interface{}) error {
 	if a == nil {
 		return ErrEvidenceNotFound
 	}
-	return getValueWithPath(jsonMap(a), evidenceName, evidenceOut)
+	return getValueWithPath(jsonMap(a), evidenceName, outValue)
 }
 
 func (a Evidence) GetEvidenceAsInt64(evidenceName string) (int64, error) {
@@ -72,45 +72,43 @@ func (a Evidence) GetEvidenceAsInt64(evidenceName string) (int64, error) {
 		return 0, ErrEvidenceNotFound
 	}
 
-	var evidenceOut float64
-	if err := a.GetEvidence(evidenceName, &evidenceOut); err != nil {
+	var outValue float64
+	if err := a.GetEvidence(evidenceName, &outValue); err != nil {
 		return 0, err
 	}
 
-	for math.Mod(evidenceOut, 1) != 0 {
-		evidenceOut *= 10
+	for math.Mod(outValue, 1) != 0 {
+		outValue *= 10
 	}
 
-	return int64(evidenceOut), nil
+	return int64(outValue), nil
 }
 
-func (s Signals) GetSignal(signalName string, out interface{}) error {
+func (s Signals) GetSignal(signalName string, outValue interface{}) error {
 	if s == nil {
-		return ErrEvidenceNotFound
+		return ErrSignalNotFound
 	}
-	return getValueWithPath(jsonMap(s), signalName, out)
+	return getValueWithPath(jsonMap(s), signalName, outValue)
 }
 
 func (s Signals) GetSignalAsInt64(signalName string) (int64, error) {
 	if s == nil {
-		return 0, ErrEvidenceNotFound
+		return 0, ErrSignalNotFound
 	}
 
-	var outFloat float64
-	if err := s.GetSignal(signalName, &outFloat); err != nil {
+	var outValue float64
+	if err := s.GetSignal(signalName, &outValue); err != nil {
 		return 0, err
 	}
 
-	for math.Mod(outFloat, 1) != 0 {
-		outFloat *= 10
+	for math.Mod(outValue, 1) != 0 {
+		outValue *= 10
 	}
 
-	return int64(outFloat), nil
+	return int64(outValue), nil
 }
 
-// getValueWithPath navigates nested JSON objects using a dot-separated path ("a.b.c").
-// It supports leaf values that are primitives or []interface{} (which can be bound to typed slices).
-func getValueWithPath(root jsonMap, path string, out interface{}) error {
+func getValueWithPath(root jsonMap, path string, outValue interface{}) error {
 	parts := strings.Split(path, ".")
 	if len(parts) == 0 {
 		return ErrEvidenceNotFound
@@ -140,65 +138,63 @@ func getValueWithPath(root jsonMap, path string, out interface{}) error {
 	}
 
 	if slice, ok := v.([]interface{}); ok {
-		return setToSlice(slice, out)
+		return setToSlice(slice, outValue)
 	}
-	return setToPointer(v, out)
+	return setToPointer(v, outValue)
 }
 
-// keep error messages stable ("evidenceOut") to avoid breaking existing tests/clients.
-func setToPointer(value interface{}, evidenceOut interface{}) error {
-	evidenceOutReflectValue := reflect.ValueOf(evidenceOut)
-	if evidenceOutReflectValue.Kind() != reflect.Ptr {
-		return errors.New("expecting evidenceOut to be a pointer")
+func setToPointer(value interface{}, outValue interface{}) error {
+	outputReflectValue := reflect.ValueOf(outValue)
+	if outputReflectValue.Kind() != reflect.Ptr {
+		return errors.New("expecting outValue to be a pointer")
 	}
-	evidenceOutIndirectReflectKind := reflect.Indirect(evidenceOutReflectValue).Kind()
+	indirectOutputValueKind := reflect.Indirect(outputReflectValue).Kind()
 
 	valueReflectValue := reflect.ValueOf(value)
 	valueReflectKind := valueReflectValue.Kind()
 
-	if evidenceOutIndirectReflectKind != valueReflectKind {
-		return fmt.Errorf("expecting evidenceOut to be a pointer to %s", valueReflectKind.String())
+	if indirectOutputValueKind != valueReflectKind {
+		return fmt.Errorf("expecting outValue to be a pointer to %s", valueReflectKind.String())
 	}
 
-	evidenceOutReflectValue.Elem().Set(valueReflectValue)
+	outputReflectValue.Elem().Set(valueReflectValue)
 	return nil
 }
 
-// keep error messages stable ("evidenceOut") to avoid breaking existing tests/clients.
-func setToSlice(evidenceSlice []interface{}, evidenceOut interface{}) error {
-	evidenceOutReflectValue := reflect.ValueOf(evidenceOut)
-	if evidenceOutReflectValue.Kind() != reflect.Ptr {
-		return errors.New("expecting evidenceOut to be a pointer to slice")
+func setToSlice(slice []interface{}, outValue interface{}) error {
+	outputReflectValue := reflect.ValueOf(outValue)
+	if outputReflectValue.Kind() != reflect.Ptr {
+		return errors.New("expecting outValue to be a pointer to slice")
 	}
-	evidenceOutIndirectReflectValue := reflect.Indirect(evidenceOutReflectValue)
+	indirectOutputValue := reflect.Indirect(outputReflectValue)
 
-	if evidenceOutIndirectReflectValue.Kind() != reflect.Slice {
-		return errors.New("expecting evidenceOut to be a pointer to slice")
+	if indirectOutputValue.Kind() != reflect.Slice {
+		return errors.New("expecting outValue to be a pointer to slice")
 	}
-	evidenceOutElemIndirectReflectKind := evidenceOutIndirectReflectValue.Type().Elem().Kind()
+	indirectValueElementKind := indirectOutputValue.Type().Elem().Kind()
 
-	if len(evidenceSlice) == 0 {
+	if len(slice) == 0 {
 		return nil
 	}
 
-	evidenceSliceElemKind := reflect.ValueOf(evidenceSlice[0]).Kind()
-	for _, e := range evidenceSlice[1:] {
-		if reflect.ValueOf(e).Kind() != evidenceSliceElemKind {
-			evidenceSliceElemKind = reflect.Interface
+	sliceElemKind := reflect.ValueOf(slice[0]).Kind()
+	for _, e := range slice[1:] {
+		if reflect.ValueOf(e).Kind() != sliceElemKind {
+			sliceElemKind = reflect.Interface
 			break
 		}
 	}
 
-	if evidenceOutElemIndirectReflectKind != evidenceSliceElemKind {
-		return fmt.Errorf("expecting evidenceOut to be a pointer to slice of %s", evidenceSliceElemKind.String())
+	if indirectValueElementKind != sliceElemKind {
+		return fmt.Errorf("expecting outValue to be a pointer to slice of %s", sliceElemKind.String())
 	}
 
-	evidenceSliceReflectValue := reflect.MakeSlice(evidenceOutIndirectReflectValue.Type(), 0, len(evidenceSlice))
-	for _, e := range evidenceSlice {
-		evidenceSliceReflectValue = reflect.Append(evidenceSliceReflectValue, reflect.ValueOf(e))
+	sliceReflectValue := reflect.MakeSlice(indirectOutputValue.Type(), 0, len(slice))
+	for _, e := range slice {
+		sliceReflectValue = reflect.Append(sliceReflectValue, reflect.ValueOf(e))
 	}
 
-	evidenceOutIndirectReflectValue.Set(evidenceSliceReflectValue)
+	indirectOutputValue.Set(sliceReflectValue)
 	return nil
 }
 

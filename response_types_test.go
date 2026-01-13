@@ -67,13 +67,13 @@ func (suite *EvidenceTestSuite) TestSuccessGetEvidenceAsSlice() {
 func (suite *EvidenceTestSuite) TestErrorGetEvidenceWrongType() {
 	var result float64
 	err := suite.Evidence.GetEvidence("geocode_quality", &result)
-	suite.EqualError(err, "expecting evidenceOut to be a pointer to string")
+	suite.EqualError(err, "expecting outValue to be a pointer to string")
 }
 
 func (suite *EvidenceTestSuite) TestErrorGetEvidenceWrongNumberType() {
 	var result int64
 	err := suite.Evidence.GetEvidence("location_events_near_address", &result)
-	suite.EqualError(err, "expecting evidenceOut to be a pointer to float64")
+	suite.EqualError(err, "expecting outValue to be a pointer to float64")
 }
 
 func (suite *EvidenceTestSuite) TestErrorGetEvidenceNotFound() {
@@ -117,7 +117,7 @@ func (suite *EvidenceTestSuite) TestGetEvidenceAsInt64_WhenEvidenceNil_ReturnsNo
 func (suite *EvidenceTestSuite) TestErrorGetEvidenceNoPointer() {
 	var result int64
 	err := suite.Evidence.GetEvidence("location_events_near_address", result)
-	suite.EqualError(err, "expecting evidenceOut to be a pointer")
+	suite.EqualError(err, "expecting outValue to be a pointer")
 }
 
 func (suite *EvidenceTestSuite) TestErrorGetEvidenceWrongPath() {
@@ -151,7 +151,7 @@ func (suite *EvidenceTestSuite) TestGetEvidence_SliceOutNotPointer_ReturnsError(
 	var out []string // <- slice, mas vamos passar sem ponteiro
 	err := e.GetEvidence("arr", out)
 
-	suite.EqualError(err, "expecting evidenceOut to be a pointer to slice")
+	suite.EqualError(err, "expecting outValue to be a pointer to slice")
 }
 
 func (suite *EvidenceTestSuite) TestGetEvidence_SliceOutPointerButNotSlice_ReturnsError() {
@@ -160,7 +160,7 @@ func (suite *EvidenceTestSuite) TestGetEvidence_SliceOutPointerButNotSlice_Retur
 	var out int
 	err := e.GetEvidence("arr", &out)
 
-	suite.EqualError(err, "expecting evidenceOut to be a pointer to slice")
+	suite.EqualError(err, "expecting outValue to be a pointer to slice")
 }
 
 const signalsJSON = `{
@@ -232,12 +232,12 @@ func (suite *SignalsTestSuite) TestSuccessGetSignalAsInt64() {
 func (suite *SignalsTestSuite) TestGetSignalAsInt64_WhenSignalsNil_ReturnsNotFound() {
 	var s Signals
 	_, err := s.GetSignalAsInt64("device.accessed_accounts_3d")
-	suite.Error(err, ErrEvidenceNotFound.Error())
+	suite.Error(err, ErrSignalNotFound.Error())
 }
 
 func (suite *SignalsTestSuite) TestGetSignalAsInt64_WhenSignalNotFound_ReturnsError() {
 	_, err := suite.Signals.GetSignalAsInt64("device.does_not_exist")
-	suite.Error(err, ErrEvidenceNotFound.Error())
+	suite.Error(err, ErrSignalNotFound.Error())
 }
 func (suite *SignalsTestSuite) TestGetSignalAsInt64_WhenSignalHasDecimal_MultipliesUntilInteger() {
 	s := Signals{
