@@ -46,133 +46,155 @@ const (
 
 var (
 	ErrEvidenceNotFound = errors.New("evidence not found")
+	ErrSignalNotFound   = errors.New("signal not found")
 )
 
 type Evidence map[string]interface{}
+
+type Signals map[string]interface{}
 
 type Reason struct {
 	Code   string
 	Source string
 }
 
-func (a Evidence) GetEvidence(evidenceName string, evidenceOut interface{}) error {
-	return a.getEvidenceWithPath(a, strings.Split(evidenceName, "."), evidenceOut)
+type jsonMap map[string]interface{}
+
+func (a Evidence) GetEvidence(evidenceName string, outValue interface{}) error {
+	if a == nil {
+		return ErrEvidenceNotFound
+	}
+	return getValueWithPath(jsonMap(a), evidenceName, outValue)
 }
 
 func (a Evidence) GetEvidenceAsInt64(evidenceName string) (int64, error) {
-	var evidenceOut float64
-	if err := a.GetEvidence(evidenceName, &evidenceOut); err != nil {
+	if a == nil {
+		return 0, ErrEvidenceNotFound
+	}
+
+	var outValue float64
+	if err := a.GetEvidence(evidenceName, &outValue); err != nil {
 		return 0, err
 	}
 
-	for math.Mod(evidenceOut, 1) != 0 {
-		evidenceOut *= 10
+	for math.Mod(outValue, 1) != 0 {
+		outValue *= 10
 	}
 
-	return int64(evidenceOut), nil
+	return int64(outValue), nil
 }
 
-func (a Evidence) getEvidenceWithPath(evidenceMap Evidence, evidencePath []string, evidenceOut interface{}) error {
-	if evidenceMap == nil {
+func (s Signals) GetSignal(signalName string, outValue interface{}) error {
+	if s == nil {
+		return ErrSignalNotFound
+	}
+	return getValueWithPath(jsonMap(s), signalName, outValue)
+}
+
+func (s Signals) GetSignalAsInt64(signalName string) (int64, error) {
+	if s == nil {
+		return 0, ErrSignalNotFound
+	}
+
+	var outValue float64
+	if err := s.GetSignal(signalName, &outValue); err != nil {
+		return 0, err
+	}
+
+	for math.Mod(outValue, 1) != 0 {
+		outValue *= 10
+	}
+
+	return int64(outValue), nil
+}
+
+func getValueWithPath(root jsonMap, path string, outValue interface{}) error {
+	parts := strings.Split(path, ".")
+	if len(parts) == 0 {
 		return ErrEvidenceNotFound
 	}
 
-	if len(evidencePath) == 0 {
-		return ErrEvidenceNotFound
-	}
+	curr := map[string]interface{}(root)
+	for len(parts) > 1 {
+		key := parts[0]
+		parts = parts[1:]
 
-	for len(evidencePath) > 1 {
-		evidenceName := evidencePath[0]
-		evidencePath = evidencePath[1:]
-
-		evidence, ok := evidenceMap[evidenceName]
-		if !ok {
+		v, ok := curr[key]
+		if !ok || v == nil {
 			return ErrEvidenceNotFound
 		}
 
-		evidenceSubMap, ok := evidence.(map[string]interface{})
-		if !ok {
+		next, ok := v.(map[string]interface{})
+		if !ok || next == nil {
 			return ErrEvidenceNotFound
 		}
-
-		evidenceMap = evidenceSubMap
+		curr = next
 	}
 
-	return a.getEvidence(evidenceMap, evidencePath[0], evidenceOut)
+	lastKey := parts[0]
+	v, ok := curr[lastKey]
+	if !ok || v == nil {
+		return ErrEvidenceNotFound
+	}
+
+	if slice, ok := v.([]interface{}); ok {
+		return setToSlice(slice, outValue)
+	}
+	return setToPointer(v, outValue)
 }
 
-func (a Evidence) getEvidence(evidenceMap map[string]interface{}, evidenceName string, evidenceOut interface{}) error {
-	if evidenceMap == nil {
-		return ErrEvidenceNotFound
+func setToPointer(value interface{}, outValue interface{}) error {
+	outputReflectValue := reflect.ValueOf(outValue)
+	if outputReflectValue.Kind() != reflect.Ptr {
+		return errors.New("expecting outValue to be a pointer")
+	}
+	indirectOutputValueKind := reflect.Indirect(outputReflectValue).Kind()
+
+	valueReflectValue := reflect.ValueOf(value)
+	valueReflectKind := valueReflectValue.Kind()
+
+	if indirectOutputValueKind != valueReflectKind {
+		return fmt.Errorf("expecting outValue to be a pointer to %s", valueReflectKind.String())
 	}
 
-	evidence, ok := evidenceMap[evidenceName]
-	if !ok {
-		return ErrEvidenceNotFound
-	}
-	if evidence == nil {
-		return ErrEvidenceNotFound
-	}
-
-	if evidenceSlice, ok := evidence.([]interface{}); ok {
-		return a.setEvidenceToSlice(evidenceSlice, evidenceOut)
-	}
-
-	return a.setEvidenceToPointer(evidence, evidenceOut)
-}
-
-func (a Evidence) setEvidenceToPointer(evidence interface{}, evidenceOut interface{}) error {
-	evidenceOutReflectValue := reflect.ValueOf(evidenceOut)
-	if evidenceOutReflectValue.Kind() != reflect.Ptr {
-		return errors.New("expecting evidenceOut to be a pointer")
-	}
-	evidenceOutIndirectReflectKind := reflect.Indirect(evidenceOutReflectValue).Kind()
-
-	evidenceReflectValue := reflect.ValueOf(evidence)
-	evidenceReflectKind := evidenceReflectValue.Kind()
-
-	if evidenceOutIndirectReflectKind != evidenceReflectKind {
-		return fmt.Errorf("expecting evidenceOut to be a pointer to %s", evidenceReflectKind.String())
-	}
-
-	evidenceOutReflectValue.Elem().Set(evidenceReflectValue)
+	outputReflectValue.Elem().Set(valueReflectValue)
 	return nil
 }
 
-func (a Evidence) setEvidenceToSlice(evidenceSlice []interface{}, evidenceOut interface{}) error {
-	evidenceOutReflectValue := reflect.ValueOf(evidenceOut)
-	if evidenceOutReflectValue.Kind() != reflect.Ptr {
-		return errors.New("expecting evidenceOut to be a pointer to slice")
+func setToSlice(slice []interface{}, outValue interface{}) error {
+	outputReflectValue := reflect.ValueOf(outValue)
+	if outputReflectValue.Kind() != reflect.Ptr {
+		return errors.New("expecting outValue to be a pointer to slice")
 	}
-	evidenceOutIndirectReflectValue := reflect.Indirect(evidenceOutReflectValue)
+	indirectOutputValue := reflect.Indirect(outputReflectValue)
 
-	if evidenceOutIndirectReflectValue.Kind() != reflect.Slice {
-		return errors.New("expecting evidenceOut to be a pointer to slice")
+	if indirectOutputValue.Kind() != reflect.Slice {
+		return errors.New("expecting outValue to be a pointer to slice")
 	}
-	evidenceOutElemIndirectReflectKind := evidenceOutIndirectReflectValue.Type().Elem().Kind()
+	indirectValueElementKind := indirectOutputValue.Type().Elem().Kind()
 
-	if len(evidenceSlice) == 0 {
+	if len(slice) == 0 {
 		return nil
 	}
-	evidenceSliceElemKind := reflect.ValueOf(evidenceSlice[0]).Kind()
 
-	for _, e := range evidenceSlice[1:] {
-		if reflect.ValueOf(e).Kind() != evidenceSliceElemKind {
-			evidenceSliceElemKind = reflect.Interface
+	sliceElemKind := reflect.ValueOf(slice[0]).Kind()
+	for _, e := range slice[1:] {
+		if reflect.ValueOf(e).Kind() != sliceElemKind {
+			sliceElemKind = reflect.Interface
 			break
 		}
 	}
 
-	if evidenceOutElemIndirectReflectKind != evidenceSliceElemKind {
-		return fmt.Errorf("expecting evidenceOut to be a pointer to slice of %s", evidenceSliceElemKind.String())
+	if indirectValueElementKind != sliceElemKind {
+		return fmt.Errorf("expecting outValue to be a pointer to slice of %s", sliceElemKind.String())
 	}
 
-	evidenceSliceReflectValue := reflect.MakeSlice(evidenceOutIndirectReflectValue.Type(), 0, len(evidenceSlice))
-	for _, e := range evidenceSlice {
-		evidenceSliceReflectValue = reflect.Append(evidenceSliceReflectValue, reflect.ValueOf(e))
+	sliceReflectValue := reflect.MakeSlice(indirectOutputValue.Type(), 0, len(slice))
+	for _, e := range slice {
+		sliceReflectValue = reflect.Append(sliceReflectValue, reflect.ValueOf(e))
 	}
 
-	evidenceOutIndirectReflectValue.Set(evidenceSliceReflectValue)
+	indirectOutputValue.Set(sliceReflectValue)
 	return nil
 }
 
@@ -181,14 +203,16 @@ type SignupAssessment struct {
 	DeviceID       string     `json:"device_id"`
 	RequestID      string     `json:"request_id"`
 	RiskAssessment Assessment `json:"risk_assessment"`
-	Evidence       Evidence   `json:"evidence"`
+	Evidence       Evidence   `json:"evidence,omitempty"`
 	Reasons        []Reason   `json:"reasons"`
+	Signals        Signals    `json:"signals,omitempty"`
 }
 
 type TransactionAssessment struct {
 	ID             string     `json:"id"`
 	RiskAssessment Assessment `json:"risk_assessment"`
 	DeviceID       string     `json:"device_id"`
-	Evidence       Evidence   `json:"evidence"`
+	Evidence       Evidence   `json:"evidence,omitempty"`
 	Reasons        []Reason   `json:"reasons"`
+	Signals        Signals    `json:"signals,omitempty"`
 }
