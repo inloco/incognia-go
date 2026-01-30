@@ -152,12 +152,14 @@ var (
 	}
 
 	postSignupRequestBodyWithAllParamsFixture = &postAssessmentRequestBody{
-		InstallationID:   installationId,
-		RequestToken:     requestToken,
-		AddressLine:      "address line",
-		DeviceOs:         "ios",
-		AppVersion:       "1.2.3",
-		CustomProperties: customPropertiesFixture,
+		InstallationID:         installationId,
+		RequestToken:           requestToken,
+		AddressLine:            "address line",
+		DeviceOs:               "ios",
+		RelatedWebRequestToken: "web-request-token",
+		TenantID:               "tenant-id",
+		AppVersion:             "1.2.3",
+		CustomProperties:       customPropertiesFixture,
 		StructuredAddress: &StructuredAddress{
 			Locale:       "locale",
 			CountryName:  "country-name",
@@ -187,6 +189,7 @@ var (
 		RequestToken:     requestToken,
 		AccountID:        "account-id",
 		PolicyID:         "policy-id",
+		TenantID:         "tenant-id",
 		CustomProperties: customPropertiesFixture,
 		PersonID: &PersonID{
 			Type:  "cpf",
@@ -283,13 +286,15 @@ var (
 		},
 	}
 	postPaymentRequestBodyFixture = &postTransactionRequestBody{
-		InstallationID: &installationId,
-		AccountID:      "account-id",
-		ExternalID:     "external-id",
-		DeviceOs:       "android",
-		AppVersion:     "1.2.3",
-		PolicyID:       "policy-id",
-		Type:           paymentType,
+		InstallationID:         &installationId,
+		AccountID:              "account-id",
+		ExternalID:             "external-id",
+		RelatedWebRequestToken: "web-request-token",
+		TenantID:               "tenant-id",
+		DeviceOs:               "android",
+		AppVersion:             "1.2.3",
+		PolicyID:               "policy-id",
+		Type:                   paymentType,
 		Coupon: &CouponType{
 			Type:        "coupon_type",
 			Value:       55.02,
@@ -473,13 +478,15 @@ var (
 		Type:           paymentType,
 	}
 	paymentFixture = &Payment{
-		InstallationID: &installationId,
-		AccountID:      "account-id",
-		ExternalID:     "external-id",
-		PolicyID:       "policy-id",
-		StoreID:        "store-id",
-		DeviceOs:       "android",
-		AppVersion:     "1.2.3",
+		InstallationID:         &installationId,
+		AccountID:              "account-id",
+		ExternalID:             "external-id",
+		RelatedWebRequestToken: "web-request-token",
+		TenantID:               "tenant-id",
+		PolicyID:               "policy-id",
+		StoreID:                "store-id",
+		DeviceOs:               "android",
+		AppVersion:             "1.2.3",
 		Coupon: &CouponType{
 			Type:        "coupon_type",
 			Value:       55.02,
@@ -959,17 +966,19 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
 	defer signupServer.Close()
 
 	response, err := suite.client.RegisterSignupWithParams(&Signup{
-		InstallationID:   postSignupRequestBodyWithAllParamsFixture.InstallationID,
-		RequestToken:     postSignupRequestBodyWithAllParamsFixture.RequestToken,
-		SessionToken:     postSignupRequestBodyWithAllParamsFixture.SessionToken,
-		DeviceOs:         postSignupRequestBodyWithAllParamsFixture.DeviceOs,
-		AppVersion:       postSignupRequestBodyWithAllParamsFixture.AppVersion,
-		Address:          addressFixture,
-		AccountID:        postSignupRequestBodyWithAllParamsFixture.AccountID,
-		PolicyID:         postSignupRequestBodyWithAllParamsFixture.PolicyID,
-		ExternalID:       postSignupRequestBodyWithAllParamsFixture.ExternalID,
-		CustomProperties: postSignupRequestBodyWithAllParamsFixture.CustomProperties,
-		PersonID:         postSignupRequestBodyWithAllParamsFixture.PersonID,
+		InstallationID:         postSignupRequestBodyWithAllParamsFixture.InstallationID,
+		RequestToken:           postSignupRequestBodyWithAllParamsFixture.RequestToken,
+		SessionToken:           postSignupRequestBodyWithAllParamsFixture.SessionToken,
+		DeviceOs:               postSignupRequestBodyWithAllParamsFixture.DeviceOs,
+		AppVersion:             postSignupRequestBodyWithAllParamsFixture.AppVersion,
+		Address:                addressFixture,
+		AccountID:              postSignupRequestBodyWithAllParamsFixture.AccountID,
+		PolicyID:               postSignupRequestBodyWithAllParamsFixture.PolicyID,
+		ExternalID:             postSignupRequestBodyWithAllParamsFixture.ExternalID,
+		CustomProperties:       postSignupRequestBodyWithAllParamsFixture.CustomProperties,
+		PersonID:               postSignupRequestBodyWithAllParamsFixture.PersonID,
+		TenantID:               postSignupRequestBodyWithAllParamsFixture.TenantID,
+		RelatedWebRequestToken: postSignupRequestBodyWithAllParamsFixture.RelatedWebRequestToken,
 	})
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
@@ -985,6 +994,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupFull() {
 		PolicyID:         postWebSignupRequestBodyWithAllParamsFixture.PolicyID,
 		CustomProperties: postWebSignupRequestBodyWithAllParamsFixture.CustomProperties,
 		PersonID:         postWebSignupRequestBodyWithAllParamsFixture.PersonID,
+		TenantID:         postSignupRequestBodyWithAllParamsFixture.TenantID,
 	})
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
