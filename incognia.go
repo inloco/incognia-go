@@ -51,25 +51,27 @@ type IncogniaClientConfig struct {
 }
 
 type Payment struct {
-	InstallationID   *string
-	SessionToken     *string
-	RequestToken     string
-	AppVersion       string
-	DeviceOs         string
-	AccountID        string
-	ExternalID       string
-	PolicyID         string
-	StoreID          string
-	Location         *Location
-	Coupon           *CouponType
-	Addresses        []*TransactionAddress
-	Value            *PaymentValue
-	Methods          []*PaymentMethod
-	Eval             *bool
-	CustomProperties map[string]interface{}
-	PersonID         *PersonID
-	DebtorAccount    *BankAccountInfo
-	CreditorAccount  *BankAccountInfo
+	InstallationID         *string
+	SessionToken           *string
+	RequestToken           string
+	RelatedWebRequestToken string
+	AppVersion             string
+	DeviceOs               string
+	AccountID              string
+	ExternalID             string
+	TenantID               string
+	PolicyID               string
+	StoreID                string
+	Location               *Location
+	Coupon                 *CouponType
+	Addresses              []*TransactionAddress
+	Value                  *PaymentValue
+	Methods                []*PaymentMethod
+	Eval                   *bool
+	CustomProperties       map[string]interface{}
+	PersonID               *PersonID
+	DebtorAccount          *BankAccountInfo
+	CreditorAccount        *BankAccountInfo
 }
 
 type WebLogin struct {
@@ -80,6 +82,7 @@ type WebLogin struct {
 	Eval             *bool
 	CustomProperties map[string]interface{}
 	PersonID         *PersonID
+	TenantID         string
 	Countries        []string
 }
 
@@ -87,7 +90,9 @@ type Login struct {
 	InstallationID          *string
 	SessionToken            *string
 	RequestToken            string
+	RelatedWebRequestToken  string
 	AccountID               string
+	TenantID                string
 	ExternalID              string
 	Countries               []string
 	PolicyID                string
@@ -119,17 +124,19 @@ type Address struct {
 }
 
 type Signup struct {
-	InstallationID   string
-	RequestToken     string
-	SessionToken     string
-	AppVersion       string
-	DeviceOs         string
-	Address          *Address
-	AccountID        string
-	PolicyID         string
-	ExternalID       string
-	PersonID         *PersonID
-	CustomProperties map[string]interface{}
+	InstallationID         string
+	RequestToken           string
+	SessionToken           string
+	RelatedWebRequestToken string
+	AppVersion             string
+	DeviceOs               string
+	Address                *Address
+	AccountID              string
+	PolicyID               string
+	ExternalID             string
+	TenantID               string
+	PersonID               *PersonID
+	CustomProperties       map[string]interface{}
 }
 
 type WebSignup struct {
@@ -138,6 +145,7 @@ type WebSignup struct {
 	AccountID        string
 	CustomProperties map[string]interface{}
 	PersonID         *PersonID
+	TenantID         string
 }
 
 func validateLocation(location *Location) error {
@@ -250,16 +258,18 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 	}
 
 	requestBody := postAssessmentRequestBody{
-		InstallationID:   params.InstallationID,
-		RequestToken:     params.RequestToken,
-		SessionToken:     params.SessionToken,
-		AccountID:        params.AccountID,
-		PolicyID:         params.PolicyID,
-		ExternalID:       params.ExternalID,
-		AppVersion:       params.AppVersion,
-		DeviceOs:         strings.ToLower(params.DeviceOs),
-		PersonID:         params.PersonID,
-		CustomProperties: params.CustomProperties,
+		InstallationID:         params.InstallationID,
+		RelatedWebRequestToken: params.RelatedWebRequestToken,
+		TenantID:               params.TenantID,
+		RequestToken:           params.RequestToken,
+		SessionToken:           params.SessionToken,
+		AccountID:              params.AccountID,
+		PolicyID:               params.PolicyID,
+		ExternalID:             params.ExternalID,
+		AppVersion:             params.AppVersion,
+		DeviceOs:               strings.ToLower(params.DeviceOs),
+		PersonID:               params.PersonID,
+		CustomProperties:       params.CustomProperties,
 	}
 	if params.Address != nil {
 		requestBody.AddressLine = params.Address.AddressLine
@@ -298,6 +308,7 @@ func (c *Client) registerWebSignup(params *WebSignup) (ret *SignupAssessment, er
 		AccountID:        params.AccountID,
 		CustomProperties: params.CustomProperties,
 		PersonID:         params.PersonID,
+		TenantID:         params.TenantID,
 	}
 
 	requestBodyBytes, err := json.Marshal(requestBody)
@@ -402,25 +413,27 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 	}
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{
-		InstallationID:   payment.InstallationID,
-		RequestToken:     payment.RequestToken,
-		SessionToken:     payment.SessionToken,
-		Type:             paymentType,
-		AccountID:        payment.AccountID,
-		PolicyID:         payment.PolicyID,
-		StoreID:          payment.StoreID,
-		Location:         payment.Location,
-		Coupon:           payment.Coupon,
-		ExternalID:       payment.ExternalID,
-		Addresses:        payment.Addresses,
-		PaymentValue:     payment.Value,
-		PaymentMethods:   payment.Methods,
-		AppVersion:       payment.AppVersion,
-		DeviceOs:         strings.ToLower(payment.DeviceOs),
-		CustomProperties: payment.CustomProperties,
-		PersonID:         payment.PersonID,
-		DebtorAccount:    payment.DebtorAccount,
-		CreditorAccount:  payment.CreditorAccount,
+		InstallationID:         payment.InstallationID,
+		RelatedWebRequestToken: payment.RelatedWebRequestToken,
+		TenantID:               payment.TenantID,
+		RequestToken:           payment.RequestToken,
+		SessionToken:           payment.SessionToken,
+		Type:                   paymentType,
+		AccountID:              payment.AccountID,
+		PolicyID:               payment.PolicyID,
+		StoreID:                payment.StoreID,
+		Location:               payment.Location,
+		Coupon:                 payment.Coupon,
+		ExternalID:             payment.ExternalID,
+		Addresses:              payment.Addresses,
+		PaymentValue:           payment.Value,
+		PaymentMethods:         payment.Methods,
+		AppVersion:             payment.AppVersion,
+		DeviceOs:               strings.ToLower(payment.DeviceOs),
+		CustomProperties:       payment.CustomProperties,
+		PersonID:               payment.PersonID,
+		DebtorAccount:          payment.DebtorAccount,
+		CreditorAccount:        payment.CreditorAccount,
 	})
 	if err != nil {
 		return nil, err
@@ -480,6 +493,8 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		PolicyID:                login.PolicyID,
 		Location:                login.Location,
 		ExternalID:              login.ExternalID,
+		RelatedWebRequestToken:  login.RelatedWebRequestToken,
+		TenantID:                login.TenantID,
 		PaymentMethodIdentifier: login.PaymentMethodIdentifier,
 		SessionToken:            login.SessionToken,
 		RequestToken:            login.RequestToken,
@@ -544,6 +559,7 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 		CustomProperties: webLogin.CustomProperties,
 		PersonID:         webLogin.PersonID,
 		Countries:        webLogin.Countries,
+		TenantID:         webLogin.TenantID,
 	})
 	if err != nil {
 		return nil, err

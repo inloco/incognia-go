@@ -28,21 +28,23 @@ type Location struct {
 }
 
 type postAssessmentRequestBody struct {
-	InstallationID    string                 `json:"installation_id,omitempty"`
-	RequestToken      string                 `json:"request_token,omitempty"`
-	SessionToken      string                 `json:"session_token,omitempty"`
-	AppVersion        string                 `json:"app_version,omitempty"`
-	DeviceOs          string                 `json:"device_os,omitempty"`
-	AddressLine       string                 `json:"address_line,omitempty"`
-	StructuredAddress *StructuredAddress     `json:"structured_address,omitempty"`
-	Coordinates       *Coordinates           `json:"address_coordinates,omitempty"`
-	AccountID         string                 `json:"account_id,omitempty"`
-	PolicyID          string                 `json:"policy_id,omitempty"`
-	ExternalID        string                 `json:"external_id,omitempty"`
-	CustomProperties  map[string]interface{} `json:"custom_properties,omitempty"`
-	PersonID          *PersonID              `json:"person_id,omitempty"`
-	DebtorAccount     *BankAccountInfo       `json:"debtor_account,omitempty"`
-	CreditorAccount   *BankAccountInfo       `json:"creditor_account,omitempty"`
+	InstallationID         string                 `json:"installation_id,omitempty"`
+	RequestToken           string                 `json:"request_token,omitempty"`
+	RelatedWebRequestToken string                 `json:"related_web_request_token,omitempty"`
+	SessionToken           string                 `json:"session_token,omitempty"`
+	AppVersion             string                 `json:"app_version,omitempty"`
+	DeviceOs               string                 `json:"device_os,omitempty"`
+	AddressLine            string                 `json:"address_line,omitempty"`
+	StructuredAddress      *StructuredAddress     `json:"structured_address,omitempty"`
+	Coordinates            *Coordinates           `json:"address_coordinates,omitempty"`
+	AccountID              string                 `json:"account_id,omitempty"`
+	PolicyID               string                 `json:"policy_id,omitempty"`
+	ExternalID             string                 `json:"external_id,omitempty"`
+	TenantID               string                 `json:"tenant_id,omitempty"`
+	CustomProperties       map[string]interface{} `json:"custom_properties,omitempty"`
+	PersonID               *PersonID              `json:"person_id,omitempty"`
+	DebtorAccount          *BankAccountInfo       `json:"debtor_account,omitempty"`
+	CreditorAccount        *BankAccountInfo       `json:"creditor_account,omitempty"`
 }
 
 type FeedbackType string
@@ -161,6 +163,7 @@ type PaymentMethod struct {
 
 type postTransactionRequestBody struct {
 	ExternalID              string                 `json:"external_id,omitempty"`
+	TenantID                string                 `json:"tenant_id,omitempty"`
 	PolicyID                string                 `json:"policy_id,omitempty"`
 	AppVersion              string                 `json:"app_version,omitempty"`
 	Location                *Location              `json:"location,omitempty"`
@@ -175,6 +178,7 @@ type postTransactionRequestBody struct {
 	PaymentMethods          []*PaymentMethod       `json:"payment_methods,omitempty"`
 	SessionToken            *string                `json:"session_token,omitempty"`
 	RequestToken            string                 `json:"request_token,omitempty"`
+	RelatedWebRequestToken  string                 `json:"related_web_request_token,omitempty"`
 	StoreID                 string                 `json:"store_id,omitempty"`
 	CustomProperties        map[string]interface{} `json:"custom_properties,omitempty"`
 	PersonID                *PersonID              `json:"person_id,omitempty"`
