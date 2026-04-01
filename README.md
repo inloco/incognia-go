@@ -294,21 +294,26 @@ err := client.RegisterFeedback(feedbackEvent, &occurredAt, &incognia.FeedbackIde
 
 ### Authentication
 
-Our library authenticates clients automatically, but clients may want to authenticate manually because our token route has a long response time (to avoid brute force attacks). If that's your case, you can choose the moment which authentication occurs by leveraging `ManualRefreshTokenProvider`, as shown by the example:
+Our library manages authentication automatically, including refreshing expired tokens. By default, token refresh happens synchronously during an API call. This means that if the token has expired, the request will take longer to complete—especially because the token endpoint intentionally has higher latency to mitigate brute-force attacks.
+
+For latency-sensitive services, you can take control of when token refresh occurs by using `ManualRefreshTokenProvider`. This allows you to refresh tokens proactively (e.g., in the background), avoiding delays during critical requests.
+
+The example below demonstrates how to periodically refresh the token in a separate thread:
 
 ```go
-tokenClient := incognia.NewTokenClient(&TokenClientConfig{clientID: clientID, clientSecret: clientSecret})
+tokenClient := incognia.NewTokenClient(&TokenClientConfig{ClientID: clientID, ClientSecret: clientSecret})
 tokenProvider := incognia.NewManualRefreshTokenProvider(tokenClient)
-c, err := incognia.New(&IncogniaClientConfig{TokenProvider: tokenProvider})
+c, err := incognia.New(&IncogniaClientConfig{ClientID: clientID, ClientSecret: clientSecret, TokenProvider: tokenProvider})
 if err != nil {
-    log.Fatal("could not initialize Incognia client")
+    log.Fatal("could not initialize Incognia client", err)
 }
 
 go func(i *incognia.Client) {
   for {
       accessToken, err := tokenProvider.Refresh()
+      log.Println("token refreshed, expires at " + accessToken.GetExpiresAt().String())
       if (err != nil) {
-          log.PrintLn("could not refresh incognia token")
+          log.Println("could not refresh token")
           continue
       }
       time.Sleep(time.Until(accessToken.GetExpiresAt()))
