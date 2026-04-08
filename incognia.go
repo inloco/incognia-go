@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -39,6 +40,8 @@ type Client struct {
 	netClient     httpClient
 	endpoints     *endpoints
 	UserAgent     string
+	lastMetrics   *libMetrics
+	lastMetricsMu sync.RWMutex
 }
 
 type IncogniaClientConfig struct {
@@ -270,6 +273,7 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 		DeviceOs:               strings.ToLower(params.DeviceOs),
 		PersonID:               params.PersonID,
 		CustomProperties:       params.CustomProperties,
+		LibMetrics:             c.getLastMetrics(),
 	}
 	if params.Address != nil {
 		requestBody.AddressLine = params.Address.AddressLine
@@ -309,6 +313,7 @@ func (c *Client) registerWebSignup(params *WebSignup) (ret *SignupAssessment, er
 		CustomProperties: params.CustomProperties,
 		PersonID:         params.PersonID,
 		TenantID:         params.TenantID,
+		LibMetrics:       c.getLastMetrics(),
 	}
 
 	requestBodyBytes, err := json.Marshal(requestBody)
@@ -356,6 +361,7 @@ func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.T
 		Event:      feedbackEvent,
 		OccurredAt: occurredAt,
 		ExpiresAt:  expiresAt,
+		LibMetrics: c.getLastMetrics(),
 	}
 	if feedbackIdentifiers != nil {
 		requestBody.InstallationID = feedbackIdentifiers.InstallationID
@@ -412,7 +418,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		return nil, locationError
 	}
 
-	requestBody, err := json.Marshal(postTransactionRequestBody{
+	paymentBody := postTransactionRequestBody{
 		InstallationID:         payment.InstallationID,
 		RelatedWebRequestToken: payment.RelatedWebRequestToken,
 		TenantID:               payment.TenantID,
@@ -434,7 +440,9 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		PersonID:               payment.PersonID,
 		DebtorAccount:          payment.DebtorAccount,
 		CreditorAccount:        payment.CreditorAccount,
-	})
+		LibMetrics:             c.getLastMetrics(),
+	}
+	requestBody, err := json.Marshal(paymentBody)
 	if err != nil {
 		return nil, err
 	}
@@ -486,7 +494,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		return nil, locationError
 	}
 
-	requestBody, err := json.Marshal(postTransactionRequestBody{
+	loginBody := postTransactionRequestBody{
 		InstallationID:          login.InstallationID,
 		Type:                    loginType,
 		AccountID:               login.AccountID,
@@ -503,7 +511,9 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		CustomProperties:        login.CustomProperties,
 		PersonID:                login.PersonID,
 		Countries:               login.Countries,
-	})
+		LibMetrics:              c.getLastMetrics(),
+	}
+	requestBody, err := json.Marshal(loginBody)
 	if err != nil {
 		return nil, err
 	}
@@ -550,7 +560,7 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 		return nil, ErrMissingAccountID
 	}
 
-	requestBody, err := json.Marshal(postTransactionRequestBody{
+	webLoginBody := postTransactionRequestBody{
 		Type:             loginType,
 		AccountID:        webLogin.AccountID,
 		PolicyID:         webLogin.PolicyID,
@@ -560,7 +570,9 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 		PersonID:         webLogin.PersonID,
 		Countries:        webLogin.Countries,
 		TenantID:         webLogin.TenantID,
-	})
+		LibMetrics:       c.getLastMetrics(),
+	}
+	requestBody, err := json.Marshal(webLoginBody)
 	if err != nil {
 		return nil, err
 	}
@@ -586,7 +598,22 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 	return &webLoginAssessment, nil
 }
 
+func (c *Client) getLastMetrics() *libMetrics {
+	c.lastMetricsMu.RLock()
+	defer c.lastMetricsMu.RUnlock()
+	return c.lastMetrics
+}
+
+func (c *Client) setLastMetrics(m *libMetrics) {
+	c.lastMetricsMu.Lock()
+	defer c.lastMetricsMu.Unlock()
+	c.lastMetrics = m
+}
+
 func (c *Client) doRequest(request *http.Request, response interface{}) error {
+	start := time.Now()
+	endpoint := request.URL.Path
+
 	request.Header.Add("Content-Type", "application/json")
 	request.Header.Add("User-Agent", c.UserAgent)
 
@@ -621,6 +648,19 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 			return err
 		}
 	}
+
+	rid := ""
+	switch r := response.(type) {
+	case *SignupAssessment:
+		rid = r.ID
+	case *TransactionAssessment:
+		rid = r.ID
+	}
+	c.setLastMetrics(&libMetrics{
+		RequestID: rid,
+		Endpoint:  endpoint,
+		Latency:   time.Since(start).Milliseconds(),
+	})
 
 	return nil
 }

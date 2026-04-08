@@ -1587,6 +1587,127 @@ func (suite *IncogniaTestSuite) TestPanic() {
 	suite.Equal(err.Error(), panicString)
 }
 
+func (suite *IncogniaTestSuite) TestLbmtIsAbsentOnFirstCall() {
+	var capturedLbmt *libMetrics
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+		if !isRequestAuthorized(r, token) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		var requestBody postAssessmentRequestBody
+		json.NewDecoder(r.Body).Decode(&requestBody)
+		capturedLbmt = requestBody.LibMetrics
+		res, _ := json.Marshal(signupAssessmentFixture)
+		w.Write(res)
+	}))
+	defer server.Close()
+
+	suite.client.endpoints.Signups = server.URL
+	_, err := suite.client.RegisterSignup(installationId, addressFixture)
+	suite.NoError(err)
+	suite.Nil(capturedLbmt)
+}
+
+func (suite *IncogniaTestSuite) TestLbmtIsSentOnSecondSignupCall() {
+	var capturedLbmt *libMetrics
+
+	firstServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
+	defer firstServer.Close()
+
+	_, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
+	suite.NoError(err)
+
+	secondServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+		if !isRequestAuthorized(r, token) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		var requestBody postAssessmentRequestBody
+		json.NewDecoder(r.Body).Decode(&requestBody)
+		capturedLbmt = requestBody.LibMetrics
+		res, _ := json.Marshal(signupAssessmentFixture)
+		w.Write(res)
+	}))
+	defer secondServer.Close()
+
+	suite.client.endpoints.Signups = secondServer.URL
+	_, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
+	suite.NoError(err)
+
+	suite.NotNil(capturedLbmt)
+	suite.Equal(signupAssessmentFixture.ID, capturedLbmt.RequestID)
+	suite.Equal("", capturedLbmt.Endpoint)
+	suite.GreaterOrEqual(capturedLbmt.Latency, int64(0))
+}
+
+func (suite *IncogniaTestSuite) TestLbmtIsSentOnFeedbackAfterTransaction() {
+	var capturedLbmt *libMetrics
+
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	_, err := suite.client.RegisterPayment(paymentFixture)
+	suite.NoError(err)
+
+	feedbackServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+		if !isRequestAuthorized(r, token) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		var requestBody postFeedbackRequestBody
+		json.NewDecoder(r.Body).Decode(&requestBody)
+		capturedLbmt = requestBody.LibMetrics
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer feedbackServer.Close()
+
+	suite.client.endpoints.Feedback = feedbackServer.URL
+	err = suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
+	suite.NoError(err)
+
+	suite.NotNil(capturedLbmt)
+	suite.Equal(transactionAssessmentFixture.ID, capturedLbmt.RequestID)
+	suite.Equal("", capturedLbmt.Endpoint)
+	suite.GreaterOrEqual(capturedLbmt.Latency, int64(0))
+}
+
+func (suite *IncogniaTestSuite) TestLbmtIsSentOnSignupAfterFeedback() {
+	var capturedLbmt *libMetrics
+
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
+	defer feedbackServer.Close()
+
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
+	suite.NoError(err)
+
+	signupServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+		if !isRequestAuthorized(r, token) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		var requestBody postAssessmentRequestBody
+		json.NewDecoder(r.Body).Decode(&requestBody)
+		capturedLbmt = requestBody.LibMetrics
+		res, _ := json.Marshal(signupAssessmentFixture)
+		w.Write(res)
+	}))
+	defer signupServer.Close()
+
+	suite.client.endpoints.Signups = signupServer.URL
+	_, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
+	suite.NoError(err)
+
+	suite.NotNil(capturedLbmt)
+	suite.Empty(capturedLbmt.RequestID) // feedback has no response ID
+	suite.Equal("", capturedLbmt.Endpoint)
+	suite.GreaterOrEqual(capturedLbmt.Latency, int64(0))
+}
+
 func TestIncogniaTestSuite(t *testing.T) {
 	suite.Run(t, new(IncogniaTestSuite))
 }
@@ -1605,6 +1726,7 @@ func (suite *IncogniaTestSuite) mockFeedbackEndpoint(expectedToken string, expec
 
 		var requestBody postFeedbackRequestBody
 		json.NewDecoder(r.Body).Decode(&requestBody)
+		requestBody.LibMetrics = nil
 
 		if postFeedbackRequestBodyEqual(&requestBody, expectedBody) {
 			w.WriteHeader(http.StatusOK)
@@ -1666,6 +1788,7 @@ func (suite *IncogniaTestSuite) mockPostTransactionsEndpoint(expectedToken strin
 
 		var requestBody postTransactionRequestBody
 		json.NewDecoder(r.Body).Decode(&requestBody)
+		requestBody.LibMetrics = nil
 
 		if reflect.DeepEqual(&requestBody, expectedBody) {
 			res, _ := json.Marshal(expectedResponse)
@@ -1695,6 +1818,7 @@ func (suite *IncogniaTestSuite) mockPostSignupsEndpoint(expectedToken string, ex
 
 		var requestBody postAssessmentRequestBody
 		json.NewDecoder(r.Body).Decode(&requestBody)
+		requestBody.LibMetrics = nil
 
 		if reflect.DeepEqual(&requestBody, expectedBody) {
 			res, _ := json.Marshal(expectedResponse)
