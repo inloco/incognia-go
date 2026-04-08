@@ -16,6 +16,7 @@ import (
 
 const (
 	defaultNetClientTimeout = 5 * time.Second
+	metricsHeader           = "X-Incognia-Latency"
 )
 
 var (
@@ -34,14 +35,14 @@ type httpClient interface {
 }
 
 type Client struct {
-	clientID      string
-	clientSecret  string
-	tokenProvider TokenProvider
-	netClient     httpClient
-	endpoints     *endpoints
-	UserAgent     string
-	lastMetrics   *libMetrics
-	lastMetricsMu sync.RWMutex
+	clientID         string
+	clientSecret     string
+	tokenProvider    TokenProvider
+	netClient        httpClient
+	endpoints        *endpoints
+	UserAgent        string
+	lastLatency      *int64
+	lastLatencyMutex sync.RWMutex
 }
 
 type IncogniaClientConfig struct {
@@ -415,7 +416,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		return nil, locationError
 	}
 
-	paymentBody := postTransactionRequestBody{
+	requestBody, err := json.Marshal(postTransactionRequestBody{
 		InstallationID:         payment.InstallationID,
 		RelatedWebRequestToken: payment.RelatedWebRequestToken,
 		TenantID:               payment.TenantID,
@@ -437,8 +438,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		PersonID:               payment.PersonID,
 		DebtorAccount:          payment.DebtorAccount,
 		CreditorAccount:        payment.CreditorAccount,
-	}
-	requestBody, err := json.Marshal(paymentBody)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -490,7 +490,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		return nil, locationError
 	}
 
-	loginBody := postTransactionRequestBody{
+	requestBody, err := json.Marshal(postTransactionRequestBody{
 		InstallationID:          login.InstallationID,
 		Type:                    loginType,
 		AccountID:               login.AccountID,
@@ -507,8 +507,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		CustomProperties:        login.CustomProperties,
 		PersonID:                login.PersonID,
 		Countries:               login.Countries,
-	}
-	requestBody, err := json.Marshal(loginBody)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -555,7 +554,7 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 		return nil, ErrMissingAccountID
 	}
 
-	webLoginBody := postTransactionRequestBody{
+	requestBody, err := json.Marshal(postTransactionRequestBody{
 		Type:             loginType,
 		AccountID:        webLogin.AccountID,
 		PolicyID:         webLogin.PolicyID,
@@ -565,8 +564,7 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 		PersonID:         webLogin.PersonID,
 		Countries:        webLogin.Countries,
 		TenantID:         webLogin.TenantID,
-	}
-	requestBody, err := json.Marshal(webLoginBody)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -592,27 +590,24 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 	return &webLoginAssessment, nil
 }
 
-func (c *Client) getLastMetrics() *libMetrics {
-	c.lastMetricsMu.RLock()
-	defer c.lastMetricsMu.RUnlock()
-	return c.lastMetrics
+func (c *Client) getLastLatency() *int64 {
+	c.lastLatencyMutex.RLock()
+	defer c.lastLatencyMutex.RUnlock()
+	return c.lastLatency
 }
 
-func (c *Client) setLastMetrics(m *libMetrics) {
-	c.lastMetricsMu.Lock()
-	defer c.lastMetricsMu.Unlock()
-	c.lastMetrics = m
+func (c *Client) setLastLatency(ms int64) {
+	c.lastLatencyMutex.Lock()
+	defer c.lastLatencyMutex.Unlock()
+	c.lastLatency = &ms
 }
 
 func (c *Client) doRequest(request *http.Request, response interface{}) error {
-	start := time.Now()
-	endpoint := request.URL.Path
-
 	request.Header.Add("Content-Type", "application/json")
 	request.Header.Add("User-Agent", c.UserAgent)
 
-	if m := c.getLastMetrics(); m != nil {
-		request.Header.Add(metricsHeader, m.encode())
+	if lt := c.getLastLatency(); lt != nil {
+		request.Header.Add(metricsHeader, fmt.Sprintf("%d", *lt))
 	}
 
 	err := c.authorizeRequest(request)
@@ -620,6 +615,7 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 		return err
 	}
 
+	start := time.Now()
 	res, err := c.netClient.Do(request)
 	if err != nil {
 		return err
@@ -647,18 +643,7 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 		}
 	}
 
-	requestID := ""
-	switch r := response.(type) {
-	case *SignupAssessment:
-		requestID = r.ID
-	case *TransactionAssessment:
-		requestID = r.ID
-	}
-	c.setLastMetrics(&libMetrics{
-		RequestID: requestID,
-		Endpoint:  endpoint,
-		Latency:   time.Since(start).Milliseconds(),
-	})
+	c.setLastLatency(time.Since(start).Milliseconds())
 
 	return nil
 }

@@ -1588,7 +1588,7 @@ func (suite *IncogniaTestSuite) TestPanic() {
 }
 
 func (suite *IncogniaTestSuite) TestLbmtIsAbsentOnFirstCall() {
-	var metricsHeader string
+	var capturedHeader string
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
@@ -1596,7 +1596,7 @@ func (suite *IncogniaTestSuite) TestLbmtIsAbsentOnFirstCall() {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		metricsHeader = r.Header.Get("ICG-API-METRICS")
+		capturedHeader = r.Header.Get("X-Incognia-Latency")
 		res, _ := json.Marshal(signupAssessmentFixture)
 		w.Write(res)
 	}))
@@ -1605,11 +1605,11 @@ func (suite *IncogniaTestSuite) TestLbmtIsAbsentOnFirstCall() {
 	suite.client.endpoints.Signups = server.URL
 	_, err := suite.client.RegisterSignup(installationId, addressFixture)
 	suite.NoError(err)
-	suite.Empty(metricsHeader)
+	suite.Empty(capturedHeader)
 }
 
 func (suite *IncogniaTestSuite) TestLbmtIsSentOnSecondSignupCall() {
-	var capturedMetrics *libMetrics
+	var capturedLatency string
 
 	firstServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer firstServer.Close()
@@ -1623,7 +1623,7 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnSecondSignupCall() {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		capturedMetrics, _ = decodeLibMetrics(r.Header.Get("ICG-API-METRICS"))
+		capturedLatency = r.Header.Get("X-Incognia-Latency")
 		res, _ := json.Marshal(signupAssessmentFixture)
 		w.Write(res)
 	}))
@@ -1633,13 +1633,14 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnSecondSignupCall() {
 	_, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
 	suite.NoError(err)
 
-	suite.NotNil(capturedMetrics)
-	suite.Equal(signupAssessmentFixture.ID, capturedMetrics.RequestID)
-	suite.GreaterOrEqual(capturedMetrics.Latency, int64(0))
+	suite.NotEmpty(capturedLatency)
+	lt, err := strconv.ParseInt(capturedLatency, 10, 64)
+	suite.NoError(err)
+	suite.GreaterOrEqual(lt, int64(0))
 }
 
 func (suite *IncogniaTestSuite) TestLbmtIsSentOnFeedbackAfterTransaction() {
-	var capturedMetrics *libMetrics
+	var capturedLatency string
 
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
@@ -1653,7 +1654,7 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnFeedbackAfterTransaction() {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		capturedMetrics, _ = decodeLibMetrics(r.Header.Get("ICG-API-METRICS"))
+		capturedLatency = r.Header.Get("X-Incognia-Latency")
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer feedbackServer.Close()
@@ -1662,13 +1663,14 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnFeedbackAfterTransaction() {
 	err = suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.NoError(err)
 
-	suite.NotNil(capturedMetrics)
-	suite.Equal(transactionAssessmentFixture.ID, capturedMetrics.RequestID)
-	suite.GreaterOrEqual(capturedMetrics.Latency, int64(0))
+	suite.NotEmpty(capturedLatency)
+	lt, err := strconv.ParseInt(capturedLatency, 10, 64)
+	suite.NoError(err)
+	suite.GreaterOrEqual(lt, int64(0))
 }
 
 func (suite *IncogniaTestSuite) TestLbmtIsSentOnSignupAfterFeedback() {
-	var capturedMetrics *libMetrics
+	var capturedLatency string
 
 	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
@@ -1682,7 +1684,7 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnSignupAfterFeedback() {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		capturedMetrics, _ = decodeLibMetrics(r.Header.Get("ICG-API-METRICS"))
+		capturedLatency = r.Header.Get("X-Incognia-Latency")
 		res, _ := json.Marshal(signupAssessmentFixture)
 		w.Write(res)
 	}))
@@ -1692,9 +1694,10 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnSignupAfterFeedback() {
 	_, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
 	suite.NoError(err)
 
-	suite.NotNil(capturedMetrics)
-	suite.Empty(capturedMetrics.RequestID) // feedback has no response ID
-	suite.GreaterOrEqual(capturedMetrics.Latency, int64(0))
+	suite.NotEmpty(capturedLatency)
+	lt, err := strconv.ParseInt(capturedLatency, 10, 64)
+	suite.NoError(err)
+	suite.GreaterOrEqual(lt, int64(0))
 }
 
 func TestIncogniaTestSuite(t *testing.T) {
