@@ -45,7 +45,6 @@ type postAssessmentRequestBody struct {
 	PersonID               *PersonID              `json:"person_id,omitempty"`
 	DebtorAccount          *BankAccountInfo       `json:"debtor_account,omitempty"`
 	CreditorAccount        *BankAccountInfo       `json:"creditor_account,omitempty"`
-	LibMetrics             *libMetrics            `json:"lbmt,omitempty"`
 }
 
 type FeedbackType string
@@ -92,7 +91,6 @@ type postFeedbackRequestBody struct {
 	AccountID      string       `json:"account_id,omitempty"`
 	ExternalID     string       `json:"external_id,omitempty"`
 	PersonID       *PersonID    `json:"person_id,omitempty"`
-	LibMetrics     *libMetrics  `json:"lbmt,omitempty"`
 }
 
 type AddressType string
@@ -187,7 +185,6 @@ type postTransactionRequestBody struct {
 	DebtorAccount           *BankAccountInfo       `json:"debtor_account,omitempty"`
 	CreditorAccount         *BankAccountInfo       `json:"creditor_account,omitempty"`
 	Countries               []string               `json:"countries,omitempty"`
-	LibMetrics              *libMetrics            `json:"lbmt,omitempty"`
 }
 
 type PersonID struct {

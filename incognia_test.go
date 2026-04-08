@@ -1588,7 +1588,7 @@ func (suite *IncogniaTestSuite) TestPanic() {
 }
 
 func (suite *IncogniaTestSuite) TestLbmtIsAbsentOnFirstCall() {
-	var capturedLbmt *libMetrics
+	var metricsHeader string
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
@@ -1596,9 +1596,7 @@ func (suite *IncogniaTestSuite) TestLbmtIsAbsentOnFirstCall() {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		var requestBody postAssessmentRequestBody
-		json.NewDecoder(r.Body).Decode(&requestBody)
-		capturedLbmt = requestBody.LibMetrics
+		metricsHeader = r.Header.Get("ICG-API-METRICS")
 		res, _ := json.Marshal(signupAssessmentFixture)
 		w.Write(res)
 	}))
@@ -1607,11 +1605,11 @@ func (suite *IncogniaTestSuite) TestLbmtIsAbsentOnFirstCall() {
 	suite.client.endpoints.Signups = server.URL
 	_, err := suite.client.RegisterSignup(installationId, addressFixture)
 	suite.NoError(err)
-	suite.Nil(capturedLbmt)
+	suite.Empty(metricsHeader)
 }
 
 func (suite *IncogniaTestSuite) TestLbmtIsSentOnSecondSignupCall() {
-	var capturedLbmt *libMetrics
+	var capturedMetrics *libMetrics
 
 	firstServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
 	defer firstServer.Close()
@@ -1625,9 +1623,7 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnSecondSignupCall() {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		var requestBody postAssessmentRequestBody
-		json.NewDecoder(r.Body).Decode(&requestBody)
-		capturedLbmt = requestBody.LibMetrics
+		capturedMetrics, _ = decodeLibMetrics(r.Header.Get("ICG-API-METRICS"))
 		res, _ := json.Marshal(signupAssessmentFixture)
 		w.Write(res)
 	}))
@@ -1637,14 +1633,13 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnSecondSignupCall() {
 	_, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
 	suite.NoError(err)
 
-	suite.NotNil(capturedLbmt)
-	suite.Equal(signupAssessmentFixture.ID, capturedLbmt.RequestID)
-	suite.Equal("", capturedLbmt.Endpoint)
-	suite.GreaterOrEqual(capturedLbmt.Latency, int64(0))
+	suite.NotNil(capturedMetrics)
+	suite.Equal(signupAssessmentFixture.ID, capturedMetrics.RequestID)
+	suite.GreaterOrEqual(capturedMetrics.Latency, int64(0))
 }
 
 func (suite *IncogniaTestSuite) TestLbmtIsSentOnFeedbackAfterTransaction() {
-	var capturedLbmt *libMetrics
+	var capturedMetrics *libMetrics
 
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
@@ -1658,9 +1653,7 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnFeedbackAfterTransaction() {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		var requestBody postFeedbackRequestBody
-		json.NewDecoder(r.Body).Decode(&requestBody)
-		capturedLbmt = requestBody.LibMetrics
+		capturedMetrics, _ = decodeLibMetrics(r.Header.Get("ICG-API-METRICS"))
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer feedbackServer.Close()
@@ -1669,14 +1662,13 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnFeedbackAfterTransaction() {
 	err = suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
 	suite.NoError(err)
 
-	suite.NotNil(capturedLbmt)
-	suite.Equal(transactionAssessmentFixture.ID, capturedLbmt.RequestID)
-	suite.Equal("", capturedLbmt.Endpoint)
-	suite.GreaterOrEqual(capturedLbmt.Latency, int64(0))
+	suite.NotNil(capturedMetrics)
+	suite.Equal(transactionAssessmentFixture.ID, capturedMetrics.RequestID)
+	suite.GreaterOrEqual(capturedMetrics.Latency, int64(0))
 }
 
 func (suite *IncogniaTestSuite) TestLbmtIsSentOnSignupAfterFeedback() {
-	var capturedLbmt *libMetrics
+	var capturedMetrics *libMetrics
 
 	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
 	defer feedbackServer.Close()
@@ -1690,9 +1682,7 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnSignupAfterFeedback() {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		var requestBody postAssessmentRequestBody
-		json.NewDecoder(r.Body).Decode(&requestBody)
-		capturedLbmt = requestBody.LibMetrics
+		capturedMetrics, _ = decodeLibMetrics(r.Header.Get("ICG-API-METRICS"))
 		res, _ := json.Marshal(signupAssessmentFixture)
 		w.Write(res)
 	}))
@@ -1702,10 +1692,9 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnSignupAfterFeedback() {
 	_, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
 	suite.NoError(err)
 
-	suite.NotNil(capturedLbmt)
-	suite.Empty(capturedLbmt.RequestID) // feedback has no response ID
-	suite.Equal("", capturedLbmt.Endpoint)
-	suite.GreaterOrEqual(capturedLbmt.Latency, int64(0))
+	suite.NotNil(capturedMetrics)
+	suite.Empty(capturedMetrics.RequestID) // feedback has no response ID
+	suite.GreaterOrEqual(capturedMetrics.Latency, int64(0))
 }
 
 func TestIncogniaTestSuite(t *testing.T) {
@@ -1726,7 +1715,6 @@ func (suite *IncogniaTestSuite) mockFeedbackEndpoint(expectedToken string, expec
 
 		var requestBody postFeedbackRequestBody
 		json.NewDecoder(r.Body).Decode(&requestBody)
-		requestBody.LibMetrics = nil
 
 		if postFeedbackRequestBodyEqual(&requestBody, expectedBody) {
 			w.WriteHeader(http.StatusOK)
@@ -1788,7 +1776,6 @@ func (suite *IncogniaTestSuite) mockPostTransactionsEndpoint(expectedToken strin
 
 		var requestBody postTransactionRequestBody
 		json.NewDecoder(r.Body).Decode(&requestBody)
-		requestBody.LibMetrics = nil
 
 		if reflect.DeepEqual(&requestBody, expectedBody) {
 			res, _ := json.Marshal(expectedResponse)
@@ -1818,7 +1805,6 @@ func (suite *IncogniaTestSuite) mockPostSignupsEndpoint(expectedToken string, ex
 
 		var requestBody postAssessmentRequestBody
 		json.NewDecoder(r.Body).Decode(&requestBody)
-		requestBody.LibMetrics = nil
 
 		if reflect.DeepEqual(&requestBody, expectedBody) {
 			res, _ := json.Marshal(expectedResponse)

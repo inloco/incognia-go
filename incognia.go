@@ -273,7 +273,6 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 		DeviceOs:               strings.ToLower(params.DeviceOs),
 		PersonID:               params.PersonID,
 		CustomProperties:       params.CustomProperties,
-		LibMetrics:             c.getLastMetrics(),
 	}
 	if params.Address != nil {
 		requestBody.AddressLine = params.Address.AddressLine
@@ -313,7 +312,6 @@ func (c *Client) registerWebSignup(params *WebSignup) (ret *SignupAssessment, er
 		CustomProperties: params.CustomProperties,
 		PersonID:         params.PersonID,
 		TenantID:         params.TenantID,
-		LibMetrics:       c.getLastMetrics(),
 	}
 
 	requestBodyBytes, err := json.Marshal(requestBody)
@@ -361,7 +359,6 @@ func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.T
 		Event:      feedbackEvent,
 		OccurredAt: occurredAt,
 		ExpiresAt:  expiresAt,
-		LibMetrics: c.getLastMetrics(),
 	}
 	if feedbackIdentifiers != nil {
 		requestBody.InstallationID = feedbackIdentifiers.InstallationID
@@ -440,7 +437,6 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		PersonID:               payment.PersonID,
 		DebtorAccount:          payment.DebtorAccount,
 		CreditorAccount:        payment.CreditorAccount,
-		LibMetrics:             c.getLastMetrics(),
 	}
 	requestBody, err := json.Marshal(paymentBody)
 	if err != nil {
@@ -511,7 +507,6 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		CustomProperties:        login.CustomProperties,
 		PersonID:                login.PersonID,
 		Countries:               login.Countries,
-		LibMetrics:              c.getLastMetrics(),
 	}
 	requestBody, err := json.Marshal(loginBody)
 	if err != nil {
@@ -570,7 +565,6 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 		PersonID:         webLogin.PersonID,
 		Countries:        webLogin.Countries,
 		TenantID:         webLogin.TenantID,
-		LibMetrics:       c.getLastMetrics(),
 	}
 	requestBody, err := json.Marshal(webLoginBody)
 	if err != nil {
@@ -617,6 +611,10 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 	request.Header.Add("Content-Type", "application/json")
 	request.Header.Add("User-Agent", c.UserAgent)
 
+	if m := c.getLastMetrics(); m != nil {
+		request.Header.Add(metricsHeader, m.encode())
+	}
+
 	err := c.authorizeRequest(request)
 	if err != nil {
 		return err
@@ -649,15 +647,15 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 		}
 	}
 
-	rid := ""
+	requestID := ""
 	switch r := response.(type) {
 	case *SignupAssessment:
-		rid = r.ID
+		requestID = r.ID
 	case *TransactionAssessment:
-		rid = r.ID
+		requestID = r.ID
 	}
 	c.setLastMetrics(&libMetrics{
-		RequestID: rid,
+		RequestID: requestID,
 		Endpoint:  endpoint,
 		Latency:   time.Since(start).Milliseconds(),
 	})
