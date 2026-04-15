@@ -10,11 +10,13 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
 )
 
 const (
 	defaultNetClientTimeout = 5 * time.Second
+	metricsHeader           = "X-Incognia-Latency"
 )
 
 var (
@@ -33,12 +35,14 @@ type httpClient interface {
 }
 
 type Client struct {
-	clientID      string
-	clientSecret  string
-	tokenProvider TokenProvider
-	netClient     httpClient
-	endpoints     *endpoints
-	UserAgent     string
+	clientID         string
+	clientSecret     string
+	tokenProvider    TokenProvider
+	netClient        httpClient
+	endpoints        *endpoints
+	UserAgent        string
+	lastLatency      *int64
+	lastLatencyMutex sync.RWMutex
 }
 
 type IncogniaClientConfig struct {
@@ -586,15 +590,32 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 	return &webLoginAssessment, nil
 }
 
+func (c *Client) getLastLatency() *int64 {
+	c.lastLatencyMutex.RLock()
+	defer c.lastLatencyMutex.RUnlock()
+	return c.lastLatency
+}
+
+func (c *Client) setLastLatency(ms int64) {
+	c.lastLatencyMutex.Lock()
+	defer c.lastLatencyMutex.Unlock()
+	c.lastLatency = &ms
+}
+
 func (c *Client) doRequest(request *http.Request, response interface{}) error {
 	request.Header.Add("Content-Type", "application/json")
 	request.Header.Add("User-Agent", c.UserAgent)
+
+	if lt := c.getLastLatency(); lt != nil {
+		request.Header.Add(metricsHeader, fmt.Sprintf("%d", *lt))
+	}
 
 	err := c.authorizeRequest(request)
 	if err != nil {
 		return err
 	}
 
+	start := time.Now()
 	res, err := c.netClient.Do(request)
 	if err != nil {
 		return err
@@ -621,6 +642,8 @@ func (c *Client) doRequest(request *http.Request, response interface{}) error {
 			return err
 		}
 	}
+
+	c.setLastLatency(time.Since(start).Milliseconds())
 
 	return nil
 }

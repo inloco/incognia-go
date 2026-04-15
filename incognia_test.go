@@ -1587,6 +1587,119 @@ func (suite *IncogniaTestSuite) TestPanic() {
 	suite.Equal(err.Error(), panicString)
 }
 
+func (suite *IncogniaTestSuite) TestLbmtIsAbsentOnFirstCall() {
+	var capturedHeader string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+		if !isRequestAuthorized(r, token) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		capturedHeader = r.Header.Get("X-Incognia-Latency")
+		res, _ := json.Marshal(signupAssessmentFixture)
+		w.Write(res)
+	}))
+	defer server.Close()
+
+	suite.client.endpoints.Signups = server.URL
+	_, err := suite.client.RegisterSignup(installationId, addressFixture)
+	suite.NoError(err)
+	suite.Empty(capturedHeader)
+}
+
+func (suite *IncogniaTestSuite) TestLbmtIsSentOnSecondSignupCall() {
+	var capturedLatency string
+
+	firstServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
+	defer firstServer.Close()
+
+	_, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
+	suite.NoError(err)
+
+	secondServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+		if !isRequestAuthorized(r, token) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		capturedLatency = r.Header.Get("X-Incognia-Latency")
+		res, _ := json.Marshal(signupAssessmentFixture)
+		w.Write(res)
+	}))
+	defer secondServer.Close()
+
+	suite.client.endpoints.Signups = secondServer.URL
+	_, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
+	suite.NoError(err)
+
+	suite.NotEmpty(capturedLatency)
+	lt, err := strconv.ParseInt(capturedLatency, 10, 64)
+	suite.NoError(err)
+	suite.GreaterOrEqual(lt, int64(0))
+}
+
+func (suite *IncogniaTestSuite) TestLbmtIsSentOnFeedbackAfterTransaction() {
+	var capturedLatency string
+
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	_, err := suite.client.RegisterPayment(paymentFixture)
+	suite.NoError(err)
+
+	feedbackServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+		if !isRequestAuthorized(r, token) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		capturedLatency = r.Header.Get("X-Incognia-Latency")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer feedbackServer.Close()
+
+	suite.client.endpoints.Feedback = feedbackServer.URL
+	err = suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
+	suite.NoError(err)
+
+	suite.NotEmpty(capturedLatency)
+	lt, err := strconv.ParseInt(capturedLatency, 10, 64)
+	suite.NoError(err)
+	suite.GreaterOrEqual(lt, int64(0))
+}
+
+func (suite *IncogniaTestSuite) TestLbmtIsSentOnSignupAfterFeedback() {
+	var capturedLatency string
+
+	feedbackServer := suite.mockFeedbackEndpoint(token, postFeedbackRequestBodyFixture)
+	defer feedbackServer.Close()
+
+	err := suite.client.RegisterFeedback(postFeedbackRequestBodyFixture.Event, postFeedbackRequestBodyFixture.OccurredAt, feedbackIdentifiersFixture)
+	suite.NoError(err)
+
+	signupServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+		if !isRequestAuthorized(r, token) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		capturedLatency = r.Header.Get("X-Incognia-Latency")
+		res, _ := json.Marshal(signupAssessmentFixture)
+		w.Write(res)
+	}))
+	defer signupServer.Close()
+
+	suite.client.endpoints.Signups = signupServer.URL
+	_, err = suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
+	suite.NoError(err)
+
+	suite.NotEmpty(capturedLatency)
+	lt, err := strconv.ParseInt(capturedLatency, 10, 64)
+	suite.NoError(err)
+	suite.GreaterOrEqual(lt, int64(0))
+}
+
 func TestIncogniaTestSuite(t *testing.T) {
 	suite.Run(t, new(IncogniaTestSuite))
 }
