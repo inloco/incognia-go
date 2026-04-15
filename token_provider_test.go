@@ -104,23 +104,47 @@ func (suite *ManualRefreshTokenProviderTestSuite) TestManualRefreshConcurrency()
 	client.endpoints.Signups = signupServer.URL
 
 	var wg sync.WaitGroup
+	firstAttemptErrs := make(chan error, 5)
 
 	for i := 0; i < 5; i++ {
 		wg.Add(1)
 
 		go func(wg *sync.WaitGroup) {
 			_, err := client.RegisterSignup("any-installation-id", addressFixture)
-			suite.Error(err)
-			if errors.Is(err, ErrTokenExpired) || errors.Is(err, ErrTokenNotFound) {
-				suite.tokenProvider.Refresh()
-			}
-			_, err = client.RegisterSignup("any-installation-id", addressFixture)
-			suite.NoError(err)
+			firstAttemptErrs <- err
 			wg.Done()
 		}(&wg)
 	}
 
 	wg.Wait()
+	close(firstAttemptErrs)
+
+	for err := range firstAttemptErrs {
+		suite.Error(err)
+		suite.True(errors.Is(err, ErrTokenExpired) || errors.Is(err, ErrTokenNotFound))
+	}
+
+	_, err := suite.tokenProvider.Refresh()
+	suite.NoError(err)
+
+	successErrs := make(chan error, 5)
+
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+
+		go func(wg *sync.WaitGroup) {
+			_, err := client.RegisterSignup("any-installation-id", addressFixture)
+			successErrs <- err
+			wg.Done()
+		}(&wg)
+	}
+
+	wg.Wait()
+	close(successErrs)
+
+	for err := range successErrs {
+		suite.NoError(err)
+	}
 }
 
 func TestManualRefreshTokenProviderTestSuite(t *testing.T) {
