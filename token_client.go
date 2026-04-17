@@ -3,10 +3,7 @@ package incognia
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
-	"runtime"
-	"runtime/debug"
 	"strconv"
 	"time"
 )
@@ -41,22 +38,7 @@ func NewTokenClient(config *TokenClientConfig) *TokenClient {
 		timeout = tokenNetClientTimeout
 	}
 
-	libVersion := "unknown"
-	if buildInfo, ok := debug.ReadBuildInfo(); ok {
-		for _, dep := range buildInfo.Deps {
-			if dep.Path == "repo.incognia.com/go/incognia" {
-				libVersion = dep.Version
-			}
-		}
-	}
-
-	userAgent := fmt.Sprintf(
-		"incognia-api-go/%s (%s %s) Go/%s",
-		libVersion,
-		runtime.GOOS,
-		runtime.GOARCH,
-		runtime.Version(),
-	)
+	userAgent := buildUserAgent(libraryVersion())
 
 	return &TokenClient{
 		ClientID:      config.ClientID,

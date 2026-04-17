@@ -2,10 +2,12 @@ package incognia
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -22,7 +24,7 @@ const (
 )
 
 var (
-	userAgentRegex   = regexp.MustCompile(`^incognia-api-go(/(v[0-9]+\.[0-9]+\.[0-9]+|unknown))? \([a-z]+ [a-z0-9]+\) Go/go[0-9]+\.[0-9]+\.[0-9]+$`)
+	userAgentRegex   = regexp.MustCompile(`^incognia-go/([0-9]+\.[0-9]+\.[0-9]+|unknown) \([a-z]+ [a-z0-9]+\) Go/go[0-9]+\.[0-9]+\.[0-9]+$`)
 	now              = time.Now()
 	floatVar         = -7.5432
 	FixedCollectedAt = time.Date(2025, time.March, 22, 12, 12, 12, 0, time.UTC)
@@ -886,6 +888,21 @@ var (
 		Location:       nil,
 	}
 )
+
+func TestBuildUserAgentTrimsVersionPrefix(t *testing.T) {
+	expected := fmt.Sprintf(
+		"incognia-go/1.1.1 (%s %s) Go/%s",
+		runtime.GOOS,
+		runtime.GOARCH,
+		runtime.Version(),
+	)
+
+	actual := buildUserAgent("v1.1.1")
+
+	if actual != expected {
+		t.Fatalf("expected %q, got %q", expected, actual)
+	}
+}
 
 type PanickingTokenProvider struct {
 	panicString string
