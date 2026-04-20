@@ -30,6 +30,28 @@ var (
 	ErrMissingLocationLatLong        = errors.New("location field missing latitude and/or longitude")
 )
 
+func libraryVersion() string {
+	if buildInfo, ok := debug.ReadBuildInfo(); ok {
+		for _, dep := range buildInfo.Deps {
+			if dep.Path == "repo.incognia.com/go/incognia" {
+				return dep.Version
+			}
+		}
+	}
+
+	return "unknown"
+}
+
+func buildUserAgent(libVersion string) string {
+	return fmt.Sprintf(
+		"incognia-go/%s (%s %s) Go/%s",
+		strings.TrimPrefix(libVersion, "v"),
+		runtime.GOOS,
+		runtime.GOARCH,
+		runtime.Version(),
+	)
+}
+
 type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
@@ -193,22 +215,7 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 		Timeout:      tokenRouteTimeout,
 	})
 
-	libVersion := "unknown"
-	if buildInfo, ok := debug.ReadBuildInfo(); ok {
-		for _, dep := range buildInfo.Deps {
-			if dep.Path == "repo.incognia.com/go/incognia" {
-				libVersion = dep.Version
-			}
-		}
-	}
-
-	userAgent := fmt.Sprintf(
-		"incognia-api-go/%s (%s %s) Go/%s",
-		libVersion,
-		runtime.GOOS,
-		runtime.GOARCH,
-		runtime.Version(),
-	)
+	userAgent := buildUserAgent(libraryVersion())
 
 	tokenProvider := config.TokenProvider
 	if tokenProvider == nil {
