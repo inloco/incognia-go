@@ -205,6 +205,7 @@ type SignupAssessment struct {
 	RiskAssessment Assessment `json:"risk_assessment"`
 	Evidence       Evidence   `json:"evidence,omitempty"`
 	Reasons        []Reason   `json:"reasons"`
+	Actions        []string   `json:"actions,omitempty"`
 	Signals        Signals    `json:"signals,omitempty"`
 }
 
@@ -214,5 +215,6 @@ type TransactionAssessment struct {
 	DeviceID       string     `json:"device_id"`
 	Evidence       Evidence   `json:"evidence,omitempty"`
 	Reasons        []Reason   `json:"reasons"`
+	Actions        []string   `json:"actions,omitempty"`
 	Signals        Signals    `json:"signals,omitempty"`
 }
