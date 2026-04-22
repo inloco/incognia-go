@@ -106,6 +106,22 @@ func (suite *EvidenceTestSuite) TestUnmarshalAssessmentWithoutEvidenceDoesNotFai
 	suite.Nil(a.Evidence)
 }
 
+func (suite *EvidenceTestSuite) TestUnmarshalAssessmentWithActionsDoesNotFail() {
+	payload := []byte(`{
+		"id":"1",
+		"risk_assessment":"low_risk",
+		"device_id":"device-1",
+		"actions":["allow"],
+		"reasons":[]
+	}`)
+
+	var a TransactionAssessment
+	err := json.Unmarshal(payload, &a)
+
+	suite.NoError(err)
+	suite.Equal([]string{"allow"}, a.Actions)
+}
+
 func (suite *EvidenceTestSuite) TestGetEvidenceAsInt64_WhenEvidenceNil_ReturnsNotFound() {
 	var evidence Evidence
 

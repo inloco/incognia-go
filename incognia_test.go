@@ -92,6 +92,33 @@ var (
 		RequestID:      "some-request-id",
 		RiskAssessment: LowRisk,
 		Reasons:        []Reason{{Code: "mpos_fraud", Source: "global"}, {Code: "mpos_fraud", Source: "local"}},
+		Actions:        []string{"allow"},
+		Evidence: Evidence{
+			"device_model":                 "Moto Z2 Play",
+			"geocode_quality":              "good",
+			"address_quality":              "good",
+			"address_match":                "street",
+			"location_events_near_address": 38.0,
+			"location_events_quantity":     288.0,
+			"location_services": map[string]interface{}{
+				"location_permission_enabled": true,
+				"location_sensors_enabled":    true,
+			},
+			"device_integrity": map[string]interface{}{
+				"probable_root":       false,
+				"emulator":            false,
+				"gps_spoofing":        false,
+				"from_official_store": true,
+			},
+		},
+	}
+	signupAssessmentHighRiskFixture = &SignupAssessment{
+		ID:             "some-id",
+		DeviceID:       "some-device-id",
+		RequestID:      "some-request-id",
+		RiskAssessment: HighRisk,
+		Reasons:        []Reason{{Code: "mpos_fraud", Source: "global"}, {Code: "mpos_fraud", Source: "local"}},
+		Actions:        []string{"warn-user", "block"},
 		Evidence: Evidence{
 			"device_model":                 "Moto Z2 Play",
 			"geocode_quality":              "good",
@@ -268,6 +295,32 @@ var (
 		DeviceID:       "some-device-id",
 		RiskAssessment: LowRisk,
 		Reasons:        []Reason{{Code: "mpos_fraud", Source: "global"}, {Code: "mpos_fraud", Source: "local"}},
+		Actions:        []string{"allow"},
+		Evidence: Evidence{
+			"device_model":                 "Moto Z2 Play",
+			"geocode_quality":              "good",
+			"address_quality":              "good",
+			"address_match":                "street",
+			"location_events_near_address": 38.0,
+			"location_events_quantity":     288.0,
+			"location_services": map[string]interface{}{
+				"location_permission_enabled": true,
+				"location_sensors_enabled":    true,
+			},
+			"device_integrity": map[string]interface{}{
+				"probable_root":       false,
+				"emulator":            false,
+				"gps_spoofing":        false,
+				"from_official_store": true,
+			},
+		},
+	}
+	transactionAssessmentHighRiskFixture = &TransactionAssessment{
+		ID:             "some-id",
+		DeviceID:       "some-device-id",
+		RiskAssessment: HighRisk,
+		Reasons:        []Reason{{Code: "mpos_fraud", Source: "global"}, {Code: "mpos_fraud", Source: "local"}},
+		Actions:        []string{"warn-user", "block"},
 		Evidence: Evidence{
 			"device_model":                 "Moto Z2 Play",
 			"geocode_quality":              "good",
@@ -1026,6 +1079,24 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignup() {
 	suite.Equal(signupAssessmentFixture, response)
 }
 
+func (suite *IncogniaTestSuite) TestSuccessRegisterSignupActionsLowRisk() {
+	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentFixture)
+	defer signupServer.Close()
+
+	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
+	suite.NoError(err)
+	suite.Equal([]string{"allow"}, response.Actions)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterSignupActionsHighRisk() {
+	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyFixture, signupAssessmentHighRiskFixture)
+	defer signupServer.Close()
+
+	response, err := suite.client.RegisterSignup(postSignupRequestBodyFixture.InstallationID, addressFixture)
+	suite.NoError(err)
+	suite.Equal([]string{"warn-user", "block"}, response.Actions)
+}
+
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignupNilOptional() {
 	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyRequiredFieldsFixture, signupAssessmentFixture)
 	defer signupServer.Close()
@@ -1209,6 +1280,15 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
 
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
+}
+
+func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentActionsHighRisk() {
+	transactionServer := suite.mockPostTransactionsEndpoint(token, postPaymentRequestBodyFixture, transactionAssessmentHighRiskFixture, emptyQueryString)
+	defer transactionServer.Close()
+
+	response, err := suite.client.RegisterPayment(paymentFixture)
+	suite.NoError(err)
+	suite.Equal([]string{"warn-user", "block"}, response.Actions)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWeb() {
