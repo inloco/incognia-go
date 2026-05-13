@@ -113,22 +113,21 @@ type WebLogin struct {
 }
 
 type Login struct {
-	InstallationID          *string
-	SessionToken            *string
-	RequestToken            string
-	RelatedWebRequestToken  string
-	AccountID               string
-	TenantID                string
-	ExternalID              string
-	Countries               []string
-	PolicyID                string
-	Location                *Location
-	PaymentMethodIdentifier string
-	Eval                    *bool
-	AppVersion              string
-	DeviceOs                string
-	CustomProperties        map[string]interface{}
-	PersonID                *PersonID
+	InstallationID         *string
+	SessionToken           *string
+	RequestToken           string
+	RelatedWebRequestToken string
+	AccountID              string
+	TenantID               string
+	ExternalID             string
+	Countries              []string
+	PolicyID               string
+	Location               *Location
+	Eval                   *bool
+	AppVersion             string
+	DeviceOs               string
+	CustomProperties       map[string]interface{}
+	PersonID               *PersonID
 }
 
 type FeedbackIdentifiers struct {
@@ -498,22 +497,21 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 	}
 
 	requestBody, err := json.Marshal(postTransactionRequestBody{
-		InstallationID:          login.InstallationID,
-		Type:                    loginType,
-		AccountID:               login.AccountID,
-		PolicyID:                login.PolicyID,
-		Location:                login.Location,
-		ExternalID:              login.ExternalID,
-		RelatedWebRequestToken:  login.RelatedWebRequestToken,
-		TenantID:                login.TenantID,
-		PaymentMethodIdentifier: login.PaymentMethodIdentifier,
-		SessionToken:            login.SessionToken,
-		RequestToken:            login.RequestToken,
-		AppVersion:              login.AppVersion,
-		DeviceOs:                strings.ToLower(login.DeviceOs),
-		CustomProperties:        login.CustomProperties,
-		PersonID:                login.PersonID,
-		Countries:               login.Countries,
+		InstallationID:         login.InstallationID,
+		Type:                   loginType,
+		AccountID:              login.AccountID,
+		PolicyID:               login.PolicyID,
+		Location:               login.Location,
+		ExternalID:             login.ExternalID,
+		RelatedWebRequestToken: login.RelatedWebRequestToken,
+		TenantID:               login.TenantID,
+		SessionToken:           login.SessionToken,
+		RequestToken:           login.RequestToken,
+		AppVersion:             login.AppVersion,
+		DeviceOs:               strings.ToLower(login.DeviceOs),
+		CustomProperties:       login.CustomProperties,
+		PersonID:               login.PersonID,
+		Countries:              login.Countries,
 	})
 	if err != nil {
 		return nil, err
