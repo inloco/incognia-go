@@ -13,6 +13,7 @@ type StructuredAddress struct {
 	CountryCode  string `json:"country_code"`
 	State        string `json:"state"`
 	City         string `json:"city"`
+	County       string `json:"county"`
 	Borough      string `json:"borough"`
 	Neighborhood string `json:"neighborhood"`
 	Street       string `json:"street"`
