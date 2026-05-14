@@ -145,6 +145,9 @@ const (
 	NuPay          paymentMethodType = "nu_pay"
 	Paypal         paymentMethodType = "paypal"
 	Pix            paymentMethodType = "pix"
+	PixRefund      paymentMethodType = "pix_refund"
+	TEF            paymentMethodType = "tef"
+	TED            paymentMethodType = "ted"
 )
 
 type CardInfo struct {
