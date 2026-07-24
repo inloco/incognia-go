@@ -52,7 +52,7 @@ var (
 	}
 	pixKeyArrayFixture = []*PixKey{
 		{Type: "cpf", Value: "12345678901"},
-		{Type: "email", Value: "legit_person@gmail.com"},
+		{Type: "email", Value: "legit_person@example.com"},
 	}
 	bankAccountInfoFixture = &BankAccountInfo{
 		AccountType:       "savings",
@@ -65,6 +65,10 @@ var (
 		AccountNumber:     "123456",
 		AccountCheckDigit: "0",
 		PixKeys:           pixKeyArrayFixture,
+	}
+	relatedAccountFixture = &RelatedAccount{
+		AccountID:    "related-account-id",
+		Organization: "related-organization",
 	}
 	locationFixtureFull = &Location{
 		Latitude:    &floatVar,
@@ -407,6 +411,7 @@ var (
 			Type:  "cpf",
 			Value: "12345678901",
 		},
+		RelatedAccount:  relatedAccountFixture,
 		DebtorAccount:   bankAccountInfoFixture,
 		CreditorAccount: bankAccountInfoFixture,
 	}
@@ -471,6 +476,7 @@ var (
 			Type:  "cpf",
 			Value: "12345678901",
 		},
+		RelatedAccount:  relatedAccountFixture,
 		DebtorAccount:   bankAccountInfoFixture,
 		CreditorAccount: bankAccountInfoFixture,
 	}
@@ -532,6 +538,7 @@ var (
 			Type:  "cpf",
 			Value: "12345678901",
 		},
+		RelatedAccount: relatedAccountFixture,
 	}
 	postPaymentRequestBodyRequiredFieldsFixture = &postTransactionRequestBody{
 		InstallationID: &installationId,
@@ -601,6 +608,7 @@ var (
 			Type:  "cpf",
 			Value: "12345678901",
 		},
+		RelatedAccount:  relatedAccountFixture,
 		DebtorAccount:   bankAccountInfoFixture,
 		CreditorAccount: bankAccountInfoFixture,
 	}
@@ -664,6 +672,7 @@ var (
 			Type:  "cpf",
 			Value: "12345678901",
 		},
+		RelatedAccount:  relatedAccountFixture,
 		DebtorAccount:   bankAccountInfoFixture,
 		CreditorAccount: bankAccountInfoFixture,
 	}
@@ -724,6 +733,7 @@ var (
 			Type:  "cpf",
 			Value: "12345678901",
 		},
+		RelatedAccount: relatedAccountFixture,
 	}
 	paymentFixtureRequiredFields = &Payment{
 		InstallationID: &installationId,

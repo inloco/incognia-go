@@ -96,6 +96,7 @@ type Payment struct {
 	Eval                   *bool
 	CustomProperties       map[string]interface{}
 	PersonID               *PersonID
+	RelatedAccount         *RelatedAccount
 	DebtorAccount          *BankAccountInfo
 	CreditorAccount        *BankAccountInfo
 }
@@ -443,6 +444,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		DeviceOs:               strings.ToLower(payment.DeviceOs),
 		CustomProperties:       payment.CustomProperties,
 		PersonID:               payment.PersonID,
+		RelatedAccount:         payment.RelatedAccount,
 		DebtorAccount:          payment.DebtorAccount,
 		CreditorAccount:        payment.CreditorAccount,
 	})

@@ -186,6 +186,7 @@ type postTransactionRequestBody struct {
 	StoreID                 string                 `json:"store_id,omitempty"`
 	CustomProperties        map[string]interface{} `json:"custom_properties,omitempty"`
 	PersonID                *PersonID              `json:"person_id,omitempty"`
+	RelatedAccount          *RelatedAccount        `json:"related_account,omitempty"`
 	DebtorAccount           *BankAccountInfo       `json:"debtor_account,omitempty"`
 	CreditorAccount         *BankAccountInfo       `json:"creditor_account,omitempty"`
 	Countries               []string               `json:"countries,omitempty"`
@@ -194,6 +195,11 @@ type postTransactionRequestBody struct {
 type PersonID struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
+}
+
+type RelatedAccount struct {
+	AccountID    string `json:"account_id"`
+	Organization string `json:"organization"`
 }
 
 type PixKey struct {
