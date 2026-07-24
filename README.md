@@ -155,7 +155,11 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
         Id:          "identifier",
         Name:        "coupon-name",
     },
-    CustomProperties: myCustomPropertiesMap
+    CustomProperties: myCustomPropertiesMap,
+    RelatedAccount: &incognia.RelatedAccount{
+        AccountID:     "related-account-id",
+        Organization:  "related-organization",
+    },
     Addresses: []*incognia.TransactionAddress{
         {
             Type: incognia.Billing,
