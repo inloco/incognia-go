@@ -6,6 +6,10 @@ on:
     branches:
       - "**"
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -13,15 +17,24 @@ jobs:
   show-claims:
     runs-on: ubuntu-latest
     steps:
-      - name: Request and display OIDC claims
+      - name: Print OIDC subject
         shell: bash
         run: |
-          payload=$(
-            printf '%s' "$GITHUB_TOKEN" |
+          token="$(
+            curl --fail --silent \
+              -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=my-audience" |
+            jq -r '.value'
+          )"
+
+          payload="$(
+            printf '%s' "$token" |
               cut -d. -f2 |
               tr '_-' '/+'
-          )
+          )"
 
-          printf '%s' "$payload$(printf '=%.0s' $(seq 1 $(( (4 - ${#payload} % 4) % 4 ))))" |
+          padding=$(( (4 - ${#payload} % 4) % 4 ))
+
+          printf '%s' "$payload$(printf '%*s' "$padding" '' | tr ' ' '=')" |
             base64 --decode |
             jq -r '.sub'
