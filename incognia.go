@@ -33,7 +33,7 @@ var (
 func libraryVersion() string {
 	if buildInfo, ok := debug.ReadBuildInfo(); ok {
 		for _, dep := range buildInfo.Deps {
-			if dep.Path == "repo.incognia.com/go/incognia" {
+			if dep.Path == "repo.incognia.com/go/incognia/v2" {
 				return dep.Version
 			}
 		}
