@@ -1,0 +1,19 @@
+name: Show GitHub OIDC claims
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "**"
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  show-claims:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request and display OIDC claims
+        shell: bash
+        run: |
+          echo $GITHUB_TOKEN | cut -d. -f2 | base64 --decode
