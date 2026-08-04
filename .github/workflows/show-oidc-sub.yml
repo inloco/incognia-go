@@ -16,4 +16,12 @@ jobs:
       - name: Request and display OIDC claims
         shell: bash
         run: |
-          echo $GITHUB_TOKEN | cut -d. -f2 | base64 --decode
+          payload=$(
+            printf '%s' "$GITHUB_TOKEN" |
+              cut -d. -f2 |
+              tr '_-' '/+'
+          )
+
+          printf '%s' "$payload$(printf '=%.0s' $(seq 1 $(( (4 - ${#payload} % 4) % 4 ))))" |
+            base64 --decode |
+            jq -r '.sub'
