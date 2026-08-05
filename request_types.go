@@ -133,6 +133,7 @@ type paymentMethodType string
 
 const (
 	AccountBalance paymentMethodType = "account_balance"
+	ACH            paymentMethodType = "ach"
 	ApplePay       paymentMethodType = "apple_pay"
 	Bancolombia    paymentMethodType = "bancolombia"
 	BoletoBancario paymentMethodType = "boleto_bancario"
