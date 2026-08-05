@@ -7,7 +7,7 @@ Go lightweight client library for [Incognia APIs](https://dash.incognia.com/api-
 ## Installation
 
 ```
-go get repo.incognia.com/go/incognia
+go get repo.incognia.com/go/incognia/v2
 ```
 
 ## Usage

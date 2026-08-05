@@ -1,0 +1,130 @@
+name: Publish Go proxy artifacts to production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - WRAPPER_VERSION
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: incognia-go-goproxy-production
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish GOPROXY artifacts
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure production AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_PRODUCTION_ACCOUNT_ID }}:role/incognia-go-s3-publisher
+          role-session-name: incognia-go-goproxy-${{ github.run_id }}
+
+      - name: Check whether the version needs publishing
+        id: publish
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+          BUCKET: incognia-sdk
+          PREFIX: Wrappers/Go/repo.incognia.com/go/incognia/v2/@v
+        run: |
+          set -euo pipefail
+
+          version="$(tr -d '[:space:]' < WRAPPER_VERSION)"
+          test -n "$version"
+
+          if [[ "$EVENT_NAME" == "push" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+            previous_version="$(git show "${BEFORE_SHA}:WRAPPER_VERSION" 2>/dev/null | tr -d '[:space:]' || true)"
+            if [[ "$version" == "$previous_version" ]]; then
+              echo "WRAPPER_VERSION was modified without a version bump; skipping publication."
+              echo "publish=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          existing_objects=0
+          for extension in info mod zip; do
+            if aws s3api head-object \
+              --bucket "$BUCKET" \
+              --key "${PREFIX}/${version}.${extension}" >/dev/null 2>&1; then
+              ((existing_objects += 1))
+            fi
+          done
+
+          if [[ "$existing_objects" -eq 3 ]]; then
+            echo "${version} is already published; skipping publication."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$existing_objects" -ne 0 ]]; then
+            echo "${version} has incomplete GOPROXY artifacts in S3; refusing to overwrite them." >&2
+            exit 1
+          fi
+
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build GOPROXY artifacts
+        if: steps.publish.outputs.publish == 'true'
+        run: make ci/build
+
+      - name: Publish GOPROXY artifacts
+        if: steps.publish.outputs.publish == 'true'
+        shell: bash
+        env:
+          BUCKET: incognia-sdk
+          PREFIX: Wrappers/Go/repo.incognia.com/go/incognia/v2/@v
+        run: |
+          set -euo pipefail
+
+          version="${{ steps.publish.outputs.version }}"
+          artifact_dir="local/goproxy/repo.incognia.com/go/incognia/v2/@v"
+
+          for extension in info mod zip; do
+            aws s3 cp \
+              "${artifact_dir}/${version}.${extension}" \
+              "s3://${BUCKET}/${PREFIX}/${version}.${extension}"
+          done
+
+          objects_file="$(mktemp)"
+          versions_file="$(mktemp)"
+          trap 'rm -f "$objects_file" "$versions_file"' EXIT
+
+          aws s3api list-objects-v2 \
+            --bucket "$BUCKET" \
+            --prefix "${PREFIX}/" \
+            --output json \
+            --query 'Contents[].Key' | jq -r '.[]?' > "$objects_file"
+
+          while IFS= read -r object; do
+            case "$object" in
+              "${PREFIX}"/v*.info)
+                candidate="${object##*/}"
+                candidate="${candidate%.info}"
+                if grep -Fxq "${PREFIX}/${candidate}.mod" "$objects_file" && \
+                   grep -Fxq "${PREFIX}/${candidate}.zip" "$objects_file"; then
+                  printf '%s\n' "$candidate" >> "$versions_file"
+                fi
+                ;;
+            esac
+          done < "$objects_file"
+
+          sort -uV "$versions_file" -o "$versions_file"
+          aws s3 cp "$versions_file" "s3://${BUCKET}/${PREFIX}/list" \
+            --content-type text/plain

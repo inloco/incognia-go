@@ -1,4 +1,4 @@
-module repo.incognia.com/go/incognia
+module repo.incognia.com/go/incognia/v2
 
 go 1.13
 
