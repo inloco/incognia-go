@@ -20,7 +20,7 @@ jobs:
   publish:
     name: Publish GOPROXY artifacts
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ci-podman
     steps:
       - name: Check out source
         uses: actions/checkout@v4
