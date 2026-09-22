@@ -1051,7 +1051,10 @@ func (suite *IncogniaTestSuite) TestManualRefreshTokenProviderSuccess() {
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
-	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyWithAllParamsFixture, signupAssessmentFixture)
+	serverAssessment := *signupAssessmentFixture
+	serverRequestToken := "server-request-token"
+	serverAssessment.RequestToken = &serverRequestToken
+	signupServer := suite.mockPostSignupsEndpoint(token, postSignupRequestBodyWithAllParamsFixture, &serverAssessment)
 	defer signupServer.Close()
 
 	response, err := suite.client.RegisterSignupWithParams(&Signup{
@@ -1070,7 +1073,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
 		RelatedWebRequestToken: postSignupRequestBodyWithAllParamsFixture.RelatedWebRequestToken,
 	})
 	suite.NoError(err)
-	suite.Equal(signupAssessmentFixture, response)
+	expected := *signupAssessmentFixture
+	expected.RequestToken = &postSignupRequestBodyWithAllParamsFixture.RequestToken
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupFull() {
@@ -1086,7 +1091,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupFull() {
 		TenantID:         postSignupRequestBodyWithAllParamsFixture.TenantID,
 	})
 	suite.NoError(err)
-	suite.Equal(signupAssessmentFixture, response)
+	expected := *signupAssessmentFixture
+	expected.RequestToken = &postWebSignupRequestBodyWithAllParamsFixture.RequestToken
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignup() {
@@ -1133,7 +1140,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupNilOptional() {
 		RequestToken: postWebSignupRequestBodyRequiredFieldsFixture.RequestToken,
 	})
 	suite.NoError(err)
-	suite.Equal(signupAssessmentFixture, response)
+	expected := *signupAssessmentFixture
+	expected.RequestToken = &postWebSignupRequestBodyRequiredFieldsFixture.RequestToken
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterSignupAfterTokenExpiration() {
@@ -1170,6 +1179,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupWithoutInstallationI
 	})
 	suite.NoError(err)
 	suite.Equal(signupAssessmentFixture, response)
+	suite.Nil(response.RequestToken)
 }
 
 func (suite *IncogniaTestSuite) TestForbiddenRegisterSignup() {
@@ -1299,6 +1309,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
 
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
+	suite.Nil(response.RequestToken)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentActionsHighRisk() {
@@ -1317,7 +1328,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWeb() {
 	response, err := suite.client.RegisterPayment(paymentWebFixture)
 
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.RequestToken = &paymentWebFixture.RequestToken
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentNilOptional() {
@@ -1405,6 +1418,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithFalseEval() {
 	response, err := suite.client.RegisterPayment(simplePaymentFixtureWithShouldNotEval)
 	suite.NoError(err)
 	suite.Equal(emptyTransactionAssessmentFixture, response)
+	suite.Nil(response.RequestToken)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithLocationAndTimestamp() {
@@ -1475,6 +1489,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLogin() {
 	response, err := suite.client.RegisterLogin(loginFixture)
 	suite.NoError(err)
 	suite.Equal(transactionAssessmentFixture, response)
+	suite.Nil(response.RequestToken)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterWebLogin() {
@@ -1483,7 +1498,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebLogin() {
 
 	response, err := suite.client.RegisterWebLogin(loginWebFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.RequestToken = &loginWebFixture.RequestToken
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithEval() {
@@ -1501,7 +1518,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginWithEval() {
 
 	response, err := suite.client.RegisterWebLogin(loginWebFixtureWithShouldEval)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.RequestToken = &loginWebFixtureWithShouldEval.RequestToken
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithFalseEval() {
@@ -1511,6 +1530,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithFalseEval() {
 	response, err := suite.client.RegisterLogin(loginFixtureWithShouldNotEval)
 	suite.NoError(err)
 	suite.Equal(emptyTransactionAssessmentFixture, response)
+	suite.Nil(response.RequestToken)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginWithFalseEval() {
@@ -1519,7 +1539,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginWithFalseEval() {
 
 	response, err := suite.client.RegisterWebLogin(loginWebFixtureWithShouldNotEval)
 	suite.NoError(err)
-	suite.Equal(emptyTransactionAssessmentFixture, response)
+	expected := *emptyTransactionAssessmentFixture
+	expected.RequestToken = &loginWebFixtureWithShouldNotEval.RequestToken
+	suite.Equal(&expected, response)
 }
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithCountries() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginRequestBodyWithCountriesFixture, transactionAssessmentFixture, emptyQueryString)
@@ -1536,7 +1558,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWeb() {
 
 	response, err := suite.client.registerWebLogin(loginWebFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.RequestToken = &loginWebFixture.RequestToken
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
@@ -1561,14 +1585,16 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginAfterTokenExpiration(
 
 	response, err := suite.client.RegisterWebLogin(loginWebFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.RequestToken = &loginWebFixture.RequestToken
+	suite.Equal(&expected, response)
 
 	token, _ := suite.client.tokenProvider.GetToken()
 	token.(*accessToken).ExpiresIn = 0
 
 	response, err = suite.client.RegisterWebLogin(loginWebFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWebWithCountries() {
@@ -1577,7 +1603,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWebWithCountries() {
 
 	response, err := suite.client.registerWebLogin(loginWebWithCountriesFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.RequestToken = &loginWebWithCountriesFixture.RequestToken
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterLoginNilLogin() {

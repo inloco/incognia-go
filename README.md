@@ -77,6 +77,9 @@ if err != nil {
 
 The implementation is based on the [Incognia API Reference](https://dash.incognia.com/api-reference).
 
+Successful signup, login, and payment assessments include the submitted request token in the
+optional `RequestToken` field. Calls that do not submit a request token leave this field `nil`.
+
 ### Authentication
 
 Authentication is done transparently, so you don't need to worry about it.
@@ -244,7 +247,7 @@ assessment, err := client.RegisterLogin(&incognia.Login{
 
 ### Registering Payment or Login without evaluating its risk assessment
 
-Turning off the risk assessment evaluation allows you to register a new transaction (Login or Payment), but the response (`TransactionAssessment`) will be empty. For instance, if you're using the risk assessment only for some payment transactions, you should still register all the other ones: this will avoid any bias on the risk assessment computation.
+Turning off the risk assessment evaluation allows you to register a new transaction (Login or Payment), but the response (`TransactionAssessment`) will contain only the submitted `RequestToken`. For instance, if you're using the risk assessment only for some payment transactions, you should still register all the other ones: this will avoid any bias on the risk assessment computation.
 
 To register a login or a payment without evaluating its risk assessment, you should use the `Eval *bool` attribute as follows:
 

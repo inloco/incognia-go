@@ -228,6 +228,13 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 	return &Client{clientID: config.ClientID, clientSecret: config.ClientSecret, tokenProvider: tokenProvider, netClient: netClient, endpoints: &endpoints, UserAgent: userAgent}, nil
 }
 
+func optionalRequestToken(requestToken string) *string {
+	if strings.TrimSpace(requestToken) == "" {
+		return nil
+	}
+	return &requestToken
+}
+
 func (c *Client) RegisterSignup(installationID string, address *Address) (ret *SignupAssessment, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -305,6 +312,7 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 	if err != nil {
 		return nil, err
 	}
+	signupAssessment.RequestToken = optionalRequestToken(params.RequestToken)
 
 	return &signupAssessment, nil
 }
@@ -339,6 +347,7 @@ func (c *Client) registerWebSignup(params *WebSignup) (ret *SignupAssessment, er
 	if err != nil {
 		return nil, err
 	}
+	signupAssessment.RequestToken = optionalRequestToken(params.RequestToken)
 
 	return &signupAssessment, nil
 }
@@ -469,6 +478,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 	if err != nil {
 		return nil, err
 	}
+	paymentAssesment.RequestToken = optionalRequestToken(payment.RequestToken)
 
 	return &paymentAssesment, nil
 }
@@ -538,6 +548,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 	if err != nil {
 		return nil, err
 	}
+	loginAssessment.RequestToken = optionalRequestToken(login.RequestToken)
 
 	return &loginAssessment, nil
 }
@@ -595,6 +606,7 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 	if err != nil {
 		return nil, err
 	}
+	webLoginAssessment.RequestToken = optionalRequestToken(webLogin.RequestToken)
 
 	return &webLoginAssessment, nil
 }
