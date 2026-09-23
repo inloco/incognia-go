@@ -203,6 +203,7 @@ type SignupAssessment struct {
 	DeviceID       string     `json:"device_id"`
 	RequestID      string     `json:"request_id"`
 	RequestToken   *string    `json:"request_token,omitempty"`
+	PolicyID       *string    `json:"policy_id,omitempty"`
 	RiskAssessment Assessment `json:"risk_assessment"`
 	Evidence       Evidence   `json:"evidence,omitempty"`
 	Reasons        []Reason   `json:"reasons"`
@@ -213,6 +214,7 @@ type SignupAssessment struct {
 type TransactionAssessment struct {
 	ID             string     `json:"id"`
 	RequestToken   *string    `json:"request_token,omitempty"`
+	PolicyID       *string    `json:"policy_id,omitempty"`
 	RiskAssessment Assessment `json:"risk_assessment"`
 	DeviceID       string     `json:"device_id"`
 	Evidence       Evidence   `json:"evidence,omitempty"`
