@@ -31,6 +31,7 @@ var (
 	nowMinusSeconds  = now.Add(-1 * time.Second)
 	installationId   = "installation-id"
 	requestToken     = "request-token"
+	policyID         = "policy-id"
 	customProperty   = map[string]interface{}{
 		"custom_1": "custom_value_1",
 		"custom_2": "custom_value_2",
@@ -94,6 +95,7 @@ var (
 		ID:             "some-id",
 		DeviceID:       "some-device-id",
 		RequestID:      "some-request-id",
+		PolicyID:       &policyID,
 		RiskAssessment: LowRisk,
 		Reasons:        []Reason{{Code: "mpos_fraud", Source: "global"}, {Code: "mpos_fraud", Source: "local"}},
 		Actions:        []string{"allow"},
@@ -300,6 +302,7 @@ var (
 	transactionAssessmentFixture      = &TransactionAssessment{
 		ID:             "some-id",
 		DeviceID:       "some-device-id",
+		PolicyID:       &policyID,
 		RiskAssessment: LowRisk,
 		Reasons:        []Reason{{Code: "mpos_fraud", Source: "global"}, {Code: "mpos_fraud", Source: "local"}},
 		Actions:        []string{"allow"},
@@ -1073,8 +1076,10 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterSignupWithParams() {
 		RelatedWebRequestToken: postSignupRequestBodyWithAllParamsFixture.RelatedWebRequestToken,
 	})
 	suite.NoError(err)
+	suite.Equal(postSignupRequestBodyWithAllParamsFixture.PolicyID, *response.PolicyID)
 	expected := *signupAssessmentFixture
 	expected.RequestToken = &postSignupRequestBodyWithAllParamsFixture.RequestToken
+	expected.PolicyID = &postSignupRequestBodyWithAllParamsFixture.PolicyID
 	suite.Equal(&expected, response)
 }
 
@@ -1091,8 +1096,10 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupFull() {
 		TenantID:         postSignupRequestBodyWithAllParamsFixture.TenantID,
 	})
 	suite.NoError(err)
+	suite.Equal(postWebSignupRequestBodyWithAllParamsFixture.PolicyID, *response.PolicyID)
 	expected := *signupAssessmentFixture
 	expected.RequestToken = &postWebSignupRequestBodyWithAllParamsFixture.RequestToken
+	expected.PolicyID = &postWebSignupRequestBodyWithAllParamsFixture.PolicyID
 	suite.Equal(&expected, response)
 }
 
@@ -1178,7 +1185,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebSignupWithoutInstallationI
 		PolicyID: postWebSignupRequestBodyMissingRequestTokenFixture.PolicyID,
 	})
 	suite.NoError(err)
-	suite.Equal(signupAssessmentFixture, response)
+	expected := *signupAssessmentFixture
+	expected.PolicyID = &postWebSignupRequestBodyMissingRequestTokenFixture.PolicyID
+	suite.Equal(&expected, response)
 	suite.Nil(response.RequestToken)
 }
 
@@ -1308,7 +1317,10 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPayment() {
 	response, err := suite.client.RegisterPayment(paymentFixture)
 
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	suite.Equal(paymentFixture.PolicyID, *response.PolicyID)
+	expected := *transactionAssessmentFixture
+	expected.PolicyID = &paymentFixture.PolicyID
+	suite.Equal(&expected, response)
 	suite.Nil(response.RequestToken)
 }
 
@@ -1330,6 +1342,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWeb() {
 	suite.NoError(err)
 	expected := *transactionAssessmentFixture
 	expected.RequestToken = &paymentWebFixture.RequestToken
+	expected.PolicyID = &paymentWebFixture.PolicyID
 	suite.Equal(&expected, response)
 }
 
@@ -1349,14 +1362,16 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentAfterTokenExpiration()
 
 	response, err := suite.client.RegisterPayment(paymentFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.PolicyID = &paymentFixture.PolicyID
+	suite.Equal(&expected, response)
 
 	token, _ := suite.client.tokenProvider.GetToken()
 	token.(*accessToken).ExpiresIn = 0
 
 	response, err = suite.client.RegisterPayment(paymentFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterPaymentNilPayment() {
@@ -1372,7 +1387,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentEmptyInstallationId() 
 	response, err := suite.client.RegisterPayment(paymentWithoutInstallationIDFixture)
 
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.PolicyID = &paymentWithoutInstallationIDFixture.PolicyID
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterPaymentEmptyAccountId() {
@@ -1408,7 +1425,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithEval() {
 
 	response, err := suite.client.RegisterPayment(simplePaymentFixtureWithShouldEval)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.PolicyID = &simplePaymentFixtureWithShouldEval.PolicyID
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithFalseEval() {
@@ -1417,7 +1436,8 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterPaymentWithFalseEval() {
 
 	response, err := suite.client.RegisterPayment(simplePaymentFixtureWithShouldNotEval)
 	suite.NoError(err)
-	suite.Equal(emptyTransactionAssessmentFixture, response)
+	expected := *emptyTransactionAssessmentFixture
+	suite.Equal(&expected, response)
 	suite.Nil(response.RequestToken)
 }
 
@@ -1488,7 +1508,10 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLogin() {
 
 	response, err := suite.client.RegisterLogin(loginFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	suite.Equal(loginFixture.PolicyID, *response.PolicyID)
+	expected := *transactionAssessmentFixture
+	expected.PolicyID = &loginFixture.PolicyID
+	suite.Equal(&expected, response)
 	suite.Nil(response.RequestToken)
 }
 
@@ -1498,8 +1521,10 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebLogin() {
 
 	response, err := suite.client.RegisterWebLogin(loginWebFixture)
 	suite.NoError(err)
+	suite.Equal(loginWebFixture.PolicyID, *response.PolicyID)
 	expected := *transactionAssessmentFixture
 	expected.RequestToken = &loginWebFixture.RequestToken
+	expected.PolicyID = &loginWebFixture.PolicyID
 	suite.Equal(&expected, response)
 }
 
@@ -1509,7 +1534,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithEval() {
 
 	response, err := suite.client.RegisterLogin(loginFixtureWithShouldEval)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.PolicyID = &loginFixtureWithShouldEval.PolicyID
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginWithEval() {
@@ -1520,6 +1547,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginWithEval() {
 	suite.NoError(err)
 	expected := *transactionAssessmentFixture
 	expected.RequestToken = &loginWebFixtureWithShouldEval.RequestToken
+	expected.PolicyID = &loginWebFixtureWithShouldEval.PolicyID
 	suite.Equal(&expected, response)
 }
 
@@ -1529,7 +1557,8 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithFalseEval() {
 
 	response, err := suite.client.RegisterLogin(loginFixtureWithShouldNotEval)
 	suite.NoError(err)
-	suite.Equal(emptyTransactionAssessmentFixture, response)
+	expected := *emptyTransactionAssessmentFixture
+	suite.Equal(&expected, response)
 	suite.Nil(response.RequestToken)
 }
 
@@ -1549,7 +1578,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithCountries() {
 
 	response, err := suite.client.RegisterLogin(loginWithCountriesFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.PolicyID = &loginWithCountriesFixture.PolicyID
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWeb() {
@@ -1560,6 +1591,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWeb() {
 	suite.NoError(err)
 	expected := *transactionAssessmentFixture
 	expected.RequestToken = &loginWebFixture.RequestToken
+	expected.PolicyID = &loginWebFixture.PolicyID
 	suite.Equal(&expected, response)
 }
 
@@ -1569,14 +1601,16 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginAfterTokenExpiration() {
 
 	response, err := suite.client.RegisterLogin(loginFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.PolicyID = &loginFixture.PolicyID
+	suite.Equal(&expected, response)
 
 	token, _ := suite.client.tokenProvider.GetToken()
 	token.(*accessToken).ExpiresIn = 0
 
 	response, err = suite.client.RegisterLogin(loginFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginAfterTokenExpiration() {
@@ -1587,6 +1621,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterWebLoginAfterTokenExpiration(
 	suite.NoError(err)
 	expected := *transactionAssessmentFixture
 	expected.RequestToken = &loginWebFixture.RequestToken
+	expected.PolicyID = &loginWebFixture.PolicyID
 	suite.Equal(&expected, response)
 
 	token, _ := suite.client.tokenProvider.GetToken()
@@ -1605,6 +1640,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWebWithCountries() {
 	suite.NoError(err)
 	expected := *transactionAssessmentFixture
 	expected.RequestToken = &loginWebWithCountriesFixture.RequestToken
+	expected.PolicyID = &loginWebWithCountriesFixture.PolicyID
 	suite.Equal(&expected, response)
 }
 
@@ -1620,7 +1656,9 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWithoutInstallationIdAnd
 
 	response, err := suite.client.RegisterLogin(loginWithoutInstallationIdFixture)
 	suite.NoError(err)
-	suite.Equal(transactionAssessmentFixture, response)
+	expected := *transactionAssessmentFixture
+	expected.PolicyID = &loginWithoutInstallationIdFixture.PolicyID
+	suite.Equal(&expected, response)
 }
 
 func (suite *IncogniaTestSuite) TestRegisterLoginEmptyAccountId() {
