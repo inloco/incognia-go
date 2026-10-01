@@ -39,8 +39,8 @@ var (
 	shouldEval               bool                = true
 	shouldNotEval            bool                = false
 	emptyQueryString         map[string][]string = nil
-	queryStringWithFalseEval                     = map[string][]string{"eval": []string{"false"}}
-	queryStringWithTrueEval                      = map[string][]string{"eval": []string{"true"}}
+	queryStringWithFalseEval                     = map[string][]string{"eval": {"false"}}
+	queryStringWithTrueEval                      = map[string][]string{"eval": {"true"}}
 	customPropertiesFixture                      = map[string]interface{}{
 		"user_id":       "a9f7e3b2-24cd-4d3e-b6e1-98d1234c5678",
 		"is_verified":   true,
