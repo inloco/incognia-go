@@ -34,7 +34,7 @@ var (
 	installationId   = "installation-id"
 	requestToken     = "request-token"
 	policyID         = "policy-id"
-	customProperty   = map[string]interface{}{
+	customProperty   = map[string]any{
 		"custom_1": "custom_value_1",
 		"custom_2": "custom_value_2",
 	}
@@ -43,11 +43,11 @@ var (
 	emptyQueryString         map[string][]string = nil
 	queryStringWithFalseEval                     = map[string][]string{"eval": {"false"}}
 	queryStringWithTrueEval                      = map[string][]string{"eval": {"true"}}
-	customPropertiesFixture                      = map[string]interface{}{
+	customPropertiesFixture                      = map[string]any{
 		"user_id":       "a9f7e3b2-24cd-4d3e-b6e1-98d1234c5678",
 		"is_verified":   true,
 		"last_latitude": -23.55052,
-		"preferences": map[string]interface{}{
+		"preferences": map[string]any{
 			"notifications_enabled": true,
 			"language":              "en-US",
 		},
@@ -108,11 +108,11 @@ var (
 			"address_match":                "street",
 			"location_events_near_address": 38.0,
 			"location_events_quantity":     288.0,
-			"location_services": map[string]interface{}{
+			"location_services": map[string]any{
 				"location_permission_enabled": true,
 				"location_sensors_enabled":    true,
 			},
-			"device_integrity": map[string]interface{}{
+			"device_integrity": map[string]any{
 				"probable_root":       false,
 				"emulator":            false,
 				"gps_spoofing":        false,
@@ -134,11 +134,11 @@ var (
 			"address_match":                "street",
 			"location_events_near_address": 38.0,
 			"location_events_quantity":     288.0,
-			"location_services": map[string]interface{}{
+			"location_services": map[string]any{
 				"location_permission_enabled": true,
 				"location_sensors_enabled":    true,
 			},
-			"device_integrity": map[string]interface{}{
+			"device_integrity": map[string]any{
 				"probable_root":       false,
 				"emulator":            false,
 				"gps_spoofing":        false,
@@ -315,11 +315,11 @@ var (
 			"address_match":                "street",
 			"location_events_near_address": 38.0,
 			"location_events_quantity":     288.0,
-			"location_services": map[string]interface{}{
+			"location_services": map[string]any{
 				"location_permission_enabled": true,
 				"location_sensors_enabled":    true,
 			},
-			"device_integrity": map[string]interface{}{
+			"device_integrity": map[string]any{
 				"probable_root":       false,
 				"emulator":            false,
 				"gps_spoofing":        false,
@@ -340,11 +340,11 @@ var (
 			"address_match":                "street",
 			"location_events_near_address": 38.0,
 			"location_events_quantity":     288.0,
-			"location_services": map[string]interface{}{
+			"location_services": map[string]any{
 				"location_permission_enabled": true,
 				"location_sensors_enabled":    true,
 			},
-			"device_integrity": map[string]interface{}{
+			"device_integrity": map[string]any{
 				"probable_root":       false,
 				"emulator":            false,
 				"gps_spoofing":        false,

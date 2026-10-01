@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"runtime"
@@ -109,7 +109,7 @@ type Payment struct {
 	Value                  *PaymentValue
 	Methods                []*PaymentMethod
 	Eval                   *bool
-	CustomProperties       map[string]interface{}
+	CustomProperties       map[string]any
 	PersonID               *PersonID
 	RelatedAccount         *RelatedAccount
 	DebtorAccount          *BankAccountInfo
@@ -122,7 +122,7 @@ type WebLogin struct {
 	ExternalID       string
 	PolicyID         string
 	Eval             *bool
-	CustomProperties map[string]interface{}
+	CustomProperties map[string]any
 	PersonID         *PersonID
 	TenantID         string
 	Countries        []string
@@ -143,7 +143,7 @@ type Login struct {
 	Eval                    *bool
 	AppVersion              string
 	DeviceOs                string
-	CustomProperties        map[string]interface{}
+	CustomProperties        map[string]any
 	PersonID                *PersonID
 }
 
@@ -178,14 +178,14 @@ type Signup struct {
 	ExternalID             string
 	TenantID               string
 	PersonID               *PersonID
-	CustomProperties       map[string]interface{}
+	CustomProperties       map[string]any
 }
 
 type WebSignup struct {
 	RequestToken     string
 	PolicyID         string
 	AccountID        string
-	CustomProperties map[string]interface{}
+	CustomProperties map[string]any
 	PersonID         *PersonID
 	TenantID         string
 }
@@ -616,7 +616,7 @@ func (c *Client) doRequest(
 	endpoint string,
 	queryParams url.Values,
 	request interface{},
-	response interface{},
+	response any,
 ) error {
 	requestBody, err := json.Marshal(request)
 	if err != nil {
@@ -652,7 +652,7 @@ func (c *Client) doRequest(
 
 	defer res.Body.Close()
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return err
 	}

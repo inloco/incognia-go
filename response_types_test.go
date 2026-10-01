@@ -162,7 +162,7 @@ func (suite *EvidenceTestSuite) TestGetEvidenceAsInt64_WhenEvidenceHasDecimal_Mu
 }
 
 func (suite *EvidenceTestSuite) TestGetEvidence_SliceOutNotPointer_ReturnsError() {
-	e := Evidence{"arr": []interface{}{"a", "b"}}
+	e := Evidence{"arr": []any{"a", "b"}}
 
 	var out []string // <- slice, mas vamos passar sem ponteiro
 	err := e.GetEvidence("arr", out)
@@ -171,7 +171,7 @@ func (suite *EvidenceTestSuite) TestGetEvidence_SliceOutNotPointer_ReturnsError(
 }
 
 func (suite *EvidenceTestSuite) TestGetEvidence_SliceOutPointerButNotSlice_ReturnsError() {
-	e := Evidence{"arr": []interface{}{"a", "b"}}
+	e := Evidence{"arr": []any{"a", "b"}}
 
 	var out int
 	err := e.GetEvidence("arr", &out)
