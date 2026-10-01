@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"runtime"
 	"runtime/debug"
 	"strings"
@@ -296,22 +297,12 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 		requestBody.Coordinates = params.Address.Coordinates
 	}
 
-	requestBodyBytes, err := json.Marshal(requestBody)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", c.endpoints.Signups, bytes.NewBuffer(requestBodyBytes))
-	if err != nil {
-		return nil, err
-	}
-
 	var signupAssessment SignupAssessment
-
-	err = c.doRequest(req, &signupAssessment)
+	err = c.doRequest(c.endpoints.Signups, nil, requestBody, &signupAssessment)
 	if err != nil {
 		return nil, err
 	}
+
 	signupAssessment.RequestToken = optionalRequestToken(params.RequestToken)
 
 	return &signupAssessment, nil
@@ -331,22 +322,13 @@ func (c *Client) registerWebSignup(params *WebSignup) (ret *SignupAssessment, er
 		TenantID:         params.TenantID,
 	}
 
-	requestBodyBytes, err := json.Marshal(requestBody)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", c.endpoints.Signups, bytes.NewBuffer(requestBodyBytes))
-	if err != nil {
-		return nil, err
-	}
-
 	var signupAssessment SignupAssessment
 
-	err = c.doRequest(req, &signupAssessment)
+	err = c.doRequest(c.endpoints.Signups, nil, requestBody, &signupAssessment)
 	if err != nil {
 		return nil, err
 	}
+
 	signupAssessment.RequestToken = optionalRequestToken(params.RequestToken)
 
 	return &signupAssessment, nil
@@ -389,17 +371,8 @@ func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.T
 		requestBody.ExternalID = feedbackIdentifiers.ExternalID
 		requestBody.PersonID = feedbackIdentifiers.PersonID
 	}
-	requestBodyBytes, err := json.Marshal(requestBody)
-	if err != nil {
-		return err
-	}
 
-	req, err := http.NewRequest("POST", c.endpoints.Feedback, bytes.NewBuffer(requestBodyBytes))
-	if err != nil {
-		return err
-	}
-
-	err = c.doRequest(req, nil)
+	err = c.doRequest(c.endpoints.Feedback, nil, requestBody, nil)
 	if err != nil {
 		return err
 	}
@@ -433,7 +406,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		return nil, locationError
 	}
 
-	requestBody, err := json.Marshal(postTransactionRequestBody{
+	requestBody := postTransactionRequestBody{
 		InstallationID:         payment.InstallationID,
 		RelatedWebRequestToken: payment.RelatedWebRequestToken,
 		TenantID:               payment.TenantID,
@@ -456,31 +429,22 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 		RelatedAccount:         payment.RelatedAccount,
 		DebtorAccount:          payment.DebtorAccount,
 		CreditorAccount:        payment.CreditorAccount,
-	})
-	if err != nil {
-		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", c.endpoints.Transactions, bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, err
-	}
-
+	var queryParams url.Values
 	if payment.Eval != nil {
-		q := req.URL.Query()
-		q.Add("eval", fmt.Sprintf("%t", *payment.Eval))
-		req.URL.RawQuery = q.Encode()
+		queryParams = url.Values{"eval": {fmt.Sprintf("%t", *payment.Eval)}}
 	}
 
-	var paymentAssesment TransactionAssessment
-
-	err = c.doRequest(req, &paymentAssesment)
+	var paymentAssessment TransactionAssessment
+	err = c.doRequest(c.endpoints.Transactions, queryParams, requestBody, &paymentAssessment)
 	if err != nil {
 		return nil, err
 	}
-	paymentAssesment.RequestToken = optionalRequestToken(payment.RequestToken)
 
-	return &paymentAssesment, nil
+	paymentAssessment.RequestToken = optionalRequestToken(payment.RequestToken)
+
+	return &paymentAssessment, nil
 }
 
 func (c *Client) RegisterLogin(login *Login) (ret *TransactionAssessment, err error) {
@@ -509,7 +473,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		return nil, locationError
 	}
 
-	requestBody, err := json.Marshal(postTransactionRequestBody{
+	requestBody := postTransactionRequestBody{
 		InstallationID:          login.InstallationID,
 		Type:                    loginType,
 		AccountID:               login.AccountID,
@@ -526,28 +490,19 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 		CustomProperties:        login.CustomProperties,
 		PersonID:                login.PersonID,
 		Countries:               login.Countries,
-	})
-	if err != nil {
-		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", c.endpoints.Transactions, bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, err
-	}
-
+	var queryParams url.Values
 	if login.Eval != nil {
-		q := req.URL.Query()
-		q.Add("eval", fmt.Sprintf("%t", *login.Eval))
-		req.URL.RawQuery = q.Encode()
+		queryParams = url.Values{"eval": {fmt.Sprintf("%t", *login.Eval)}}
 	}
 
 	var loginAssessment TransactionAssessment
-
-	err = c.doRequest(req, &loginAssessment)
+	err := c.doRequest(c.endpoints.Transactions, queryParams, requestBody, &loginAssessment)
 	if err != nil {
 		return nil, err
 	}
+
 	loginAssessment.RequestToken = optionalRequestToken(login.RequestToken)
 
 	return &loginAssessment, nil
@@ -574,7 +529,7 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 		return nil, ErrMissingAccountID
 	}
 
-	requestBody, err := json.Marshal(postTransactionRequestBody{
+	requestBody := postTransactionRequestBody{
 		Type:             loginType,
 		AccountID:        webLogin.AccountID,
 		PolicyID:         webLogin.PolicyID,
@@ -584,28 +539,19 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 		PersonID:         webLogin.PersonID,
 		Countries:        webLogin.Countries,
 		TenantID:         webLogin.TenantID,
-	})
-	if err != nil {
-		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", c.endpoints.Transactions, bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, err
-	}
-
+	var queryParams url.Values
 	if webLogin.Eval != nil {
-		q := req.URL.Query()
-		q.Add("eval", fmt.Sprintf("%t", *webLogin.Eval))
-		req.URL.RawQuery = q.Encode()
+		queryParams = url.Values{"eval": {fmt.Sprintf("%t", *webLogin.Eval)}}
 	}
 
 	var webLoginAssessment TransactionAssessment
-
-	err = c.doRequest(req, &webLoginAssessment)
+	err := c.doRequest(c.endpoints.Transactions, queryParams, requestBody, &webLoginAssessment)
 	if err != nil {
 		return nil, err
 	}
+
 	webLoginAssessment.RequestToken = optionalRequestToken(webLogin.RequestToken)
 
 	return &webLoginAssessment, nil
@@ -623,21 +569,40 @@ func (c *Client) setLastLatency(ms int64) {
 	c.lastLatency = &ms
 }
 
-func (c *Client) doRequest(request *http.Request, response interface{}) error {
-	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("User-Agent", c.UserAgent)
-
-	if lt := c.getLastLatency(); lt != nil {
-		request.Header.Add(metricsHeader, fmt.Sprintf("%d", *lt))
+func (c *Client) doRequest(
+	endpoint string,
+	queryParams url.Values,
+	request interface{},
+	response interface{},
+) error {
+	requestBody, err := json.Marshal(request)
+	if err != nil {
+		return err
 	}
 
-	err := c.authorizeRequest(request)
+	httpRequest, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return err
+	}
+
+	if queryParams != nil {
+		httpRequest.URL.RawQuery = queryParams.Encode()
+	}
+
+	httpRequest.Header.Add("Content-Type", "application/json")
+	httpRequest.Header.Add("User-Agent", c.UserAgent)
+
+	if lt := c.getLastLatency(); lt != nil {
+		httpRequest.Header.Add(metricsHeader, fmt.Sprintf("%d", *lt))
+	}
+
+	err = c.authorizeRequest(httpRequest)
 	if err != nil {
 		return err
 	}
 
 	start := time.Now()
-	res, err := c.netClient.Do(request)
+	res, err := c.netClient.Do(httpRequest)
 	if err != nil {
 		return err
 	}
