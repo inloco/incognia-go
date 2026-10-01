@@ -141,6 +141,8 @@ assessment, err := client.RegisterSignupWithParams(&incognia.Signup{
 })
 ```
 
+To use a `context.Context` for timeouts or cancellation, use `client.RegisterSignupWithContext`.
+
 ### Registering Payment
 
 This method registers a new payment for the given installation and account, returning a `TransactionAssessment`, containing the risk assessment and supporting evidence.
@@ -219,6 +221,7 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
 })
 ```
 
+To use a `context.Context` for timeouts or cancellation, use `client.RegisterPaymentWithContext`.
 
 ### Registering Login
 
@@ -244,6 +247,8 @@ assessment, err := client.RegisterLogin(&incognia.Login{
     ...
 })
 ```
+
+To use a `context.Context` for timeouts or cancellation, use `client.RegisterLoginWithContext`.
 
 ### Registering Payment or Login without evaluating its risk assessment
 
@@ -298,6 +303,8 @@ err := client.RegisterFeedback(feedbackEvent, &occurredAt, &incognia.FeedbackIde
     AccountID:      "some-account-id",
 })
 ```
+
+To use a `context.Context` for timeouts or cancellation, use `client.RegisterFeedbackWithContext`.
 
 ### Authentication
 
