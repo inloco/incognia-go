@@ -1,7 +1,9 @@
 package incognia
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -1587,7 +1589,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWeb() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
-	response, err := suite.client.registerWebLogin(loginWebFixture)
+	response, err := suite.client.registerWebLogin(context.Background(), loginWebFixture)
 	suite.NoError(err)
 	expected := *transactionAssessmentFixture
 	expected.RequestToken = &loginWebFixture.RequestToken
@@ -1636,7 +1638,7 @@ func (suite *IncogniaTestSuite) TestSuccessRegisterLoginWebWithCountries() {
 	transactionServer := suite.mockPostTransactionsEndpoint(token, postLoginWebRequestBodyWithCountriesFixture, transactionAssessmentFixture, emptyQueryString)
 	defer transactionServer.Close()
 
-	response, err := suite.client.registerWebLogin(loginWebWithCountriesFixture)
+	response, err := suite.client.registerWebLogin(context.Background(), loginWebWithCountriesFixture)
 	suite.NoError(err)
 	expected := *transactionAssessmentFixture
 	expected.RequestToken = &loginWebWithCountriesFixture.RequestToken
@@ -1880,6 +1882,33 @@ func (suite *IncogniaTestSuite) TestLbmtIsSentOnSignupAfterFeedback() {
 	lt, err := strconv.ParseInt(capturedLatency, 10, 64)
 	suite.NoError(err)
 	suite.GreaterOrEqual(lt, int64(0))
+}
+
+func (suite *IncogniaTestSuite) TestClientDoRequestRespectsContextProperties() {
+	suite.Run("c.doRequest respects cancellation", func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel() // Context is already cancelled
+
+		var response interface{}
+		err := suite.client.doRequest(ctx, "https://xalala.com", nil, map[string]string{"hello": "world"}, &response)
+
+		suite.True(errors.Is(err, context.Canceled))
+		suite.Nil(response)
+	})
+
+	suite.Run("c.doRequest respects context timeouts", func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
+		defer cancel()
+
+		// Force context to time out
+		time.Sleep(2 * time.Millisecond)
+
+		var response interface{}
+		err := suite.client.doRequest(ctx, "https://xalala.com", nil, map[string]string{"hello": "world"}, &response)
+
+		suite.True(errors.Is(err, context.DeadlineExceeded))
+		suite.Nil(response)
+	})
 }
 
 func TestIncogniaTestSuite(t *testing.T) {

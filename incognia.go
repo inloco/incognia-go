@@ -252,6 +252,10 @@ func (c *Client) RegisterSignup(installationID string, address *Address) (ret *S
 }
 
 func (c *Client) RegisterSignupWithParams(params *Signup) (ret *SignupAssessment, err error) {
+	return c.RegisterSignupWithContext(context.Background(), params)
+}
+
+func (c *Client) RegisterSignupWithContext(ctx context.Context, params *Signup) (ret *SignupAssessment, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
@@ -259,10 +263,14 @@ func (c *Client) RegisterSignupWithParams(params *Signup) (ret *SignupAssessment
 		}
 	}()
 
-	return c.registerSignup(context.Background(), params)
+	return c.registerSignup(ctx, params)
 }
 
 func (c *Client) RegisterWebSignup(params *WebSignup) (ret *SignupAssessment, err error) {
+	return c.RegisterWebSignupWithContext(context.Background(), params)
+}
+
+func (c *Client) RegisterWebSignupWithContext(ctx context.Context, params *WebSignup) (ret *SignupAssessment, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
@@ -270,7 +278,7 @@ func (c *Client) RegisterWebSignup(params *WebSignup) (ret *SignupAssessment, er
 		}
 	}()
 
-	return c.registerWebSignup(context.Background(), params)
+	return c.registerWebSignup(ctx, params)
 }
 
 func (c *Client) registerSignup(ctx context.Context, params *Signup) (ret *SignupAssessment, err error) {
@@ -336,23 +344,31 @@ func (c *Client) registerWebSignup(ctx context.Context, params *WebSignup) (ret 
 }
 
 func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, occurredAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
+	return c.RegisterFeedbackWithContext(context.Background(), feedbackEvent, occurredAt, feedbackIdentifiers)
+}
+
+func (c *Client) RegisterFeedbackWithContext(ctx context.Context, feedbackEvent FeedbackType, occurredAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
 		}
 	}()
 
-	return c.registerFeedback(context.Background(), feedbackEvent, occurredAt, nil, feedbackIdentifiers)
+	return c.registerFeedback(ctx, feedbackEvent, occurredAt, nil, feedbackIdentifiers)
 }
 
 func (c *Client) RegisterFeedbackWithExpiration(feedbackEvent FeedbackType, occurredAt *time.Time, expiresAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
+	return c.RegisterFeedbackWithExpirationWithContext(context.Background(), feedbackEvent, occurredAt, expiresAt, feedbackIdentifiers)
+}
+
+func (c *Client) RegisterFeedbackWithExpirationWithContext(ctx context.Context, feedbackEvent FeedbackType, occurredAt *time.Time, expiresAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
 		}
 	}()
 
-	return c.registerFeedback(context.Background(), feedbackEvent, occurredAt, expiresAt, feedbackIdentifiers)
+	return c.registerFeedback(ctx, feedbackEvent, occurredAt, expiresAt, feedbackIdentifiers)
 }
 
 func (c *Client) registerFeedback(ctx context.Context, feedbackEvent FeedbackType, occurredAt *time.Time, expiresAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
@@ -382,6 +398,10 @@ func (c *Client) registerFeedback(ctx context.Context, feedbackEvent FeedbackTyp
 }
 
 func (c *Client) RegisterPayment(payment *Payment) (ret *TransactionAssessment, err error) {
+	return c.RegisterPaymentWithContext(context.Background(), payment)
+}
+
+func (c *Client) RegisterPaymentWithContext(ctx context.Context, payment *Payment) (ret *TransactionAssessment, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
@@ -389,7 +409,7 @@ func (c *Client) RegisterPayment(payment *Payment) (ret *TransactionAssessment, 
 		}
 	}()
 
-	return c.registerPayment(context.Background(), payment)
+	return c.registerPayment(ctx, payment)
 }
 
 func (c *Client) registerPayment(ctx context.Context, payment *Payment) (ret *TransactionAssessment, err error) {
@@ -449,6 +469,10 @@ func (c *Client) registerPayment(ctx context.Context, payment *Payment) (ret *Tr
 }
 
 func (c *Client) RegisterLogin(login *Login) (ret *TransactionAssessment, err error) {
+	return c.RegisterLoginWithContext(context.Background(), login)
+}
+
+func (c *Client) RegisterLoginWithContext(ctx context.Context, login *Login) (ret *TransactionAssessment, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
@@ -456,7 +480,7 @@ func (c *Client) RegisterLogin(login *Login) (ret *TransactionAssessment, err er
 		}
 	}()
 
-	return c.registerLogin(context.Background(), login)
+	return c.registerLogin(ctx, login)
 }
 
 func (c *Client) registerLogin(ctx context.Context, login *Login) (*TransactionAssessment, error) {
@@ -510,6 +534,10 @@ func (c *Client) registerLogin(ctx context.Context, login *Login) (*TransactionA
 }
 
 func (c *Client) RegisterWebLogin(webLogin *WebLogin) (ret *TransactionAssessment, err error) {
+	return c.RegisterWebLoginWithContext(context.Background(), webLogin)
+}
+
+func (c *Client) RegisterWebLoginWithContext(ctx context.Context, webLogin *WebLogin) (ret *TransactionAssessment, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
@@ -517,7 +545,7 @@ func (c *Client) RegisterWebLogin(webLogin *WebLogin) (ret *TransactionAssessmen
 		}
 	}()
 
-	return c.registerWebLogin(context.Background(), webLogin)
+	return c.registerWebLogin(ctx, webLogin)
 }
 
 func (c *Client) registerWebLogin(ctx context.Context, webLogin *WebLogin) (*TransactionAssessment, error) {
