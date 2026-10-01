@@ -49,18 +49,18 @@ var (
 	ErrSignalNotFound   = errors.New("signal not found")
 )
 
-type Evidence map[string]interface{}
+type Evidence map[string]any
 
-type Signals map[string]interface{}
+type Signals map[string]any
 
 type Reason struct {
 	Code   string
 	Source string
 }
 
-type jsonMap map[string]interface{}
+type jsonMap map[string]any
 
-func (a Evidence) GetEvidence(evidenceName string, outValue interface{}) error {
+func (a Evidence) GetEvidence(evidenceName string, outValue any) error {
 	if a == nil {
 		return ErrEvidenceNotFound
 	}
@@ -84,7 +84,7 @@ func (a Evidence) GetEvidenceAsInt64(evidenceName string) (int64, error) {
 	return int64(outValue), nil
 }
 
-func (s Signals) GetSignal(signalName string, outValue interface{}) error {
+func (s Signals) GetSignal(signalName string, outValue any) error {
 	if s == nil {
 		return ErrSignalNotFound
 	}
@@ -108,13 +108,13 @@ func (s Signals) GetSignalAsInt64(signalName string) (int64, error) {
 	return int64(outValue), nil
 }
 
-func getValueWithPath(root jsonMap, path string, outValue interface{}) error {
+func getValueWithPath(root jsonMap, path string, outValue any) error {
 	parts := strings.Split(path, ".")
 	if len(parts) == 0 {
 		return ErrEvidenceNotFound
 	}
 
-	curr := map[string]interface{}(root)
+	curr := map[string]any(root)
 	for len(parts) > 1 {
 		key := parts[0]
 		parts = parts[1:]
@@ -124,7 +124,7 @@ func getValueWithPath(root jsonMap, path string, outValue interface{}) error {
 			return ErrEvidenceNotFound
 		}
 
-		next, ok := v.(map[string]interface{})
+		next, ok := v.(map[string]any)
 		if !ok || next == nil {
 			return ErrEvidenceNotFound
 		}
@@ -137,15 +137,15 @@ func getValueWithPath(root jsonMap, path string, outValue interface{}) error {
 		return ErrEvidenceNotFound
 	}
 
-	if slice, ok := v.([]interface{}); ok {
+	if slice, ok := v.([]any); ok {
 		return setToSlice(slice, outValue)
 	}
 	return setToPointer(v, outValue)
 }
 
-func setToPointer(value interface{}, outValue interface{}) error {
+func setToPointer(value any, outValue any) error {
 	outputReflectValue := reflect.ValueOf(outValue)
-	if outputReflectValue.Kind() != reflect.Ptr {
+	if outputReflectValue.Kind() != reflect.Pointer {
 		return errors.New("expecting outValue to be a pointer")
 	}
 	indirectOutputValueKind := reflect.Indirect(outputReflectValue).Kind()
@@ -161,9 +161,9 @@ func setToPointer(value interface{}, outValue interface{}) error {
 	return nil
 }
 
-func setToSlice(slice []interface{}, outValue interface{}) error {
+func setToSlice(slice []any, outValue any) error {
 	outputReflectValue := reflect.ValueOf(outValue)
-	if outputReflectValue.Kind() != reflect.Ptr {
+	if outputReflectValue.Kind() != reflect.Pointer {
 		return errors.New("expecting outValue to be a pointer to slice")
 	}
 	indirectOutputValue := reflect.Indirect(outputReflectValue)
