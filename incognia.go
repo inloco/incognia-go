@@ -70,12 +70,25 @@ type Client struct {
 }
 
 type IncogniaClientConfig struct {
-	ClientID          string
-	ClientSecret      string
-	TokenProvider     TokenProvider
-	Timeout           time.Duration
+	ClientID      string
+	ClientSecret  string
+	TokenProvider TokenProvider
+
+	// Timeout defines the maximum duration of a HTTP requests made by the [Client].
+	// When passing a [context.Context] with a deadline to methods like
+	// [Client.RegisterLoginWithContext], the smaller timeout 'wins', that is, the process will
+	// stop as soon as the first duration times out.
+	//
+	// Passing a duration of 0 makes the default timeout equal to [defaultNetClientTimeout].
+	Timeout time.Duration
+
+	// TokenRouteTimeout defines the maximum duration of HTTP token requests.
+	//
+	// Passing a duration of 0 makes the default timeout equal to [defaultNetClientTimeout].
 	TokenRouteTimeout time.Duration
-	HTTPClient        httpClient
+
+	// Overwrites the client's [http.Client]. Can be left nil to use a default http client.
+	HTTPClient httpClient
 }
 
 type Payment struct {
