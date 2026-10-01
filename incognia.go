@@ -2,6 +2,7 @@ package incognia
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -244,7 +245,7 @@ func (c *Client) RegisterSignup(installationID string, address *Address) (ret *S
 		}
 	}()
 
-	return c.registerSignup(&Signup{
+	return c.registerSignup(context.Background(), &Signup{
 		InstallationID: installationID,
 		Address:        address,
 	})
@@ -258,7 +259,7 @@ func (c *Client) RegisterSignupWithParams(params *Signup) (ret *SignupAssessment
 		}
 	}()
 
-	return c.registerSignup(params)
+	return c.registerSignup(context.Background(), params)
 }
 
 func (c *Client) RegisterWebSignup(params *WebSignup) (ret *SignupAssessment, err error) {
@@ -269,10 +270,10 @@ func (c *Client) RegisterWebSignup(params *WebSignup) (ret *SignupAssessment, er
 		}
 	}()
 
-	return c.registerWebSignup(params)
+	return c.registerWebSignup(context.Background(), params)
 }
 
-func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err error) {
+func (c *Client) registerSignup(ctx context.Context, params *Signup) (ret *SignupAssessment, err error) {
 	if params == nil {
 		return nil, ErrMissingSignup
 	}
@@ -298,7 +299,7 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 	}
 
 	var signupAssessment SignupAssessment
-	err = c.doRequest(c.endpoints.Signups, nil, requestBody, &signupAssessment)
+	err = c.doRequest(ctx, c.endpoints.Signups, nil, requestBody, &signupAssessment)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +309,7 @@ func (c *Client) registerSignup(params *Signup) (ret *SignupAssessment, err erro
 	return &signupAssessment, nil
 }
 
-func (c *Client) registerWebSignup(params *WebSignup) (ret *SignupAssessment, err error) {
+func (c *Client) registerWebSignup(ctx context.Context, params *WebSignup) (ret *SignupAssessment, err error) {
 	if params == nil {
 		return nil, ErrMissingSignup
 	}
@@ -324,7 +325,7 @@ func (c *Client) registerWebSignup(params *WebSignup) (ret *SignupAssessment, er
 
 	var signupAssessment SignupAssessment
 
-	err = c.doRequest(c.endpoints.Signups, nil, requestBody, &signupAssessment)
+	err = c.doRequest(ctx, c.endpoints.Signups, nil, requestBody, &signupAssessment)
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +342,7 @@ func (c *Client) RegisterFeedback(feedbackEvent FeedbackType, occurredAt *time.T
 		}
 	}()
 
-	return c.registerFeedback(feedbackEvent, occurredAt, nil, feedbackIdentifiers)
+	return c.registerFeedback(context.Background(), feedbackEvent, occurredAt, nil, feedbackIdentifiers)
 }
 
 func (c *Client) RegisterFeedbackWithExpiration(feedbackEvent FeedbackType, occurredAt *time.Time, expiresAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
@@ -351,10 +352,10 @@ func (c *Client) RegisterFeedbackWithExpiration(feedbackEvent FeedbackType, occu
 		}
 	}()
 
-	return c.registerFeedback(feedbackEvent, occurredAt, expiresAt, feedbackIdentifiers)
+	return c.registerFeedback(context.Background(), feedbackEvent, occurredAt, expiresAt, feedbackIdentifiers)
 }
 
-func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.Time, expiresAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
+func (c *Client) registerFeedback(ctx context.Context, feedbackEvent FeedbackType, occurredAt *time.Time, expiresAt *time.Time, feedbackIdentifiers *FeedbackIdentifiers) (err error) {
 	requestBody := postFeedbackRequestBody{
 		Event:      feedbackEvent,
 		OccurredAt: occurredAt,
@@ -372,7 +373,7 @@ func (c *Client) registerFeedback(feedbackEvent FeedbackType, occurredAt *time.T
 		requestBody.PersonID = feedbackIdentifiers.PersonID
 	}
 
-	err = c.doRequest(c.endpoints.Feedback, nil, requestBody, nil)
+	err = c.doRequest(ctx, c.endpoints.Feedback, nil, requestBody, nil)
 	if err != nil {
 		return err
 	}
@@ -388,10 +389,10 @@ func (c *Client) RegisterPayment(payment *Payment) (ret *TransactionAssessment, 
 		}
 	}()
 
-	return c.registerPayment(payment)
+	return c.registerPayment(context.Background(), payment)
 }
 
-func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, err error) {
+func (c *Client) registerPayment(ctx context.Context, payment *Payment) (ret *TransactionAssessment, err error) {
 
 	if payment == nil {
 		return nil, ErrMissingPayment
@@ -437,7 +438,7 @@ func (c *Client) registerPayment(payment *Payment) (ret *TransactionAssessment, 
 	}
 
 	var paymentAssessment TransactionAssessment
-	err = c.doRequest(c.endpoints.Transactions, queryParams, requestBody, &paymentAssessment)
+	err = c.doRequest(ctx, c.endpoints.Transactions, queryParams, requestBody, &paymentAssessment)
 	if err != nil {
 		return nil, err
 	}
@@ -455,10 +456,10 @@ func (c *Client) RegisterLogin(login *Login) (ret *TransactionAssessment, err er
 		}
 	}()
 
-	return c.registerLogin(login)
+	return c.registerLogin(context.Background(), login)
 }
 
-func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
+func (c *Client) registerLogin(ctx context.Context, login *Login) (*TransactionAssessment, error) {
 
 	if login == nil {
 		return nil, ErrMissingLogin
@@ -498,7 +499,7 @@ func (c *Client) registerLogin(login *Login) (*TransactionAssessment, error) {
 	}
 
 	var loginAssessment TransactionAssessment
-	err := c.doRequest(c.endpoints.Transactions, queryParams, requestBody, &loginAssessment)
+	err := c.doRequest(ctx, c.endpoints.Transactions, queryParams, requestBody, &loginAssessment)
 	if err != nil {
 		return nil, err
 	}
@@ -516,10 +517,10 @@ func (c *Client) RegisterWebLogin(webLogin *WebLogin) (ret *TransactionAssessmen
 		}
 	}()
 
-	return c.registerWebLogin(webLogin)
+	return c.registerWebLogin(context.Background(), webLogin)
 }
 
-func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, error) {
+func (c *Client) registerWebLogin(ctx context.Context, webLogin *WebLogin) (*TransactionAssessment, error) {
 
 	if webLogin == nil {
 		return nil, ErrMissingLogin
@@ -547,7 +548,7 @@ func (c *Client) registerWebLogin(webLogin *WebLogin) (*TransactionAssessment, e
 	}
 
 	var webLoginAssessment TransactionAssessment
-	err := c.doRequest(c.endpoints.Transactions, queryParams, requestBody, &webLoginAssessment)
+	err := c.doRequest(ctx, c.endpoints.Transactions, queryParams, requestBody, &webLoginAssessment)
 	if err != nil {
 		return nil, err
 	}
@@ -570,6 +571,7 @@ func (c *Client) setLastLatency(ms int64) {
 }
 
 func (c *Client) doRequest(
+	ctx context.Context,
 	endpoint string,
 	queryParams url.Values,
 	request interface{},
@@ -580,7 +582,7 @@ func (c *Client) doRequest(
 		return err
 	}
 
-	httpRequest, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(requestBody))
+	httpRequest, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return err
 	}
