@@ -92,6 +92,12 @@ type postFeedbackRequestBody struct {
 	AccountID      string       `json:"account_id,omitempty"`
 	ExternalID     string       `json:"external_id,omitempty"`
 	PersonID       *PersonID    `json:"person_id,omitempty"`
+
+	FinancialAccount             *FeedbackFinancialAccount `json:"financial_account,omitempty"`
+	CounterpartyFinancialAccount *FinancialAccount         `json:"counterparty_financial_account,omitempty"`
+	CounterpartyRole             CounterpartyRole          `json:"counterparty_role,omitempty"`
+	DebtorAccount                *BankAccountInfo          `json:"debtor_account,omitempty"`
+	CreditorAccount              *BankAccountInfo          `json:"creditor_account,omitempty"`
 }
 
 type AddressType string
@@ -191,6 +197,10 @@ type postTransactionRequestBody struct {
 	DebtorAccount           *BankAccountInfo      `json:"debtor_account,omitempty"`
 	CreditorAccount         *BankAccountInfo      `json:"creditor_account,omitempty"`
 	Countries               []string              `json:"countries,omitempty"`
+
+	FinancialAccount             *FinancialAccount `json:"financial_account,omitempty"`
+	CounterpartyFinancialAccount *FinancialAccount `json:"counterparty_financial_account,omitempty"`
+	CounterpartyRole             CounterpartyRole  `json:"counterparty_role,omitempty"`
 }
 
 type PersonID struct {
@@ -208,6 +218,9 @@ type PixKey struct {
 	Value string `json:"value"`
 }
 
+// BankAccountInfo describes the legacy bank account format.
+//
+// Deprecated: Use FinancialAccount and the request's CounterpartyRole instead.
 type BankAccountInfo struct {
 	AccountType       string    `json:"account_type"`
 	AccountPurpose    string    `json:"account_purpose"`
@@ -219,4 +232,50 @@ type BankAccountInfo struct {
 	AccountNumber     string    `json:"account_number"`
 	AccountCheckDigit string    `json:"account_check_digit"`
 	PixKeys           []*PixKey `json:"pix_keys"`
+}
+
+// AccountSchema identifies the banking standard used by an account.
+type AccountSchema string
+
+const (
+	AccountSchemaLocal AccountSchema = "local"
+	AccountSchemaSwift AccountSchema = "swift"
+)
+
+// CounterpartyRole identifies the direction of funds relative to the counterparty.
+type CounterpartyRole string
+
+const (
+	CounterpartySender    CounterpartyRole = "sender"
+	CounterpartyRecipient CounterpartyRole = "recipient"
+)
+
+// FinancialAccount describes an account using international banking identifiers.
+type FinancialAccount struct {
+	AccountIdentifier string        `json:"account_identifier,omitempty"`
+	AccountSchema     AccountSchema `json:"account_schema,omitempty"`
+	AccountType       string        `json:"account_type,omitempty"`
+	AccountPurpose    string        `json:"account_purpose,omitempty"`
+	// BranchIdentifier can be omitted when a branch does not apply.
+	BranchIdentifier *string   `json:"branch_identifier,omitempty"`
+	BankIdentifier   string    `json:"bank_identifier,omitempty"`
+	Country          string    `json:"country,omitempty"`
+	HolderID         *PersonID `json:"holder_id,omitempty"`
+	HolderType       string    `json:"holder_type,omitempty"`
+	PixKeys          []*PixKey `json:"pix_keys,omitempty"`
+}
+
+// FeedbackFinancialAccount accepts new or legacy identifiers. Do not mix them.
+type FeedbackFinancialAccount struct {
+	FinancialAccount
+	// Deprecated: Use AccountIdentifier instead.
+	AccountNumber string `json:"account_number,omitempty"`
+	// Deprecated: Include the check digit in AccountIdentifier instead.
+	AccountCheckDigit string `json:"account_check_digit,omitempty"`
+	// Deprecated: Use BranchIdentifier instead.
+	BranchCode string `json:"branch_code,omitempty"`
+	// Deprecated: Use BankIdentifier instead.
+	IspbCode string `json:"ispb_code,omitempty"`
+	// Deprecated: Use HolderID instead.
+	HolderTaxID *PersonID `json:"holder_tax_id,omitempty"`
 }

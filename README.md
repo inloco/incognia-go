@@ -291,6 +291,72 @@ assessment, err := client.RegisterPayment(&incognia.Payment{
     ...
 ```
 
+### International financial accounts
+
+`Payment`, `Login`, and `WebLogin` accept `FinancialAccount`,
+`CounterpartyFinancialAccount`, and `CounterpartyRole`. The same fields are
+available in `FeedbackIdentifiers`.
+
+```go
+branch := "example_branch_identifier"
+account := &incognia.FinancialAccount{
+    AccountIdentifier: "example_account_identifier",
+    AccountSchema:     incognia.AccountSchemaLocal,
+    BankIdentifier:    "example_bank_identifier",
+    BranchIdentifier:  &branch,
+    Country:           "BR",
+    HolderID: &incognia.PersonID{
+        Type:  "example_id_type",
+        Value: "example_holder_id",
+    },
+}
+
+assessment, err := client.RegisterPayment(&incognia.Payment{
+    AccountID:        "example_account_id",
+    PolicyID:         "example_policy_id",
+    FinancialAccount: account,
+    CounterpartyFinancialAccount: &incognia.FinancialAccount{
+        AccountIdentifier: "example_counterparty_identifier",
+        AccountSchema:     incognia.AccountSchemaSwift,
+        Country:           "GB",
+    },
+    CounterpartyRole: incognia.CounterpartyRecipient,
+})
+```
+
+The example uses placeholders. Required identifiers depend on the country and
+account schema (`local` or `swift`). For Brazilian accounts, include the check digit
+in `AccountIdentifier`, separated by a hyphen. `BranchIdentifier` is optional;
+leave it nil when no branch applies. Accounts also accept `AccountType`,
+`AccountPurpose`, `HolderType`, and `PixKeys`.
+
+`CounterpartyRecipient` means the counterparty receives funds from the user's
+account; `CounterpartySender` means it sends funds to that account. The role can
+be omitted for nontransactional events.
+
+For feedback, wrap the user's account in `FeedbackFinancialAccount`:
+
+```go
+err := client.RegisterFeedback(incognia.PaymentAccepted, nil, &incognia.FeedbackIdentifiers{
+    FinancialAccount: &incognia.FeedbackFinancialAccount{
+        FinancialAccount: *account,
+    },
+    CounterpartyRole: incognia.CounterpartyRecipient,
+    CounterpartyFinancialAccount: &incognia.FinancialAccount{
+        AccountIdentifier: "example_counterparty_identifier",
+        AccountSchema:     incognia.AccountSchemaSwift,
+        Country:           "GB",
+    },
+})
+```
+
+`BankAccountInfo`, `DebtorAccount`, and `CreditorAccount` remain supported and are
+deprecated. Feedback's `FinancialAccount` also accepts the deprecated
+`AccountNumber`, `AccountCheckDigit`, `BranchCode`, `IspbCode`, and `HolderTaxID`
+fields. Use `AccountIdentifier`, `BranchIdentifier`, `BankIdentifier`, and `HolderID`
+instead. Do not mix new and legacy identification fields in the same feedback
+account. The API handles account validation and legacy field mapping.
+
 ### Sending Feedback
 
 This method registers a feedback event for the given identifiers (represented in `FeedbackIdentifiers`) related to a signup, login or payment.
