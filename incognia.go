@@ -112,8 +112,14 @@ type Payment struct {
 	CustomProperties       map[string]any
 	PersonID               *PersonID
 	RelatedAccount         *RelatedAccount
-	DebtorAccount          *BankAccountInfo
-	CreditorAccount        *BankAccountInfo
+	// Deprecated: Use the financial account fields and CounterpartyRole instead.
+	DebtorAccount *BankAccountInfo
+	// Deprecated: Use the financial account fields and CounterpartyRole instead.
+	CreditorAccount *BankAccountInfo
+
+	FinancialAccount             *FinancialAccount
+	CounterpartyFinancialAccount *FinancialAccount
+	CounterpartyRole             CounterpartyRole
 }
 
 type WebLogin struct {
@@ -126,6 +132,10 @@ type WebLogin struct {
 	PersonID         *PersonID
 	TenantID         string
 	Countries        []string
+
+	FinancialAccount             *FinancialAccount
+	CounterpartyFinancialAccount *FinancialAccount
+	CounterpartyRole             CounterpartyRole
 }
 
 type Login struct {
@@ -145,6 +155,10 @@ type Login struct {
 	DeviceOs                string
 	CustomProperties        map[string]any
 	PersonID                *PersonID
+
+	FinancialAccount             *FinancialAccount
+	CounterpartyFinancialAccount *FinancialAccount
+	CounterpartyRole             CounterpartyRole
 }
 
 type FeedbackIdentifiers struct {
@@ -157,6 +171,15 @@ type FeedbackIdentifiers struct {
 	AccountID      string
 	ExternalID     string
 	PersonID       *PersonID
+
+	FinancialAccount             *FeedbackFinancialAccount
+	CounterpartyFinancialAccount *FinancialAccount
+	CounterpartyRole             CounterpartyRole
+
+	// Deprecated: Use the financial account fields and CounterpartyRole instead.
+	DebtorAccount *BankAccountInfo
+	// Deprecated: Use the financial account fields and CounterpartyRole instead.
+	CreditorAccount *BankAccountInfo
 }
 
 type Address struct {
@@ -400,6 +423,11 @@ func (c *Client) registerFeedback(ctx context.Context, feedbackEvent FeedbackTyp
 		requestBody.AccountID = feedbackIdentifiers.AccountID
 		requestBody.ExternalID = feedbackIdentifiers.ExternalID
 		requestBody.PersonID = feedbackIdentifiers.PersonID
+		requestBody.FinancialAccount = feedbackIdentifiers.FinancialAccount
+		requestBody.CounterpartyFinancialAccount = feedbackIdentifiers.CounterpartyFinancialAccount
+		requestBody.CounterpartyRole = feedbackIdentifiers.CounterpartyRole
+		requestBody.DebtorAccount = feedbackIdentifiers.DebtorAccount
+		requestBody.CreditorAccount = feedbackIdentifiers.CreditorAccount
 	}
 
 	err = c.doRequest(ctx, c.endpoints.Feedback, nil, requestBody, nil)
@@ -463,6 +491,10 @@ func (c *Client) registerPayment(ctx context.Context, payment *Payment) (ret *Tr
 		RelatedAccount:         payment.RelatedAccount,
 		DebtorAccount:          payment.DebtorAccount,
 		CreditorAccount:        payment.CreditorAccount,
+
+		FinancialAccount:             payment.FinancialAccount,
+		CounterpartyFinancialAccount: payment.CounterpartyFinancialAccount,
+		CounterpartyRole:             payment.CounterpartyRole,
 	}
 
 	var queryParams url.Values
@@ -528,6 +560,10 @@ func (c *Client) registerLogin(ctx context.Context, login *Login) (*TransactionA
 		CustomProperties:        login.CustomProperties,
 		PersonID:                login.PersonID,
 		Countries:               login.Countries,
+
+		FinancialAccount:             login.FinancialAccount,
+		CounterpartyFinancialAccount: login.CounterpartyFinancialAccount,
+		CounterpartyRole:             login.CounterpartyRole,
 	}
 
 	var queryParams url.Values
@@ -581,6 +617,10 @@ func (c *Client) registerWebLogin(ctx context.Context, webLogin *WebLogin) (*Tra
 		PersonID:         webLogin.PersonID,
 		Countries:        webLogin.Countries,
 		TenantID:         webLogin.TenantID,
+
+		FinancialAccount:             webLogin.FinancialAccount,
+		CounterpartyFinancialAccount: webLogin.CounterpartyFinancialAccount,
+		CounterpartyRole:             webLogin.CounterpartyRole,
 	}
 
 	var queryParams url.Values
