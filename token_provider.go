@@ -1,6 +1,7 @@
 package incognia
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"sync"
@@ -49,7 +50,11 @@ func (t *ManualRefreshTokenProvider) GetToken() (Token, error) {
 }
 
 func (t *ManualRefreshTokenProvider) Refresh() (Token, error) {
-	accessToken, err := t.tokenClient.requestToken()
+	return t.refreshWithContext(context.Background())
+}
+
+func (t *ManualRefreshTokenProvider) refreshWithContext(ctx context.Context) (Token, error) {
+	accessToken, err := t.tokenClient.requestTokenWithContext(ctx)
 	if err != nil {
 		return nil, err
 	}
