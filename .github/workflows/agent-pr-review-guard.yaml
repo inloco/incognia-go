@@ -1,0 +1,106 @@
+name: Agent PR Review Guard
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  pull_request_review:
+    types: [submitted, dismissed]
+  merge_group:
+    types: [checks_requested]
+
+permissions:
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: agent-pr-review-guard-${{ github.event.pull_request.number || github.event.merge_group.head_sha }}
+  cancel-in-progress: true
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Evaluate
+        if: github.event_name != 'merge_group'
+        id: evaluate
+        uses: actions/github-script@v8
+        with:
+          script: |
+            function isAgent(id) {
+              const agentIds = [
+                333783168
+              ];
+              return agentIds.includes(id);
+            }
+
+            async function isAgentPR(owner, repo, pull_number) {
+              const { data: pr } = await github.rest.pulls.get({
+                owner, repo, pull_number: context.payload.pull_request.number,
+              });
+              return isAgent(pr.user.id);
+            }
+
+            async function canApprove(owner, repo, user) {
+              if (isAgent(user.id)) return false;
+
+              const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner, repo, username: user.login,
+              });
+              return ['admin', 'maintain', 'write'].includes(data.permission);
+            }
+
+            async function reviewCount(owner, repo, pull_number) {
+              const reviews = await github.paginate(
+                github.rest.pulls.listReviews,
+                { owner, repo, pull_number, per_page: 100 }
+              );
+
+              const latestReviews = new Map();
+
+              for (const review of reviews) {
+                if (review.state === "COMMENTED") continue;
+
+                if (!review.user) continue;
+                const user = review.user;
+                if (!await canApprove(owner, repo, user)) continue;
+
+                if (!review.submitted_at) continue;
+                const previous = latestReviews.get(user.id);
+                if (
+                  !previous ||
+                  new Date(review.submitted_at) >= new Date(previous.submitted_at)
+                ) {
+                  latestReviews.set(user.id, review);
+                }
+              }
+
+              return [...latestReviews.values()]
+                .filter(review => review.state === "APPROVED")
+                .length;
+            }
+
+
+            const { owner, repo } = context.repo;
+            const pull_number = context.payload.pull_request.number;
+            ok = !await isAgentPR(owner, repo, pull_number) || await reviewCount(owner, repo, pull_number) >= 2
+
+            core.setOutput("ok", ok);
+
+      - name: Set commit status
+        uses: actions/github-script@v8
+        env:
+          IS_OK: ${{ github.event_name == 'merge_group' || steps.evaluate.outputs.ok }}
+        with:
+          script: |
+            const ok = process.env.IS_OK == "true";
+
+            await github.rest.repos.createCommitStatus({
+              ...context.repo,
+              sha: context.eventName === "merge_group"
+                ? context.payload.merge_group.head_sha
+                : context.payload.pull_request.head.sha,
+              state: ok ? "success" : "pending",
+              context: "Agent PR Review Guard",
+              description: "Agent PRs require 2 approvals to merge"
+            });
