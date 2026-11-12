@@ -402,7 +402,7 @@ if err != nil {
 // Call client.Close() on application shutdown to avoid goroutine leaks
 ```
 
-Use `NewPeriodicRefreshTokenProvider(tokenClient)` for defaults, or `NewPeriodicRefreshTokenProviderWithConfig(tokenClient, config)` to configure refresh behavior.
+Use `NewPeriodicRefreshTokenProvider(tokenClient)` for defaults, or `NewPeriodicRefreshTokenProviderWithConfig(tokenClient, config)` to configure refresh behavior. Refresh is scheduled at token expiration minus `RefreshBefore`. Failed refreshes retry after `RetryInterval`.
 
 Use `ManualRefreshTokenProvider` instead if you want to manage refresh timing yourself.
 

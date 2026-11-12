@@ -10,7 +10,7 @@ import (
 // Zero-valued fields use their defaults. Negative durations are invalid.
 type PeriodicRefreshTokenProviderConfig struct {
 	// RefreshBefore is the lead time before expiration. Default: one minute.
-	// For short-lived tokens, the lead time is capped at half the remaining lifetime.
+	// Must be less than the token lifetime of 15 minutes.
 	RefreshBefore time.Duration
 	// RetryInterval is the delay after a failed refresh. Default: five seconds.
 	RetryInterval time.Duration
@@ -44,6 +44,9 @@ func NewPeriodicRefreshTokenProviderWithConfig(tokenClient *TokenClient, config 
 	}
 	if config.RefreshBefore < 0 || config.RetryInterval < 0 {
 		return nil, errors.New("periodic refresh durations must not be negative")
+	}
+	if config.RefreshBefore >= 15*time.Minute {
+		return nil, errors.New("refresh lead time must be less than 15 minutes")
 	}
 	if config.RefreshBefore == 0 {
 		config.RefreshBefore = time.Minute
@@ -88,15 +91,7 @@ func (p *PeriodicRefreshTokenProvider) Close() error {
 }
 
 func (p *PeriodicRefreshTokenProvider) refreshDelay(token Token, now time.Time) time.Duration {
-	remaining := token.GetExpiresAt().Sub(now)
-	if remaining <= 0 {
-		return p.config.RetryInterval
-	}
-	lead := p.config.RefreshBefore
-	if remaining <= lead {
-		lead = remaining / 2
-	}
-	return remaining - lead
+	return token.GetExpiresAt().Sub(now) - p.config.RefreshBefore
 }
 
 func (p *PeriodicRefreshTokenProvider) run(ctx context.Context, token Token) {

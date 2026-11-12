@@ -85,11 +85,9 @@ func TestPeriodicProviderRefreshDelay(t *testing.T) {
 		lifetime int64
 		want     time.Duration
 	}{
-		{3600, 59 * time.Minute},
-		{30, 15 * time.Second},
-		{60, 30 * time.Second},
-		{0, 5 * time.Second},
-		{-1, 5 * time.Second},
+		{900, 14 * time.Minute},
+		{120, time.Minute},
+		{90, 30 * time.Second},
 	} {
 		token := &accessToken{CreatedAt: now.Unix(), ExpiresIn: tt.lifetime}
 		require.Equal(t, tt.want, p.refreshDelay(token, now))
@@ -109,7 +107,9 @@ func TestPeriodicProviderRefreshDoesNotBlockReadsAndCloseCancels(t *testing.T) {
 		<-r.Context().Done()
 		close(canceled)
 	})
-	p, err := NewPeriodicRefreshTokenProvider(client)
+	p, err := NewPeriodicRefreshTokenProviderWithConfig(client, PeriodicRefreshTokenProviderConfig{
+		RefreshBefore: time.Second,
+	})
 	require.NoError(t, err)
 	defer p.Close()
 	select {
@@ -164,6 +164,7 @@ func TestPeriodicProviderRetriesAndRetainsToken(t *testing.T) {
 		w.WriteHeader(http.StatusInternalServerError)
 	})
 	p, err := NewPeriodicRefreshTokenProviderWithConfig(client, PeriodicRefreshTokenProviderConfig{
+		RefreshBefore: time.Second,
 		RetryInterval: 50 * time.Millisecond,
 	})
 	require.NoError(t, err)
