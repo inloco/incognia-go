@@ -376,30 +376,35 @@ To use a `context.Context` for timeouts or cancellation, use `client.RegisterFee
 
 Our library manages authentication automatically, including refreshing expired tokens. By default, token refresh happens synchronously during an API call. This means that if the token has expired, the request will take longer to complete—especially because the token endpoint intentionally has higher latency to mitigate brute-force attacks.
 
-For latency-sensitive services, you can take control of when token refresh occurs by using `ManualRefreshTokenProvider`. This allows you to refresh tokens proactively (e.g., in the background), avoiding delays during critical requests.
-
-The example below demonstrates how to periodically refresh the token in a separate thread:
+For latency-sensitive services, use `PeriodicRefreshTokenProvider` to refresh tokens proactively before tokens expire. Its constructor fetches the initial token synchronously, then starts a background goroutine:
 
 ```go
-tokenClient := incognia.NewTokenClient(&TokenClientConfig{ClientID: clientID, ClientSecret: clientSecret})
-tokenProvider := incognia.NewManualRefreshTokenProvider(tokenClient)
-c, err := incognia.New(&IncogniaClientConfig{ClientID: clientID, ClientSecret: clientSecret, TokenProvider: tokenProvider})
+tokenClient := incognia.NewTokenClient(&incognia.TokenClientConfig{
+    ClientID: clientID, ClientSecret: clientSecret,
+})
+tokenProvider, err := incognia.NewPeriodicRefreshTokenProviderWithConfig(tokenClient,
+    incognia.PeriodicRefreshTokenProviderConfig{
+        RefreshBefore: time.Minute,
+        RetryInterval: 5 * time.Second,
+    },
+)
 if err != nil {
-    log.Fatal("could not initialize Incognia client", err)
+    return err
 }
 
-go func(i *incognia.Client) {
-  for {
-      accessToken, err := tokenProvider.Refresh()
-      log.Println("token refreshed, expires at " + accessToken.GetExpiresAt().String())
-      if (err != nil) {
-          log.Println("could not refresh token")
-          continue
-      }
-      time.Sleep(time.Until(accessToken.GetExpiresAt()))
-   }
-}(c)
+client, err := incognia.New(&incognia.IncogniaClientConfig{
+    ClientID: clientID, ClientSecret: clientSecret, TokenProvider: tokenProvider,
+})
+if err != nil {
+    return err
+}
+
+// Call client.Close() on application shutdown to avoid goroutine leaks
 ```
+
+Use `NewPeriodicRefreshTokenProvider(tokenClient)` for defaults, or `NewPeriodicRefreshTokenProviderWithConfig(tokenClient, config)` to configure refresh behavior. Refresh is scheduled at token expiration minus `RefreshBefore`. Failed refreshes retry after `RetryInterval`.
+
+Use `ManualRefreshTokenProvider` instead if you want to manage refresh timing yourself.
 
 You can also keep the default automatic authentication but increase the token route timeout by changing the `TokenRouteTimeout` parameter of your `IncogniaClientConfig`.
 

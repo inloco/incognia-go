@@ -266,6 +266,14 @@ func New(config *IncogniaClientConfig) (*Client, error) {
 	return &Client{clientID: config.ClientID, clientSecret: config.ClientSecret, tokenProvider: tokenProvider, netClient: netClient, endpoints: &endpoints, UserAgent: userAgent}, nil
 }
 
+// Close closes client and the underlying token provider
+func (c *Client) Close() error {
+	if closer, ok := c.tokenProvider.(io.Closer); ok {
+		return closer.Close()
+	}
+	return nil
+}
+
 func optionalRequestToken(requestToken string) *string {
 	if strings.TrimSpace(requestToken) == "" {
 		return nil
